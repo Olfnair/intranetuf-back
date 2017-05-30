@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<resources>
-  <Resource id="JNDI_intranetuf" type="javax.sql.DataSource">#Mon May 15 14:48:58 CEST 2017
-jdbcDriver=com.mysql.jdbc.Driver
-password=dev
-userName=dev
-jdbcUrl=jdbc\:mysql\://localhost\:3306/intranetuf?zeroDateTimeBehavior\=convertToNull
-</Resource>
-</resources>
