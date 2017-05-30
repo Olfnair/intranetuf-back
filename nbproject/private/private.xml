@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/ValidationFacadeREST.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/ApplicationConfig.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/entities/File.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/entities/User.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/entities/Validation.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/LogFacadeREST.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/entities/FileAction.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/web/META-INF/context.xml</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/conf/persistence.xml</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/FileFacadeREST.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/ProjectFacadeREST.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/UserFacadeREST.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/entities/Control.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/AbstractFacade.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/conf/MANIFEST.MF</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/entities/Log.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/web/index.jsp</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/entities/Role.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/ControlFacadeREST.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/entities/Project.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/web/WEB-INF/beans.xml</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/web/WEB-INF/resources.xml</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/AbstractFacadeBackup.java</file>
+            <file>file:/C:/Users/Florian/Documents/IUF/src/java/rest/RoleFacadeREST.java</file>
+        </group>
+    </open-files>
+</project-private>
