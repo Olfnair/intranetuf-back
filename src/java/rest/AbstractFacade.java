@@ -36,7 +36,7 @@ public abstract class AbstractFacade<T> {
     
     static {
         HEADERS = new HashMap<>();
-        // HEADERS.put("Access-Control-Allow-Origin", /*"http://localhost:4200"*/"*");
+        // HEADERS.put("Access-Control-Allow-Origin", "http://localhost:4200");
     }
 
     public AbstractFacade(Class<T> entityClass) {

@@ -13,6 +13,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Column;
+import javax.persistence.NamedQuery;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -23,6 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
+@NamedQuery(name="User.Auth", query="Select u From User u WHERE u.login = :login AND pwd_hash = :pwd_hash")
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;

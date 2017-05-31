@@ -29,6 +29,7 @@ public class ApplicationConfig extends Application {
      * If required, comment out calling this method in getClasses().
      */
     private void addRestResourceClasses(Set<Class<?>> resources) {
+        resources.add(rest.AuthenticationEndpoint.class);
         resources.add(rest.ControlFacadeREST.class);
         resources.add(rest.DownloadFacade.class);
         resources.add(rest.FileFacadeREST.class);
