@@ -8,7 +8,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.Path; 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -27,7 +27,7 @@ public class AuthenticationEndpoint {
     @POST
     public Response authenticateUser(Credentials credentials) {       
         AuthToken token = authenticate(credentials);
-        return Response.ok(token.toString()).build();   
+        return Response.ok(/*token.toString()*/"token").build();   
     }
     
     private AuthToken authenticate(Credentials credentials) {
