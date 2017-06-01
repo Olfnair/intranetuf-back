@@ -31,10 +31,10 @@ public class AuthenticationEndpoint {
     }
     
     private AuthToken authenticate(Credentials credentials) {
-        Query auth = em.createNamedQuery("User.Auth");
-        auth.setParameter("login", credentials.getLogin());
-        auth.setParameter("pwd_hash", credentials.getPassword());
-        List<User> user = auth.getResultList();
+        Query authQuery = em.createNamedQuery("User.Auth");
+        authQuery.setParameter("login", credentials.getLogin());
+        authQuery.setParameter("pwd_hash", credentials.getPassword());
+        List<User> user = authQuery.getResultList();
 
         // si on a un et un seul résultat (login est unique) c'est bon, sinon :
         if(user == null || user.isEmpty() || user.size() > 1) {
