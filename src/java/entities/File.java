@@ -40,7 +40,7 @@ public class File implements Serializable {
     private boolean deleted;
     
     @ManyToOne
-    private Project project ;
+    private Project project;
     
     @OneToMany(mappedBy="file")
     private Collection<Log> logs;

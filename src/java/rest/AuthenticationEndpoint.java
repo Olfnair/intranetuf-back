@@ -19,7 +19,7 @@ import utils.ByteUtils;
 
 @Path("/auth")
 @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+@Produces(MediaType.TEXT_PLAIN)
 public class AuthenticationEndpoint {
     @PersistenceContext(unitName = "IUFPU")
     private EntityManager em;
@@ -27,7 +27,7 @@ public class AuthenticationEndpoint {
     @POST
     public Response authenticateUser(Credentials credentials) {       
         AuthToken token = authenticate(credentials);
-        return Response.ok(/*token.toString()*/"token").build();   
+        return Response.ok(token.toBase64JsonString()).build();
     }
     
     private AuthToken authenticate(Credentials credentials) {
@@ -47,8 +47,10 @@ public class AuthenticationEndpoint {
     
     private static AuthToken issueToken(User user) {
         SecureRandom random = new SecureRandom();
-        byte bytes[] = new byte[Long.SIZE];
+        byte bytes[] = new byte[Long.BYTES];
         random.nextBytes(bytes);
-        return new AuthToken(ByteUtils.bytesToLong(bytes), user.getId(), 0);
+        AuthToken token = new AuthToken(ByteUtils.bytesToLong(bytes), user.getId(), 0);
+        token.sign();
+        return token;
     }
 }

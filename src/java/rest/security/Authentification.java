@@ -15,11 +15,12 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
  *
  * @author Florian
  */
-public class Authentification {   
+public class Authentification {  
     public static AuthToken validate(MessageContext jaxrsContext) {
         // Get the HTTP Authorization header from the request
         List<String> authorizationHeaderList = jaxrsContext.getHttpHeaders().getRequestHeader(HttpHeaders.AUTHORIZATION);
         
+        AuthToken token = new AuthToken();
         try {
             if(authorizationHeaderList == null) {
                 throw new Exception("Authorization header must be provided");
@@ -31,24 +32,24 @@ public class Authentification {
             }
             
             // Extract the token from the HTTP Authorization header
-            String token = authorizationHeader.substring("Bearer".length()).trim();
+            String base64JsonTokenData = authorizationHeader.substring("Bearer".length()).trim();
+            token = new AuthToken(base64JsonTokenData);
             
             // Validate the token
             validateToken(token);
             
         } catch (Exception e) {
-            /*ResponseBuilder builder = null;
-            builder = Response.status(Response.Status.UNAUTHORIZED);*/
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-            /*requestContext.abortWith(
-                    Response.status(Response.Status.UNAUTHORIZED).build());*/
         }
-        return new AuthToken(0, 0, 0);
+        return token;
     }
     
-    private static void validateToken(String token) throws Exception {
-        // TODO : validation plus "poussee"
-        if(! token.equals("token"))
-            throw new Exception("bad token");
+    private static void validateToken(AuthToken token) throws Exception {
+        if(! token.checkSign()) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid Token").build());
+        }  
+        if(token.isExpired()) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Expired Token").build());
+        }
     }
 }
