@@ -33,8 +33,8 @@ public class AuthToken implements Serializable {
     public AuthToken() {
     }
     
-    public AuthToken(String base64JsonString) {
-        extractDataFromBase64JsonString(base64JsonString);
+    public AuthToken(String jsonString) {
+        extractDataFromJsonString(jsonString);
     }
     
     public AuthToken(long nonce, long userId, long roleId) {
@@ -122,9 +122,9 @@ public class AuthToken implements Serializable {
         return Instant.now().toEpochMilli() > this.expDate;
     }
     
-    private void extractDataFromBase64JsonString(String base64JsonString) {
+    private void extractDataFromJsonString(String jsonString) {
         try {
-            byte bytes[] = Base64.decodeBase64(base64JsonString);
+            byte bytes[] = Base64.decodeBase64(jsonString);
             String json = new String(bytes);//.trim(); -> on peut trim() par sécurité, mais ne devrait pas être nécessaire
             StringBuilder builder;
             int i = 0;
@@ -174,7 +174,7 @@ public class AuthToken implements Serializable {
         }
     }
     
-    public String toBase64JsonString() {
+    public String toJsonString() {
         // !!! attention à ne pas insérer d'espace !!!
         String json = "{"
                 + "\"nonce\":\"" + Long.toString(this.nonce) + "\","

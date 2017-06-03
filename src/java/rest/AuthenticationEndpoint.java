@@ -27,7 +27,7 @@ public class AuthenticationEndpoint {
     @POST
     public Response authenticateUser(Credentials credentials) {       
         AuthToken token = authenticate(credentials);
-        return Response.ok(token.toBase64JsonString()).build();
+        return Response.ok(token.toJsonString()).build();
     }
     
     private AuthToken authenticate(Credentials credentials) {
