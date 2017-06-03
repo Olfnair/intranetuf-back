@@ -41,7 +41,7 @@ public class AuthToken implements Serializable {
         this.nonce = nonce;
         this.userId = userId;
         this.roleId = roleId;
-        this.expDate = Instant.now().toEpochMilli() + 60 * 60 * 1000; // valable 1h
+        this.expDate = Instant.now().getEpochSecond() + 60 * 60; // valable 1h (60 * 60 = 3600s = 1h)
     }
     
     private void setEmpty() {
@@ -102,7 +102,6 @@ public class AuthToken implements Serializable {
             HMAC_sha256.init(secret_key);
             
             sign = Base64.encodeBase64String(HMAC_sha256.doFinal(data.getBytes()));
-            //this.signature = new String(HMAC_sha256.doFinal(data.getBytes()));
         }
         catch (IllegalStateException | InvalidKeyException | NoSuchAlgorithmException e){
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -119,18 +118,16 @@ public class AuthToken implements Serializable {
     }
     
     public boolean isExpired() {
-        return Instant.now().toEpochMilli() > this.expDate;
+        return Instant.now().getEpochSecond() > this.expDate;
     }
     
-    private void extractDataFromJsonString(String jsonString) {
+    private void extractDataFromJsonString(String json) {
         try {
-            byte bytes[] = Base64.decodeBase64(jsonString);
-            String json = new String(bytes);//.trim(); -> on peut trim() par sécurité, mais ne devrait pas être nécessaire
             StringBuilder builder;
             int i = 0;
             
             builder = new StringBuilder(Long.BYTES);
-            final String nonceIdentifier = "\"nonce\":\"";
+            final String nonceIdentifier = "\"n\":\"";
             int nonceIndex = json.indexOf(nonceIdentifier, i) + nonceIdentifier.length();
             for(i = nonceIndex; json.charAt(i) != '\"' && i < json.length() && i > -1; ++i) {
                 builder.append(json.charAt(i));
@@ -138,7 +135,7 @@ public class AuthToken implements Serializable {
             this.nonce = Long.parseLong(builder.toString());
             
             builder = new StringBuilder(Long.BYTES);
-            final String userIdIdentifier = "\"userId\":\"";
+            final String userIdIdentifier = "\"u\":\"";
             int userIdIndex = json.indexOf(userIdIdentifier, i) + userIdIdentifier.length();
             for(i = userIdIndex; json.charAt(i) != '\"' && i < json.length() && i > -1; ++i) {
                 builder.append(json.charAt(i));
@@ -146,7 +143,7 @@ public class AuthToken implements Serializable {
             this.userId = Long.parseLong(builder.toString());
             
             builder = new StringBuilder(Long.BYTES);
-            final String roleIdIdentifier = "\"roleId\":\"";
+            final String roleIdIdentifier = "\"r\":\"";
             int roleIdIndex = json.indexOf(roleIdIdentifier, i) + roleIdIdentifier.length();
             for(i = roleIdIndex; json.charAt(i) != '\"' && i < json.length() && i > -1; ++i) {
                 builder.append(json.charAt(i));
@@ -154,7 +151,7 @@ public class AuthToken implements Serializable {
             this.roleId = Long.parseLong(builder.toString());
             
             builder = new StringBuilder(Long.BYTES);
-            final String expDateIdentifier = "\"expDate\":\"";
+            final String expDateIdentifier = "\"e\":\"";
             int expDateIndex = json.indexOf(expDateIdentifier, i) + expDateIdentifier.length();
             for(i = expDateIndex; json.charAt(i) != '\"' && i < json.length() && i > -1; ++i) {
                 builder.append(json.charAt(i));
@@ -162,7 +159,7 @@ public class AuthToken implements Serializable {
             this.expDate = Long.parseLong(builder.toString());
             
             builder = new StringBuilder(50); // une taille de 50 devrait être suffisante pour la signature
-            final String signatureIdentifier = "\"signature\":\"";
+            final String signatureIdentifier = "\"s\":\"";
             int signatureIndex = json.indexOf(signatureIdentifier, i) + signatureIdentifier.length();
             for(i = signatureIndex; json.charAt(i) != '\"' && i < json.length() && i > -1; ++i) {
                 builder.append(json.charAt(i));
@@ -176,14 +173,13 @@ public class AuthToken implements Serializable {
     
     public String toJsonString() {
         // !!! attention à ne pas insérer d'espace !!!
-        String json = "{"
-                + "\"nonce\":\"" + Long.toString(this.nonce) + "\","
-                + "\"userId\":\"" + Long.toString(this.userId) + "\","
-                + "\"roleId\":\"" + Long.toString(this.roleId) + "\","
-                + "\"expDate\":\"" + Long.toString(this.expDate) + "\","
-                + "\"signature\":\"" + this.signature + "\"" +
-                "}";
-        return Base64.encodeBase64String(json.getBytes());
+        return "{"
+            + "\"n\":\"" + Long.toString(this.nonce) + "\","
+            + "\"u\":\"" + Long.toString(this.userId) + "\","
+            + "\"r\":\"" + Long.toString(this.roleId) + "\","
+            + "\"e\":\"" + Long.toString(this.expDate) + "\","
+            + "\"s\":\"" + this.signature + "\"" +
+        "}";
     }
     
     public static void updateSecret(String secret) {

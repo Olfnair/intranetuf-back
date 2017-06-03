@@ -20,31 +20,25 @@ public class Authentification {
         // Get the HTTP Authorization header from the request
         List<String> authorizationHeaderList = jaxrsContext.getHttpHeaders().getRequestHeader(HttpHeaders.AUTHORIZATION);
         
-        AuthToken token = new AuthToken();
-        try {
-            if(authorizationHeaderList == null) {
-                throw new Exception("Authorization header must be provided");
-            }
-            String authorizationHeader = authorizationHeaderList.get(0);
-            // Check if the HTTP Authorization header is present and formatted correctly
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                throw new Exception("Authorization header must be provided");
-            }
-            
-            // Extract the token from the HTTP Authorization header
-            String base64JsonTokenData = authorizationHeader.substring("Bearer".length()).trim();
-            token = new AuthToken(base64JsonTokenData);
-            
-            // Validate the token
-            validateToken(token);
-            
-        } catch (Exception e) {
-            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        if(authorizationHeaderList == null) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Authorization header must be provided").build());
         }
+        String authorizationHeader = authorizationHeaderList.get(0);
+        // Check if the HTTP Authorization header is present and formatted correctly
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Authorization header must be provided").build());
+        }
+        
+        // Extract the token from the HTTP Authorization header
+        String base64JsonTokenData = authorizationHeader.substring("Bearer".length()).trim();
+        AuthToken token = new AuthToken(base64JsonTokenData);
+        
+        // Validate the token
+        validateToken(token);
         return token;
     }
     
-    private static void validateToken(AuthToken token) throws Exception {
+    private static void validateToken(AuthToken token) {
         if(! token.checkSign()) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid Token").build());
         }  
