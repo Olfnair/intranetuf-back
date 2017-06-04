@@ -30,8 +30,8 @@ public class Authentification {
         }
         
         // Extract the token from the HTTP Authorization header
-        String base64JsonTokenData = authorizationHeader.substring("Bearer".length()).trim();
-        AuthToken token = new AuthToken(base64JsonTokenData);
+        String jsonTokenData = authorizationHeader.substring("Bearer ".length());//.trim(); -> ne devrait pas être nécessaire : attention à ne pas ajouter d'accents...
+        AuthToken token = new AuthToken(jsonTokenData);
         
         // Validate the token
         validateToken(token);
