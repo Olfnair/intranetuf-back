@@ -15,7 +15,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
  *
  * @author Florian
  */
-public class Authentification {  
+public class Authentification { 
     public static AuthToken validate(MessageContext jaxrsContext) {
         // Get the HTTP Authorization header from the request
         List<String> authorizationHeaderList = jaxrsContext.getHttpHeaders().getRequestHeader(HttpHeaders.AUTHORIZATION);
@@ -30,7 +30,7 @@ public class Authentification {
         }
         
         // Extract the token from the HTTP Authorization header
-        String jsonTokenData = authorizationHeader.substring("Bearer ".length());//.trim(); -> ne devrait pas être nécessaire : attention à ne pas ajouter d'accents...
+        String jsonTokenData = authorizationHeader.substring("Bearer ".length());//.trim(); -> ne devrait pas être nécessaire : attention à ne pas ajouter d'espaces...
         AuthToken token = new AuthToken(jsonTokenData);
         
         // Validate the token
@@ -42,7 +42,7 @@ public class Authentification {
         if(! token.checkSign()) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid Token").build());
         }  
-        if(token.isExpired()) {
+        else if(token.isExpired()) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Expired Token").build());
         }
     }
