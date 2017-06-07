@@ -6,6 +6,7 @@
 package rest;
 
 import entities.File;
+import entities.User;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -59,6 +60,16 @@ public class FileFacadeREST extends AbstractFacade<File> {
     @Path("{id}")
     public Response find(@PathParam("id") Long id) {
         return super.find(id);
+    }
+    
+    @GET
+    @Path("/project/{id}")
+    public Response findByProject(@PathParam("id") Long id) {
+        return super.buildResponseList(() -> {
+            javax.persistence.Query authQuery = em.createNamedQuery("File.byProject");
+            authQuery.setParameter("projectId", id);
+            return authQuery.getResultList();
+        });
     }
 
     @GET
