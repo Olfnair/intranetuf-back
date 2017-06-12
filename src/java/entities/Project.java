@@ -8,10 +8,12 @@ package entities;
 import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -24,15 +26,16 @@ public class Project implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    private String filepath;
+    @NotNull
     private String name;
-    private boolean active;
     
-    @OneToMany(mappedBy="project")
-    private Collection<File> files ;
+    private boolean active = true;
+    
+    @OneToMany(mappedBy="project", fetch=FetchType.LAZY)
+    private Collection<File> files;
 
     public Long getId() {
         return id;
@@ -40,14 +43,6 @@ public class Project implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getFilepath() {
-        return filepath;
-    }
-
-    public void setFilepath(String filepath) {
-        this.filepath = filepath;
     }
 
     public String getName() {

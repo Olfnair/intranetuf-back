@@ -7,15 +7,17 @@ package entities;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Date;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.Temporal;
+import javax.persistence.OneToOne;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -29,25 +31,30 @@ public class File implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @NotNull
     private String filename;
     
-    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
-    private java.util.Date date_upload;
+    private long version = 1;
     
-    private long version;
+    private boolean active = true;
     
-    private boolean deleted;
+    private int status = 0;
     
-    @ManyToOne
+    /*@Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private java.util.Date date_upload;*/
+    @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
+    private Date date_upload;
+    
+    @ManyToOne(fetch=FetchType.LAZY)
     private Project project;
     
-    @OneToMany(mappedBy="file")
+    @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
     private Collection<Log> logs;
     
-    @OneToMany(mappedBy="file")
+    @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
     private Collection<FileAction> fileActions;
 
     public Long getId() {
@@ -66,14 +73,6 @@ public class File implements Serializable {
         this.filename = filename;
     }
 
-    public Date getDate_upload() {
-        return date_upload;
-    }
-
-    public void setDate_upload(Date date_upload) {
-        this.date_upload = date_upload;
-    }
-
     public long getVersion() {
         return version;
     }
@@ -82,12 +81,52 @@ public class File implements Serializable {
         this.version = version;
     }
 
-    public boolean isDeleted() {
-        return deleted;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+    
+    public Date getDate_upload() {
+        return date_upload;
+    }
+
+    public void setDate_upload(Date date_upload) {
+        this.date_upload = date_upload;
+    }
+
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
+    public Collection<Log> getLogs() {
+        return logs;
+    }
+
+    public void setLogs(Collection<Log> logs) {
+        this.logs = logs;
+    }
+
+    public Collection<FileAction> getFileActions() {
+        return fileActions;
+    }
+
+    public void setFileActions(Collection<FileAction> fileActions) {
+        this.fileActions = fileActions;
     }
 
     @Override

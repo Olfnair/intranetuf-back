@@ -29,15 +29,15 @@ public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     @NotNull
-    @Pattern(regexp = "[a-zA-Z]+", message = "{invalid.name}")
+    //@Pattern(regexp = "[a-zA-Z]+", message = "{invalid.name}")
     private String name;
     
     @NotNull
-    @Pattern(regexp = "[a-zA-Z]+", message = "{invalid.firstname}")
+    //@Pattern(regexp = "[a-zA-Z]+", message = "{invalid.firstname}")
     private String firstname;
     
     @NotNull
@@ -56,7 +56,7 @@ public class User implements Serializable {
     // hash(login + pwd + SALT)
     private String pwd_hash;
         
-    private boolean active;
+    private boolean active = true;
     
     @OneToMany(mappedBy = "user")
     private Collection<Log> logs;

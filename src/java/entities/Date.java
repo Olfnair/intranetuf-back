@@ -5,6 +5,7 @@
  */
 package entities;
 
+import entities.exception.DateException;
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,14 +21,14 @@ public class Date implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private int year;
-    private int month;
-    private int day;
-    private int hour;
-    private int min;
-    private int sec;
+    private int year = 0;
+    private int month = 0;
+    private int day = 0;
+    private int hour = 0;
+    private int min = 0;
+    private int sec = 0;
     
     public Date() {
     }
@@ -115,13 +116,17 @@ public class Date implements Serializable {
         if(this.month > 12 || this.day > 31 || this.hour > 23 || this.min > 59 || this.sec > 59) {
             return false;
         }
-        else if(month == 2) {
-            if(bissex() && day > 29)
+        else if(this.month == 2) {
+            if(bissex() && this.day > 29)
                 return false;
-            else if(day > 28)
+            else if(this.day > 28)
                 return false;
         }
         return true;
+    }
+    
+    public boolean isValid() {
+        return this.valid();
     }
     
     /*

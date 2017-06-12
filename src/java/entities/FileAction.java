@@ -6,13 +6,14 @@
 package entities;
 
 import java.io.Serializable;
-import java.util.Date;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.Temporal;
+import javax.persistence.OneToOne;
 
 /**
  *
@@ -23,18 +24,22 @@ public class FileAction implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
-    private java.util.Date date_init;
+    /*@Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private java.util.Date date_init;*/
+    @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
+    private Date date_init;
     
-    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
-    private java.util.Date date_action;
+    /*@Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private java.util.Date date_action;*/
+    @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
+    private Date date_action;
     
-    private String coment;
+    private String comment;
     
-    private long order_num;
+    private Long order_num = 0L;
     
     @ManyToOne
     private File file;
@@ -66,19 +71,19 @@ public class FileAction implements Serializable {
         this.date_action = date_action;
     }
 
-    public String getComent() {
-        return coment;
+    public String getComment() {
+        return comment;
     }
 
-    public void setComent(String coment) {
-        this.coment = coment;
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
-    public long getOrder_num() {
+    public Long getOrder_num() {
         return order_num;
     }
 
-    public void setOrder_num(long order_num) {
+    public void setOrder_num(Long order_num) {
         this.order_num = order_num;
     }
     

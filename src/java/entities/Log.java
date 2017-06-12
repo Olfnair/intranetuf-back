@@ -6,13 +6,15 @@
 package entities;
 
 import java.io.Serializable;
-import java.util.Date;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.Temporal;
+import javax.persistence.OneToOne;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -25,19 +27,22 @@ public class Log implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     private String type;
     private String message;
     
-    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
-    private java.util.Date logdate;
+    /*@Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private java.util.Date logdate;*/
+    @NotNull
+    @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
+    private Date logdate;
     
-    @ManyToOne
+    @ManyToOne(fetch=FetchType.EAGER)
     private User user;
     
-    @ManyToOne
+    @ManyToOne(fetch=FetchType.EAGER)
     private File file;
 
     public Long getId() {
