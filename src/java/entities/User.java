@@ -7,12 +7,14 @@ package entities;
 
 import java.io.Serializable;
 import java.util.Collection;
+import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Column;
+import javax.persistence.FetchType;
 import javax.persistence.NamedQuery;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -40,29 +42,46 @@ public class User implements Serializable {
     //@Pattern(regexp = "[a-zA-Z]+", message = "{invalid.firstname}")
     private String firstname;
     
+    @Basic(fetch=FetchType.LAZY)
     @NotNull
-    @Pattern(regexp = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\."
+    
+    /*@Pattern(regexp = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\."
         +"[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
         +"(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?",
-             message = "{invalid.email}")
+             message = "{invalid.email}")*/
+    // http://emailregex.com/
+    @Pattern(regexp = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/="
+            + "?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-"
+            + "\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")"
+            + "@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]"
+            + "*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)"
+            + "{3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:"
+            + "(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|"
+            + "\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])",
+            message = "{invalid.email}")
     private String email;
     
+    @Basic(fetch=FetchType.LAZY)
     @Column(unique = true)
     @NotNull
     @Pattern(regexp = "[a-zA-Z0-9]+", message = "{invalid.login}")
     private String login;
         
+    @Basic(fetch=FetchType.LAZY)
     @NotNull
-    // hash(login + pwd + SALT)
-    private String pwd_hash;
+    // hash : utiliser bcrypt
+    private String password;
         
     private boolean active = true;
     
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)
     private Collection<Log> logs;
     
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)
     private Collection<FileAction> fileActions;
+    
+    @OneToMany(mappedBy="author", fetch=FetchType.LAZY)
+    private Collection<File> files;
 
     public Long getId() {
         return id;
@@ -104,12 +123,12 @@ public class User implements Serializable {
         this.login = login;
     }
 
-    public String getPwd_hash() {
-        return pwd_hash;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPwd_hash(String pwd_hash) {
-        this.pwd_hash = pwd_hash;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public boolean isActive() {
@@ -118,6 +137,30 @@ public class User implements Serializable {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public Collection<Log> getLogs() {
+        return logs;
+    }
+
+    public void setLogs(Collection<Log> logs) {
+        this.logs = logs;
+    }
+
+    public Collection<FileAction> getFileActions() {
+        return fileActions;
+    }
+
+    public void setFileActions(Collection<FileAction> fileActions) {
+        this.fileActions = fileActions;
+    }
+
+    public Collection<File> getFiles() {
+        return files;
+    }
+
+    public void setFiles(Collection<File> files) {
+        this.files = files;
     }
     
     @Override

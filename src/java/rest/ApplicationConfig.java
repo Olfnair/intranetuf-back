@@ -14,6 +14,7 @@ import javax.ws.rs.core.Application;
  */
 @javax.ws.rs.ApplicationPath("rest")
 public class ApplicationConfig extends Application {
+    public final static String PROJECTS_LOCATION = "C:\\IUF_data\\";
     
     @Override
     public Set<Class<?>> getClasses() {
@@ -31,6 +32,7 @@ public class ApplicationConfig extends Application {
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(rest.AuthenticationEndpoint.class);
         resources.add(rest.ControlFacadeREST.class);
+        resources.add(rest.DateFacadeREST.class);
         resources.add(rest.DownloadFacade.class);
         resources.add(rest.FileFacadeREST.class);
         resources.add(rest.LogFacadeREST.class);
@@ -39,6 +41,7 @@ public class ApplicationConfig extends Application {
         resources.add(rest.UploadFacade.class);
         resources.add(rest.UserFacadeREST.class);
         resources.add(rest.ValidationFacadeREST.class);
+        resources.add(rest.VersionFacadeREST.class);
     }
     
 }
