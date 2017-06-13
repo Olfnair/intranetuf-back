@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
-@NamedQuery(name="User.Auth", query="Select u From User u WHERE u.pwd_hash = :pwd_hash AND u.login = :login AND u.active = true")
+@NamedQuery(name="User.Auth", query="Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true")
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
