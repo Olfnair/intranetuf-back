@@ -34,8 +34,8 @@ public class Version implements Serializable {
     @NotNull
     private String filename;
     
-    @Min(1)
-    private Long num;
+    @Min(1L)
+    private Long num = 1L;
     
     private int status = 0;
     
