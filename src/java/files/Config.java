@@ -5,9 +5,6 @@
  */
 package files;
 
-import entities.Project;
-import entities.Version;
-
 /**
  *
  * @author Florian
@@ -19,15 +16,14 @@ public class Config {
         return name.replaceAll("\\s", "_"); // remplace tous les caractères d'espacement par '_'
     }
     
-    public static String getProjectFolder(Project project) {
-        return nameFormat(project.getName()) + '_' + project.getId().toString();
-    }
-    
-    public static String getFileName(Version version) {
-        String name = nameFormat(version.getFilename());
-        int extIndex = name.lastIndexOf('.', 0);
+    public static String combineNameWithId(String name, Long id) {
+        name = nameFormat(name);
+        int extIndex = name.lastIndexOf('.');
+        if(extIndex == -1) {
+            extIndex = name.length();
+        }
         String file = name.substring(0, extIndex);
         String ext = name.substring(extIndex);
-        return file + '_' + version.getId().toString() + ext;
+        return file + '_' + id.toString() + ext;
     }
 }

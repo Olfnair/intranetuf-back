@@ -5,12 +5,12 @@
 */
 package rest;
 
+import entities.Date;
 import entities.File;
 import entities.Project;
+import entities.Version;
 import files.Config;
 import files.Upload;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -50,19 +50,22 @@ public class FileFacadeREST extends AbstractFacade<File> {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response create(
             @Multipart("entity") File entity,
-            @Multipart("file") InputStream uploadedInputStream) {
-        // TODO : check extension
-        // check file_size et décider d'un max
+            @Multipart("file") InputStream uploadedInputStream,
+            @Multipart("file") Attachment attachment) {
+        // TODO : auth + vérifier droits
         // ajouter auteur
-        // ajouter date upload
         try {
+            Version version = entity.getVersion();
+            version.setFile(entity);
+            version.setDate_upload(Date.now());
+            em.persist(entity);
             Project project = em.find(Project.class, entity.getProject().getId());
-            new Upload(uploadedInputStream, Config.getProjectFolder(project), Config.getFileName(entity.getVersion())).run();
+            new Upload(uploadedInputStream, Config.combineNameWithId(project.getName(), project.getId()), Config.combineNameWithId(version.getFilename(), version.getId())).run();
+            return Response.status(201).build();
         }
         catch(Exception e) {
             throw new WebApplicationException(Response.status(500).build());
         }
-        return super.insert(entity);
     }
     
     @PUT

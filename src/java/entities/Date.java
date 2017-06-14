@@ -26,28 +26,33 @@ public class Date implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private int year = 1970;
-    private int month = 1;
-    private int day = 1;
+    private int year = 0;
+    private int month = 0;
+    private int day = 0;
     private int hour = 0;
     private int min = 0;
     private int sec = 0;
     
-    public Date() {
+    public static Date now() {
         Calendar now = Calendar.getInstance();
-        this.year = now.get(Calendar.YEAR);
-        this.month = now.get(Calendar.MONTH) + 1;
-        this.day = now.get(Calendar.DAY_OF_MONTH);
-        this.hour = now.get(Calendar.HOUR_OF_DAY);
-        this.min = now.get(Calendar.MINUTE);
-        this.sec = now.get(Calendar.SECOND);   
+        Date date = new Date();
+        date.year = now.get(Calendar.YEAR);
+        date.month = now.get(Calendar.MONTH) + 1;
+        date.day = now.get(Calendar.DAY_OF_MONTH);
+        date.hour = now.get(Calendar.HOUR_OF_DAY);
+        date.min = now.get(Calendar.MINUTE);
+        date.sec = now.get(Calendar.SECOND);
+        return date;
+    }
+    
+    public Date() {
     }
     
     public Date(int year, int month, int day) throws DateException {
         this.year = year;
         this.month = month;
         this.day = day;
-        if(! valid()) throw new DateException();
+        if(! validDate()) throw new DateException();
     }
     
     public Date(int year, int month, int day, int hour, int min, int sec) throws DateException {
@@ -74,7 +79,9 @@ public class Date implements Serializable {
     
     public void setYear(int year) throws DateException {
         this.year = year;
-        if(! valid()) throw new DateException();
+        if(this.month == 0) this.month = 1;
+        if(this.day == 0) this.day = 1;
+        if(! validDate()) throw new DateException();
     }
     
     public int getMonth() {
@@ -83,7 +90,8 @@ public class Date implements Serializable {
     
     public void setMonth(int month) throws DateException {
         this.month = month;
-        if(! valid()) throw new DateException();
+        if(this.day == 0) this.day = 1;
+        if(! validDate()) throw new DateException();
     }
     
     public int getDay() {
@@ -92,7 +100,8 @@ public class Date implements Serializable {
     
     public void setDay(int day) throws DateException {
         this.day = day;
-        if(! valid()) throw new DateException();
+        if(this.month == 0) this.month = 1;
+        if(! validDate()) throw new DateException();
     }
     
     public int getHour() {
@@ -101,7 +110,7 @@ public class Date implements Serializable {
     
     public void setHour(int hour) throws DateException {
         this.hour = hour;
-        if(! valid()) throw new DateException();
+        if(! validHour()) throw new DateException();
     }
     
     public int getMin() {
@@ -110,7 +119,7 @@ public class Date implements Serializable {
     
     public void setMin(int min) throws DateException {
         this.min = min;
-        if(! valid()) throw new DateException();
+        if(! validHour()) throw new DateException();
     }
     
     public int getSec() {
@@ -119,18 +128,38 @@ public class Date implements Serializable {
     
     public void setSec(int sec) throws DateException {
         this.sec = sec;
-        if(! valid()) throw new DateException();
+        if(! validHour()) throw new DateException();
     }
     
-    private boolean valid() {
-        if (this.month > 12 || this.day > 31 || this.hour > 23 || this.min > 59 || this.sec > 59
-         || this.month <  1 || this.day <  1 || this.hour <  0 || this.min <  0 || this.sec <  0) {
+    private boolean validDate() {
+        if(this.month == 0 || this.day == 0) {
+            return false;
+        }
+        if (this.month > 12 || this.day > 31
+         || this.month <  1 || this.day <  1) {
             return false;
         }
         if (this.month == 2) {
             return this.isBissex() ? this.day <= 29 : this.day <= 28;
         }
         return this.day < 31 || ((this.month - 1) % 7) % 2 == 0;
+    }
+    
+    private boolean validHour() {
+        return this.hour < 24 && this.min < 60 && this.sec < 60
+            && this.hour >= 0 && this.min >= 0 && this.sec >= 0;
+    }
+    
+    private boolean valid() {
+        return this.validDate() && this.validHour();
+    }
+    
+    public boolean isValidDate() {
+        return this.validDate();
+    }
+    
+    public boolean isValidHour() {
+        return this.validHour();
     }
     
     public boolean isValid() {

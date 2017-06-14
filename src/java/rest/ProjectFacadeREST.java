@@ -45,7 +45,7 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     @POST
     public Response create(Project entity) {
         Response res = super.insert(entity);
-        new java.io.File(Config.PROJECTS_LOCATION + '/' + Config.getProjectFolder(entity)).mkdirs();
+        new java.io.File(Config.PROJECTS_LOCATION + '/' + Config.combineNameWithId(entity.getName(), entity.getId())).mkdirs();
         return res;
     }
     
