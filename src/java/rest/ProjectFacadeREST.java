@@ -6,7 +6,7 @@
 package rest;
 
 import entities.Project;
-import java.io.File;
+import files.Config;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -45,11 +45,7 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     @POST
     public Response create(Project entity) {
         Response res = super.insert(entity);
-        new java.io.File(
-            ApplicationConfig.PROJECTS_LOCATION +
-            entity.getName().replaceAll("\\s", "_") + // remplace tous les caractères d'espacement par '_'
-            '_' + entity.getId().toString()
-        ).mkdirs();
+        new java.io.File(Config.PROJECTS_LOCATION + '/' + Config.getProjectFolder(entity)).mkdirs();
         return res;
     }
     

@@ -63,6 +63,7 @@ public abstract class AbstractFacade<T> {
             q.query(entity);
         }
         catch(Exception e) {
+            e.printStackTrace();
             return this.buildResponse(400);
         }
         return this.buildResponse(200, entity);

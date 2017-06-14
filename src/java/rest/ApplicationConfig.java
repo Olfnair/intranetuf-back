@@ -14,8 +14,6 @@ import javax.ws.rs.core.Application;
  */
 @javax.ws.rs.ApplicationPath("rest")
 public class ApplicationConfig extends Application {
-    public final static String PROJECTS_LOCATION = "C:\\IUF_data\\";
-    
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> resources = new java.util.HashSet<>();
