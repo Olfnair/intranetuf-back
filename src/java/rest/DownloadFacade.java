@@ -9,9 +9,12 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import rest.security.AuthToken;
+import rest.security.Authentification;
 
 /**
  *
@@ -23,7 +26,11 @@ public class DownloadFacade {
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response getFile(@PathParam("id") Long id) {
+    public Response getFile(@QueryParam("token") String jsonToken, @PathParam("id") Long id) {
+        
+        // check accès
+        AuthToken token = Authentification.validate(jsonToken);
+        
         java.io.File file = new java.io.File(FILE_PATH);
         ResponseBuilder response = Response.ok((Object) file);
         AbstractFacade.HEADERS.keySet().forEach((key) -> {

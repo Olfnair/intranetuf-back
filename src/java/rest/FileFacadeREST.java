@@ -8,6 +8,7 @@ package rest;
 import entities.Date;
 import entities.File;
 import entities.Project;
+import entities.User;
 import entities.Version;
 import files.Config;
 import files.Upload;
@@ -24,10 +25,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
+import org.apache.cxf.jaxrs.ext.MessageContext;
+import rest.security.AuthToken;
+import rest.security.Authentification;
 
 /**
  *
@@ -49,15 +54,20 @@ public class FileFacadeREST extends AbstractFacade<File> {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response create(
+            @Context MessageContext jaxrsContext,
             @Multipart("entity") File entity,
             @Multipart("file") InputStream uploadedInputStream,
             @Multipart("file") Attachment attachment) {
-        // TODO : auth + vérifier droits
-        // ajouter auteur
+        // TODO : vérifier droits
+        // TODO : check extension
+        // TODO : check file_size et décider d'un max
+        AuthToken token = Authentification.validate(jaxrsContext);
         try {
+            User author = em.find(User.class, token.getUserId());
             Version version = entity.getVersion();
             version.setFile(entity);
             version.setDate_upload(Date.now());
+            entity.setAuthor(author);
             em.persist(entity);
             Project project = em.find(Project.class, entity.getProject().getId());
             new Upload(uploadedInputStream, Config.combineNameWithId(project.getName(), project.getId()), Config.combineNameWithId(version.getFilename(), version.getId())).run();

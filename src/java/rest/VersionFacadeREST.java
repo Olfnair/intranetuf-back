@@ -5,6 +5,11 @@
  */
 package rest;
 
+import entities.Date;
+import entities.Project;
+import files.Config;
+import files.Upload;
+import java.io.InputStream;
 import entities.File;
 import entities.Version;
 import javax.ejb.Stateless;
@@ -16,9 +21,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import org.apache.cxf.jaxrs.ext.MessageContext;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
+import org.apache.cxf.jaxrs.ext.multipart.Multipart;
+import rest.security.AuthToken;
+import rest.security.Authentification;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -40,18 +51,29 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
     }
 
     @POST
-    @Path("{fileId}")
-    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response create(@PathParam("fileId") Long fileId, Version entity) {
-        File file = em.find(File.class, fileId);
-        if(file == null) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response create(
+            @Context MessageContext jaxrsContext,
+            @Multipart("entity") Version entity,
+            @Multipart("file") InputStream uploadedInputStream,
+            @Multipart("file") Attachment attachment) {       
+        AuthToken token = Authentification.validate(jaxrsContext);
+        // TODO : vérifier que le token est bien celui de l'auteur ou de l'admin
+        try {
+            File file = em.find(File.class, entity.getFile().getId());  
+            entity.setFile(file);
+            entity.setNum(file.getVersion().getNum() + 1);
+            entity.setDate_upload(Date.now());
+            em.persist(entity);
+            file.setVersion(entity);
+            em.merge(file);
+            Project project = em.find(Project.class, file.getProject().getId());
+            new Upload(uploadedInputStream, Config.combineNameWithId(project.getName(), project.getId()), Config.combineNameWithId(entity.getFilename(), entity.getId())).run();
+            return Response.status(201).build();
         }
-        entity.setFile(file);
-        Response res = super.insert(entity);
-        file.setVersion(entity);
-        em.merge(file);
-        return res;
+        catch(Exception e) {
+            throw new WebApplicationException(Response.status(500).build());
+        }
     }
 
     @PUT

@@ -16,11 +16,23 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
  * @author Florian
  */
 public class Authentification { 
+    public static AuthToken validate(String jsonTokenData) {
+        if(jsonTokenData == null) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Token not found").build());
+        }
+        
+        AuthToken token = new AuthToken(jsonTokenData);
+        
+        // Validate the token
+        validateToken(token);
+        return token;
+    }
+    
     public static AuthToken validate(MessageContext jaxrsContext) {
         // Get the HTTP Authorization header from the request
         List<String> authorizationHeaderList = jaxrsContext.getHttpHeaders().getRequestHeader(HttpHeaders.AUTHORIZATION);
         
-        if(authorizationHeaderList == null) {
+        if(authorizationHeaderList == null || authorizationHeaderList.size() < 1) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Authorization header must be provided").build());
         }
         String authorizationHeader = authorizationHeaderList.get(0);
@@ -31,11 +43,8 @@ public class Authentification {
         
         // Extract the token from the HTTP Authorization header
         String jsonTokenData = authorizationHeader.substring("Bearer ".length());//.trim(); -> ne devrait pas être nécessaire : attention à ne pas ajouter d'espaces...
-        AuthToken token = new AuthToken(jsonTokenData);
         
-        // Validate the token
-        validateToken(token);
-        return token;
+        return validate(jsonTokenData);
     }
     
     private static void validateToken(AuthToken token) {

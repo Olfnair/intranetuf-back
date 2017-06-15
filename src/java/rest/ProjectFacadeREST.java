@@ -69,7 +69,7 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     
     @GET
     public Response findAll(@Context MessageContext jaxrsContext) {
-        //AuthToken token = Authentification.validate(jaxrsContext);
+        AuthToken token = Authentification.validate(jaxrsContext);
         return super.findAll();
     }
     
