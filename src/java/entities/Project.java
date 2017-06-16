@@ -6,7 +6,8 @@
 package entities;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -35,7 +36,7 @@ public class Project implements Serializable {
     private boolean active = true;
     
     @OneToMany(mappedBy="project", fetch=FetchType.LAZY)
-    private Collection<File> files;
+    private List<File> files = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -61,11 +62,11 @@ public class Project implements Serializable {
         this.active = active;
     }
 
-    public Collection<File> getFiles() {
+    public List<File> getFiles() {
         return files;
     }
 
-    public void setFiles(Collection<File> files) {
+    public void setFiles(List<File> files) {
         this.files = files;
     }
     

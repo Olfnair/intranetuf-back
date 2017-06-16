@@ -6,7 +6,8 @@
 package entities;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -75,13 +76,13 @@ public class User implements Serializable {
     private boolean active = true;
     
     @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)
-    private Collection<Log> logs;
+    private List<Log> logs = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)
-    private Collection<FileAction> fileActions;
+    private List<FileAction> fileActions = new ArrayList<>();
     
     @OneToMany(mappedBy="author", fetch=FetchType.LAZY)
-    private Collection<File> files;
+    private List<File> files = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -139,27 +140,27 @@ public class User implements Serializable {
         this.active = active;
     }
 
-    public Collection<Log> getLogs() {
+    public List<Log> getLogs() {
         return logs;
     }
 
-    public void setLogs(Collection<Log> logs) {
+    public void setLogs(List<Log> logs) {
         this.logs = logs;
     }
 
-    public Collection<FileAction> getFileActions() {
+    public List<FileAction> getFileActions() {
         return fileActions;
     }
 
-    public void setFileActions(Collection<FileAction> fileActions) {
+    public void setFileActions(List<FileAction> fileActions) {
         this.fileActions = fileActions;
     }
 
-    public Collection<File> getFiles() {
+    public List<File> getFiles() {
         return files;
     }
 
-    public void setFiles(Collection<File> files) {
+    public void setFiles(List<File> files) {
         this.files = files;
     }
     

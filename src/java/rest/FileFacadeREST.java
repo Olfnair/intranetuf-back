@@ -100,9 +100,9 @@ public class FileFacadeREST extends AbstractFacade<File> {
     @Path("/project/{id}")
     public Response findByProject(@PathParam("id") Long id) {
         return super.buildResponseList(() -> {
-            javax.persistence.Query authQuery = em.createNamedQuery("File.byProject");
-            authQuery.setParameter("projectId", id);
-            return authQuery.getResultList();
+            javax.persistence.Query filesQuery = em.createNamedQuery("File.byProject");
+            filesQuery.setParameter("projectId", id);
+            return filesQuery.getResultList();
         });
     }
     

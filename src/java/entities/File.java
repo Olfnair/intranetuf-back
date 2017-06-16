@@ -7,7 +7,7 @@ package entities;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -15,6 +15,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -26,7 +27,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
-@NamedQuery(name="File.byProject", query="SELECT f FROM File f WHERE f.project.id = :projectId")
+@NamedQueries({
+    @NamedQuery(name="File.byProject", query="SELECT f FROM File f WHERE f.active = true AND f.project.id = :projectId"),
+    @NamedQuery(name="File.byVersion", query="SELECT f FROM File f JOIN FETCH f.project WHERE f.version.id = :versionId")
+})
 public class File implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -46,13 +50,13 @@ public class File implements Serializable {
     private Project project;
     
     @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
-    private Collection<Version> versions;
+    private List<Version> versions = new ArrayList<>();
     
     @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
-    private Collection<Log> logs;
+    private List<Log> logs = new ArrayList<>();
     
     @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
-    private Collection<FileAction> fileActions;
+    private List<FileAction> fileActions = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -94,27 +98,27 @@ public class File implements Serializable {
         this.project = project;
     }
 
-    public Collection<Version> getVersions() {
+    public List<Version> getVersions() {
         return versions;
     }
 
-    public void setVersions(Collection<Version> versions) {
+    public void setVersions(List<Version> versions) {
         this.versions = versions;
     }
     
-    public Collection<Log> getLogs() {
+    public List<Log> getLogs() {
         return logs;
     }
 
-    public void setLogs(Collection<Log> logs) {
+    public void setLogs(List<Log> logs) {
         this.logs = logs;
     }
 
-    public Collection<FileAction> getFileActions() {
+    public List<FileAction> getFileActions() {
         return fileActions;
     }
 
-    public void setFileActions(Collection<FileAction> fileActions) {
+    public void setFileActions(List<FileAction> fileActions) {
         this.fileActions = fileActions;
     }
 
