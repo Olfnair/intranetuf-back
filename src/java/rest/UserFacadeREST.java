@@ -6,7 +6,10 @@
 package rest;
 
 import entities.User;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
+import javax.mail.MessagingException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.ws.rs.Consumes;
@@ -19,6 +22,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import mail.MailSender;
 
 /**
  *
@@ -63,6 +67,11 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @GET
     @Override
     public Response findAll() {
+        /*try {
+            new MailSender("chalet.florian@gmail.com", "test", "le message de test").send();
+        } catch (MessagingException ex) {
+            Logger.getLogger(UserFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
+        }*/
         return super.buildResponseList(() -> {
             javax.persistence.Query usersQuery = em.createNamedQuery("User.ListAllComplete");
             return usersQuery.getResultList();

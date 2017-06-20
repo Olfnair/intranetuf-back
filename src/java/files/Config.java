@@ -10,7 +10,8 @@ package files;
  * @author Florian
  */
 public class Config {
-    public final static String PROJECTS_LOCATION = "C:/IUF_data";
+    public final static String PROJECTS_LOCATION = "C:/IUF_data/projects";
+    public final static String PROPERTIES_LOCATION = "C:/IUF_data/config";
     
     private static String nameFormat(String name) {
         return name.replaceAll("\\s", "_"); // remplace tous les caractères d'espacement par '_'
