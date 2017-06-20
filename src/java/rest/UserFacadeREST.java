@@ -63,7 +63,10 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @GET
     @Override
     public Response findAll() {
-        return super.findAll();
+        return super.buildResponseList(() -> {
+            javax.persistence.Query usersQuery = em.createNamedQuery("User.ListAllComplete");
+            return usersQuery.getResultList();
+        });
     }
 
     @GET

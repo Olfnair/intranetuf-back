@@ -16,6 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Column;
 import javax.persistence.FetchType;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -27,7 +28,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
-@NamedQuery(name="User.Auth", query="Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true")
+@NamedQueries({
+    @NamedQuery(name="User.Auth", query="Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true"),
+    @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login")
+})
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
