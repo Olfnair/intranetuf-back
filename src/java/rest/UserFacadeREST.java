@@ -6,10 +6,11 @@
 package rest;
 
 import entities.User;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
-import javax.mail.MessagingException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.ws.rs.Consumes;
@@ -23,6 +24,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import mail.MailSender;
+import mail.SendMailThread;
+import rest.security.AuthToken;
 
 /**
  *
@@ -43,7 +46,19 @@ public class UserFacadeREST extends AbstractFacade<User> {
 
     @POST
     public Response create(User entity) {
-        return super.insert(entity);
+        // TODO : check que c'est bien l'admin qui fait la requête
+        Response res = super.insert(entity);
+        // on signe le token avec la clé pour les activations. Important pour éviter de générer un token qui pourrait aussi servir pour tout le reste
+        AuthToken token = AuthenticationEndpoint.issueToken(entity, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
+        String url = "";
+        String text = "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : ";
+        try {
+            url = "http://localhost:4200/activate/?token=" + URLEncoder.encode(token.toJsonString(), "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(UserFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        new SendMailThread(new MailSender(entity.getEmail(), "Activer votre compte", text + url)).start();
+        return res;
     }
 
     @PUT
@@ -67,11 +82,8 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @GET
     @Override
     public Response findAll() {
-        /*try {
-            new MailSender("chalet.florian@gmail.com", "test", "le message de test").send();
-        } catch (MessagingException ex) {
-            Logger.getLogger(UserFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
-        }*/
+        //new SendMailThread(new MailSender("chalet.florian@gmail.com", "test", "le message de test")).start();
+        
         return super.buildResponseList(() -> {
             javax.persistence.Query usersQuery = em.createNamedQuery("User.ListAllComplete");
             return usersQuery.getResultList();

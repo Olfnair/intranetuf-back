@@ -28,7 +28,7 @@ public class MailSender {
         ConfigFile configFile = new ConfigFile(Config.PROPERTIES_LOCATION + '/' + "mail.properties");
         try {
             MailSender.configUser(configFile.read("username"), configFile.read("password"));
-            MailSender.configServer(configFile.read("host"), configFile.read("port"));
+            MailSender.configServer(configFile);
         } catch (IOException ex) {
             Logger.getLogger(MailSender.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -39,11 +39,20 @@ public class MailSender {
         MailSender.password = password;
     }
     
-    public static void configServer(String host, String port) {
-        MailSender.PROPS.put("mail.smtp.auth", "true");
-        MailSender.PROPS.put("mail.smtp.starttls.enable", "true");
-        MailSender.PROPS.put("mail.smtp.host", host); // smtp.gmail.com
-        MailSender.PROPS.put("mail.smtp.port", port); // 587
+    public static void configServer(ConfigFile config) throws IOException {
+        MailSender.PROPS.put("mail.transport.protocol", "smtp");
+        MailSender.PROPS.put("mail.smtp.auth", config.read("auth"));
+        if(config.read("starttls").equals("true")) {
+            MailSender.PROPS.put("mail.smtp.starttls.enable", "true");
+        }
+        else if(config.read("ssl").equals("true")) {
+            MailSender.PROPS.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory"); 
+            MailSender.PROPS.put("mail.smtp.socketFactory.fallback", "false");
+        }
+        MailSender.PROPS.put("mail.smtp.host", config.read("host")); // smtp.gmail.com
+        MailSender.PROPS.put("mail.smtp.port", config.read("port")); // 587
+        MailSender.PROPS.put("mail.smtp.user", config.read("user"));
+        MailSender.PROPS.put("mail.smtp.password", config.read("password"));
     }
     
     public MailSender(String recipient, String subject, String text) {

@@ -42,15 +42,15 @@ public class AuthenticationEndpoint {
         }
         
         // génération du token en fonction du l'utilisateur
-        return issueToken(user.get(0));
+        return issueToken(user.get(0), 60 * 60, AuthToken.AUTH_KEY); // token valable pendent 1h = 60 * 60 = 3600 sec
     }
     
-    private static AuthToken issueToken(User user) {
+    public static AuthToken issueToken(User user, long secValidity, int key) {
         SecureRandom random = new SecureRandom();
         byte bytes[] = new byte[Long.BYTES];
         random.nextBytes(bytes);
-        AuthToken token = new AuthToken(ByteUtils.bytesToLong(bytes), user.getId(), 0);
-        token.sign();
+        AuthToken token = new AuthToken(ByteUtils.bytesToLong(bytes), user.getId(), 0, secValidity);
+        token.sign(key);
         return token;
     }
 }

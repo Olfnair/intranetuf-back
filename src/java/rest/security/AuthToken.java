@@ -5,10 +5,15 @@
 */
 package rest.security;
 
+import files.Config;
+import files.ConfigFile;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -22,7 +27,30 @@ import org.apache.commons.codec.binary.Base64;
  */
 @XmlRootElement
 public class AuthToken implements Serializable {
-    private static String SECRET = "la_clef_ultra_secrete"; // TODO : Récupérer depuis un fichier de config
+    public static final int AUTH_KEY = 0;
+    public static final int ACTIVATION_KEY = 1;
+    private static final String AUTH_SECRET;
+    private static final String ACTIVATION_SECRET;
+    
+    static {
+        ConfigFile config = new ConfigFile(Config.KEYS_LOCATION);
+        String auth="jsdhfijsyfsdnfjsqhdfdsjhdsjfjksqd"; // clé par défaut de secours
+        String activation="arfùaùfadhskqjfhqsfjdsfdsqfhqsdjh"; // clé par défaut de secours
+        try {
+            auth = config.read("auth");
+            activation = config.read("activation");
+            if(auth == null || activation == null) {
+                throw new Exception("Error in keys.properties");
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            AUTH_SECRET = auth;
+            ACTIVATION_SECRET = activation;
+        }
+    }
     
     private long nonce;
     private long userId;
@@ -37,11 +65,11 @@ public class AuthToken implements Serializable {
         extractDataFromJsonString(jsonString);
     }
     
-    public AuthToken(long nonce, long userId, long roleId) {
+    public AuthToken(long nonce, long userId, long roleId, long secValidity) {
         this.nonce = nonce;
         this.userId = userId;
         this.roleId = roleId;
-        this.expDate = Instant.now().getEpochSecond() + 60 * 60; // valable 1h (60 * 60 = 3600s = 1h)
+        this.expDate = Instant.now().getEpochSecond() + secValidity;
     }
     
     private void setEmpty() {
@@ -92,13 +120,13 @@ public class AuthToken implements Serializable {
         this.expDate = expDate;
     }
     
-    private String generateSignature() {
+    private String generateSignature(int key) {
         String sign;
         try {
             String data = Long.toString(this.nonce) + Long.toString(this.userId) + Long.toString(this.roleId);
             
             Mac HMAC_sha256 = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secret_key = new SecretKeySpec(SECRET.getBytes(), "HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(getSecret(key).getBytes(), "HmacSHA256");
             HMAC_sha256.init(secret_key);
             
             sign = Base64.encodeBase64String(HMAC_sha256.doFinal(data.getBytes()));
@@ -109,12 +137,12 @@ public class AuthToken implements Serializable {
         return sign;
     }
     
-    public void sign() {
-        this.signature = this.generateSignature();
+    public void sign(int key) {
+        this.signature = this.generateSignature(key);
     }
     
-    public boolean checkSign() {
-        return this.signature.equals(this.generateSignature());
+    public boolean checkSign(int key) {
+        return this.signature.equals(this.generateSignature(key));
     }
     
     public boolean isExpired() {
@@ -182,7 +210,10 @@ public class AuthToken implements Serializable {
         "}";
     }
     
-    public static void updateSecret(String secret) {
-        SECRET = secret;
+    private static String getSecret(int key) {
+        if(key == ACTIVATION_KEY) {
+            return ACTIVATION_SECRET;
+        }
+        return AUTH_SECRET; // par defaut
     }
 }

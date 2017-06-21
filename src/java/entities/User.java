@@ -29,8 +29,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name="User.Auth", query="Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true"),
-    @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login")
+    @NamedQuery(name="User.Auth", query="Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true AND u.pending = false"),
+    @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login JOIN FETCH u.pending")
 })
 public class User implements Serializable {
 
@@ -73,11 +73,14 @@ public class User implements Serializable {
     private String login;
         
     @Basic(fetch=FetchType.LAZY)
-    @NotNull
+    //@NotNull // autoriser password NULL comme c'est l'admin qui crée le compte. A ce moment il n'y a pas de mot de passe
     // hash : utiliser bcrypt
     private String password;
         
     private boolean active = true;
+    
+    @Basic(fetch=FetchType.LAZY)
+    private boolean pending = true;
     
     @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)
     private List<Log> logs = new ArrayList<>();
@@ -142,6 +145,14 @@ public class User implements Serializable {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isPending() {
+        return pending;
+    }
+
+    public void setPending(boolean pending) {
+        this.pending = pending;
     }
 
     public List<Log> getLogs() {

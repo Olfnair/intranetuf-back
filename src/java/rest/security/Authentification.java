@@ -15,8 +15,14 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
  *
  * @author Florian
  */
-public class Authentification { 
+public class Authentification {    
+    
+    // AUTH_KEY par defaut
     public static AuthToken validate(String jsonTokenData) {
+        return validate(jsonTokenData, AuthToken.AUTH_KEY);
+    }
+    
+    public static AuthToken validate(String jsonTokenData, int key) {
         if(jsonTokenData == null) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Token not found").build());
         }
@@ -24,11 +30,16 @@ public class Authentification {
         AuthToken token = new AuthToken(jsonTokenData);
         
         // Validate the token
-        validateToken(token);
+        validateToken(token, key);
         return token;
     }
     
+    // AUTH_KEY par defaut
     public static AuthToken validate(MessageContext jaxrsContext) {
+        return validate(jaxrsContext, AuthToken.AUTH_KEY);
+    }
+    
+    public static AuthToken validate(MessageContext jaxrsContext, int key) {
         // Get the HTTP Authorization header from the request
         List<String> authorizationHeaderList = jaxrsContext.getHttpHeaders().getRequestHeader(HttpHeaders.AUTHORIZATION);
         
@@ -44,11 +55,11 @@ public class Authentification {
         // Extract the token from the HTTP Authorization header
         String jsonTokenData = authorizationHeader.substring("Bearer ".length());//.trim(); -> ne devrait pas être nécessaire : attention à ne pas ajouter d'espaces...
         
-        return validate(jsonTokenData);
+        return validate(jsonTokenData, key);
     }
     
-    private static void validateToken(AuthToken token) {
-        if(! token.checkSign()) {
+    private static void validateToken(AuthToken token, int key) {
+        if(! token.checkSign(key)) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid Token").build());
         }  
         else if(token.isExpired()) {
