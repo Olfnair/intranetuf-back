@@ -30,7 +30,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name="User.Auth", query="Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true AND u.pending = false"),
-    @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login JOIN FETCH u.pending")
+    @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login")
+    //@NamedQuery(name="User.hasRight", query="SELECT u fom User u INNER JOIN ProjectRight pr ")
 })
 public class User implements Serializable {
 
@@ -79,7 +80,6 @@ public class User implements Serializable {
         
     private boolean active = true;
     
-    @Basic(fetch=FetchType.LAZY)
     private boolean pending = true;
     
     @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)

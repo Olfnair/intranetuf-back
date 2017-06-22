@@ -21,11 +21,15 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import mail.MailSender;
 import mail.SendMailThread;
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
+import rest.security.Authentification;
 
 /**
  *
@@ -53,7 +57,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
         String url = "";
         String text = "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : ";
         try {
-            url = "http://localhost:4200/activate/?token=" + URLEncoder.encode(token.toJsonString(), "UTF-8");
+            url = "http://localhost:4200/#/activate/" + URLEncoder.encode(token.toJsonString(), "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(UserFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -100,7 +104,42 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @Path("count")
     public Response countREST() {
         return super.count();
-    }    
+    }
+
+    @GET
+    @Path("activate")
+    public Response findUserToActivate(@Context MessageContext jaxrsContext) {
+        AuthToken token = Authentification.validate(jaxrsContext, AuthToken.ACTIVATION_KEY);
+        User user = em.find(User.class, token.getUserId());
+        if(user == null) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+        else if(! user.isPending()) {
+            throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("user").build());
+        }
+        return super.buildResponse(200, user);
+    }
+    
+    @PUT
+    @Path("activate/{id}")
+    public Response activate(@Context MessageContext jaxrsContext, @PathParam("id") Long id, User entity) {
+        AuthToken token = Authentification.validate(jaxrsContext, AuthToken.ACTIVATION_KEY);
+        if(token.getUserId() != id) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+        }
+        // vérifie que le compte n'est pas déjà pending == false
+        User user = em.find(User.class, id);
+        if(user == null || ! user.isPending()) {
+            throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("user").build());
+        }
+        // TODO : améliorer le check password
+        if(entity.getPassword() == null || entity.getPassword().length() < 8) {
+            throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("password").build());
+        }
+        entity.setId(id); // on s'assure que l'id soit bon
+        entity.setPending(false); // on active le compte
+        return super.edit(entity);
+    }
 
     @Override
     protected EntityManager getEntityManager() {
