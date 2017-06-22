@@ -1,7 +1,6 @@
 package rest;
 
 import entities.User;
-import java.security.SecureRandom;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -14,8 +13,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import rest.security.AuthToken;
+import rest.security.Authentication;
 import rest.security.Credentials;
-import utils.ByteUtils;
 
 @Path("/auth")
 @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -42,15 +41,6 @@ public class AuthenticationEndpoint {
         }
         
         // génération du token en fonction du l'utilisateur
-        return issueToken(user.get(0), 60 * 60, AuthToken.AUTH_KEY); // token valable pendent 1h = 60 * 60 = 3600 sec
-    }
-    
-    public static AuthToken issueToken(User user, long secValidity, int key) {
-        SecureRandom random = new SecureRandom();
-        byte bytes[] = new byte[Long.BYTES];
-        random.nextBytes(bytes);
-        AuthToken token = new AuthToken(ByteUtils.bytesToLong(bytes), user.getId(), 0, secValidity);
-        token.sign(key);
-        return token;
+        return Authentication.issueToken(user.get(0).getId(), 0L, 60 * 60, AuthToken.AUTH_KEY); // token valable pendent 1h = 60 * 60 = 3600 sec
     }
 }

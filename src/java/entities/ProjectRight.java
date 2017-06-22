@@ -22,28 +22,28 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
+@NamedQueries({
+    // renvoie l'id de l'utilisateur ayant :userId et le droit :right sur :projectId. Utile pour vérifier les droits d'un utilisateur à partir de son ID : retourne userId s'il a le droit, sinon rien
+    @NamedQuery(name="ProjectRight.UserHasRight", query="Select pr.user.id FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId AND MOD(pr.rights/:right, 2) = 1")
+})
 public class ProjectRight implements Serializable {
     // droits sur le projet :
-    //  1 : voir le projet et ses fichiers
-    //  2 : editer le projet (changer le nom)
-    //  4 : supprimer le projet
-    //  8 : ajouter des fichiers au projet
-    // 16 : supprimer des fichiers du projet
-    // 32 : controler des fichiers du projet
-    // 64 : valider les fichiers du projet
+    public static final int VIEWPROJECT     =  1; // voir le projet et ses fichiers
+    public static final int EDITPROJECT     =  2; // editer le projet (changer le nom)
+    public static final int DELETEPROJECT   =  4; // supprimer le projet
+    public static final int ADDFILES        =  8; // ajouter des fichiers au projet
+    public static final int DELETEFILES     = 16; // supprimer des fichiers du projet
+    public static final int CONTROLFILE     = 32; // controler des fichiers du projet
+    public static final int VALIDATEFILE    = 64; // valider les fichiers du projet
     // admin = tous les droits sur tous les projets
-    public static int VIEWPROJECT = 1;
-    public static int EDITPROJECT = 2;
-    public static int DELETEPROJECT = 4;
-    public static int ADDFILES = 8;
-    public static int DELETEFILES = 16;
-    public static int CONTROLFILE = 32;
-    public static int VALIDATEFILE = 64;
+    // combiner les droits : 1 + 8 = 9 => voir projet et ajouter fichiers
+    // Autrement dit, chaque bit de 'rights' correspond à un droit qui est actif ou pas (0 ou 1)
+    // il reste des bits inutilisés pour ajouter des droits si nécessaire
     
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     private int rights = 0;
@@ -68,6 +68,14 @@ public class ProjectRight implements Serializable {
 
     public void setRights(int rights) {
         this.rights = rights;
+    }
+    
+    public boolean isRightSet(int right) {
+        return (this.rights & right) != 0;
+    }
+    
+    public void setRight(int right) {
+        this.rights |= right;
     }
 
     public Project getProject() {

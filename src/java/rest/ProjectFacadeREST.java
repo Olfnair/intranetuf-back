@@ -5,8 +5,8 @@
 */
 package rest;
 
+import config.ApplicationConfig;
 import entities.Project;
-import files.Config;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
-import rest.security.Authentification;
+import rest.security.Authentication;
 
 /**
  *
@@ -45,7 +45,7 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     @POST
     public Response create(Project entity) {
         Response res = super.insert(entity);
-        new java.io.File(Config.PROJECTS_LOCATION + '/' + Config.combineNameWithId(entity.getName(), entity.getId())).mkdirs();
+        new java.io.File(ApplicationConfig.PROJECTS_LOCATION + '/' + ApplicationConfig.combineNameWithId(entity.getName(), entity.getId())).mkdirs();
         return res;
     }
     
@@ -69,7 +69,7 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     
     @GET
     public Response findAll(@Context MessageContext jaxrsContext) {
-        AuthToken token = Authentification.validate(jaxrsContext);
+        AuthToken token = Authentication.validate(jaxrsContext);
         return super.findAll();
     }
     

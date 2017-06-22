@@ -5,8 +5,8 @@
 */
 package rest.security;
 
-import files.Config;
-import files.ConfigFile;
+import config.ApplicationConfig;
+import config.ConfigFile;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.InvalidKeyException;
@@ -33,7 +33,7 @@ public class AuthToken implements Serializable {
     private static final String ACTIVATION_SECRET;
     
     static {
-        ConfigFile config = new ConfigFile(Config.KEYS_LOCATION);
+        ConfigFile config = new ConfigFile(ApplicationConfig.KEYS_LOCATION);
         String auth="jsdhfijsyfsdnfjsqhdfdsjhdsjfjksqd"; // clé par défaut de secours
         String activation="arfùaùfadhskqjfhqsfjdsfdsqfhqsdjh"; // clé par défaut de secours
         try {
@@ -42,10 +42,8 @@ public class AuthToken implements Serializable {
             if(auth == null || activation == null) {
                 throw new Exception("Error in keys.properties");
             }
-        } catch (IOException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             AUTH_SECRET = auth;
             ACTIVATION_SECRET = activation;

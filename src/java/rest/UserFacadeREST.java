@@ -5,6 +5,7 @@
  */
 package rest;
 
+import config.ApplicationConfig;
 import entities.User;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -25,11 +26,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import mail.MailSender;
+import mail.Mail;
 import mail.SendMailThread;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
-import rest.security.Authentification;
+import rest.security.Authentication;
 
 /**
  *
@@ -52,16 +53,17 @@ public class UserFacadeREST extends AbstractFacade<User> {
     public Response create(User entity) {
         // TODO : check que c'est bien l'admin qui fait la requête
         Response res = super.insert(entity);
-        // on signe le token avec la clé pour les activations. Important pour éviter de générer un token qui pourrait aussi servir pour tout le reste
-        AuthToken token = AuthenticationEndpoint.issueToken(entity, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
+        // On signe le token avec la clé pour les activations.
+        // Important pour éviter de générer un token qui pourrait aussi servir pour tout le reste
+        AuthToken token = Authentication.issueToken(entity.getId(), 0L, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
         String url = "";
         String text = "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : ";
         try {
-            url = "http://localhost:4200/#/activate/" + URLEncoder.encode(token.toJsonString(), "UTF-8");
+            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + URLEncoder.encode(token.toJsonString(), "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(UserFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
         }
-        new SendMailThread(new MailSender(entity.getEmail(), "Activer votre compte", text + url)).start();
+        new SendMailThread(new Mail(entity.getEmail(), "Activer votre compte", text + url)).start();
         return res;
     }
 
@@ -86,7 +88,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @GET
     @Override
     public Response findAll() {
-        //new SendMailThread(new MailSender("chalet.florian@gmail.com", "test", "le message de test")).start();
+        //new SendMailThread(new Mail("chalet.florian@gmail.com", "test", "le message de test")).start();
         
         return super.buildResponseList(() -> {
             javax.persistence.Query usersQuery = em.createNamedQuery("User.ListAllComplete");
@@ -109,7 +111,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @GET
     @Path("activate")
     public Response findUserToActivate(@Context MessageContext jaxrsContext) {
-        AuthToken token = Authentification.validate(jaxrsContext, AuthToken.ACTIVATION_KEY);
+        AuthToken token = Authentication.validate(jaxrsContext, AuthToken.ACTIVATION_KEY);
         User user = em.find(User.class, token.getUserId());
         if(user == null) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
@@ -123,7 +125,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @PUT
     @Path("activate/{id}")
     public Response activate(@Context MessageContext jaxrsContext, @PathParam("id") Long id, User entity) {
-        AuthToken token = Authentification.validate(jaxrsContext, AuthToken.ACTIVATION_KEY);
+        AuthToken token = Authentication.validate(jaxrsContext, AuthToken.ACTIVATION_KEY);
         if(token.getUserId() != id) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }

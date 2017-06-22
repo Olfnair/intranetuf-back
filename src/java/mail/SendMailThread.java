@@ -14,9 +14,9 @@ import javax.mail.MessagingException;
  * @author Florian
  */
 public class SendMailThread extends Thread {
-    private final MailSender mail;
+    private final Mail mail;
     
-    public SendMailThread(MailSender mail) {
+    public SendMailThread(Mail mail) {
         super();
         this.mail = mail;
     }

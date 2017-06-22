@@ -5,7 +5,7 @@
 */
 package entities;
 
-import entities.exception.DateException;
+import entities.exceptions.DateException;
 import java.io.Serializable;
 import java.util.Calendar;
 import javax.persistence.Entity;

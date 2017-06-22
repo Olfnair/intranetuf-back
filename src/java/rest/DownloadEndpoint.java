@@ -5,10 +5,11 @@
 */
 package rest;
 
+import config.ApplicationConfig;
 import entities.File;
 import entities.Version;
 import entities.Project;
-import files.Config;
+import files.Download;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -20,16 +21,15 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import rest.security.AuthToken;
-import rest.security.Authentification;
+import rest.security.Authentication;
 
 /**
  *
  * @author Florian
  */
 @Path("download")
-public class DownloadFacade {
+public class DownloadEndpoint {
     @PersistenceContext(unitName = "IUFPU")
     private EntityManager em;
     
@@ -38,7 +38,7 @@ public class DownloadFacade {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response getFile(@QueryParam("token") String jsonToken, @PathParam("versionId") Long versionId) {
         
-        AuthToken token = Authentification.validate(jsonToken);
+        AuthToken token = Authentication.validate(jsonToken);
         // TODO : check droits
         
         
@@ -58,14 +58,8 @@ public class DownloadFacade {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         try {
-            String filepath = Config.PROJECTS_LOCATION + '/'
-                    + Config.combineNameWithId(project.getName(), project.getId()) + '/'
-                    + Config.combineNameWithId(version.getFilename(), versionId);
-            java.io.File fileDownload = new java.io.File(filepath);
-            ResponseBuilder response = Response.ok((Object) fileDownload);
-            response.header("Content-Disposition", "attachment; filename=\"" + version.getFilename() + '"');
-            response.header("Content-Length", "" + fileDownload.length());
-            return response.build();
+            return new Download(version.getFilename(), ApplicationConfig.combineNameWithId(project.getName(), project.getId()),
+                    ApplicationConfig.combineNameWithId(version.getFilename(), versionId)).run();
         }
         catch(Exception e) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);

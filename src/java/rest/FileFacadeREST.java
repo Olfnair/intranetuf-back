@@ -5,12 +5,12 @@
 */
 package rest;
 
+import config.ApplicationConfig;
 import entities.Date;
 import entities.File;
 import entities.Project;
 import entities.User;
 import entities.Version;
-import files.Config;
 import files.Upload;
 import java.io.InputStream;
 import javax.ejb.Stateless;
@@ -32,7 +32,7 @@ import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
-import rest.security.Authentification;
+import rest.security.Authentication;
 
 /**
  *
@@ -61,7 +61,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
         // TODO : vérifier droits
         // TODO : check extension
         // TODO : check file_size et décider d'un max
-        AuthToken token = Authentification.validate(jaxrsContext);
+        AuthToken token = Authentication.validate(jaxrsContext);
         try {
             User author = em.find(User.class, token.getUserId());
             Version version = entity.getVersion();
@@ -70,7 +70,8 @@ public class FileFacadeREST extends AbstractFacade<File> {
             entity.setAuthor(author);
             em.persist(entity);
             Project project = em.find(Project.class, entity.getProject().getId());
-            new Upload(uploadedInputStream, Config.combineNameWithId(project.getName(), project.getId()), Config.combineNameWithId(version.getFilename(), version.getId())).run();
+            new Upload(uploadedInputStream, ApplicationConfig.combineNameWithId(project.getName(), project.getId()),
+                    ApplicationConfig.combineNameWithId(version.getFilename(), version.getId())).run();
             return Response.status(201).build();
         }
         catch(Exception e) {

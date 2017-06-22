@@ -32,12 +32,12 @@ public abstract class AbstractFacade<T> {
 
     private final Class<T> entityClass;
     
-    public static final HashMap<String, String> HEADERS;
+    /*public static final HashMap<String, String> HEADERS;
     
     static {
         HEADERS = new HashMap<>();
         // HEADERS.put("Access-Control-Allow-Origin", "http://localhost:4200");
-    }
+    }*/
 
     public AbstractFacade(Class<T> entityClass) {
         this.entityClass = entityClass;
@@ -48,9 +48,9 @@ public abstract class AbstractFacade<T> {
     public Response buildResponse(int status, Object entity) {
         Response.ResponseBuilder resp = Response.status(status);
         
-        HEADERS.keySet().forEach((key) -> {
+        /*HEADERS.keySet().forEach((key) -> {
             resp.header(key, HEADERS.get(key));
-        });
+        });*/
         return resp.entity(entity).build();
     }
     

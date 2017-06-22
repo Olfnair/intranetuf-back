@@ -5,6 +5,7 @@
 */
 package files;
 
+import config.ApplicationConfig;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +20,7 @@ public class Upload {
     
     public Upload(InputStream uploadedInputStream, String folder, String file) {
         this.uploadedInputStream = uploadedInputStream;
-        this.filepath = Config.PROJECTS_LOCATION + '/' +  folder + '/' + file;
+        this.filepath = ApplicationConfig.PROJECTS_LOCATION + '/' +  folder + '/' + file;
     }
     
     public void run () throws IOException {

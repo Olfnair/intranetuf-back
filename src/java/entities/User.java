@@ -31,7 +31,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name="User.Auth", query="Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true AND u.pending = false"),
     @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login")
-    //@NamedQuery(name="User.hasRight", query="SELECT u fom User u INNER JOIN ProjectRight pr ")
 })
 public class User implements Serializable {
 
@@ -90,6 +89,9 @@ public class User implements Serializable {
     
     @OneToMany(mappedBy="author", fetch=FetchType.LAZY)
     private List<File> files = new ArrayList<>();
+    
+    @OneToMany(mappedBy="user", fetch=FetchType.LAZY)
+    private List<ProjectRight> projectRights = new ArrayList();
 
     public Long getId() {
         return id;
@@ -177,6 +179,14 @@ public class User implements Serializable {
 
     public void setFiles(List<File> files) {
         this.files = files;
+    }
+
+    public List<ProjectRight> getProjectRights() {
+        return projectRights;
+    }
+
+    public void setProjectRights(List<ProjectRight> projectRights) {
+        this.projectRights = projectRights;
     }
     
     @Override

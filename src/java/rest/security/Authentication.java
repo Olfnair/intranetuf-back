@@ -5,6 +5,7 @@
 */
 package rest.security;
 
+import java.security.SecureRandom;
 import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
@@ -15,7 +16,37 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
  *
  * @author Florian
  */
-public class Authentification {    
+
+class ByteUtils {
+    public static byte[] longToBytes(long l) {
+        byte[] result = new byte[Long.SIZE / Byte.SIZE];
+        for (int i = Long.SIZE / Byte.SIZE - 1; i >= 0; --i) {
+            result[i] = (byte)(l & 0xFF);
+            l >>= Byte.SIZE;
+        }
+        return result;
+    }
+    
+    public static long bytesToLong(byte[] b) {
+        long result = 0;
+        for (int i = 0; i < Long.SIZE / Byte.SIZE; ++i) {
+            result <<= Byte.SIZE;
+            result |= (b[i] & 0xFF);
+        }
+        return result;
+    }
+}
+
+public class Authentication {
+    
+    public static AuthToken issueToken(Long userId, Long roleId, long secValidity, int key) {
+        SecureRandom random = new SecureRandom();
+        byte bytes[] = new byte[Long.BYTES];
+        random.nextBytes(bytes);
+        AuthToken token = new AuthToken(ByteUtils.bytesToLong(bytes), userId, roleId, secValidity);
+        token.sign(key);
+        return token;
+    }
     
     // AUTH_KEY par defaut
     public static AuthToken validate(String jsonTokenData) {

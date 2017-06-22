@@ -5,9 +5,9 @@
  */
 package rest;
 
+import config.ApplicationConfig;
 import entities.Date;
 import entities.Project;
-import files.Config;
 import files.Upload;
 import java.io.InputStream;
 import entities.File;
@@ -25,7 +25,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import rest.security.AuthToken;
-import rest.security.Authentification;
+import rest.security.Authentication;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -57,7 +57,7 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             @Multipart("entity") Version entity,
             @Multipart("file") InputStream uploadedInputStream,
             @Multipart("file") Attachment attachment) {       
-        AuthToken token = Authentification.validate(jaxrsContext);
+        AuthToken token = Authentication.validate(jaxrsContext);
         // TODO : vérifier que le token est bien celui de l'auteur ou de l'admin
         try {
             File file = em.find(File.class, entity.getFile().getId());  
@@ -68,7 +68,8 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             file.setVersion(entity);
             em.merge(file);
             Project project = em.find(Project.class, file.getProject().getId());
-            new Upload(uploadedInputStream, Config.combineNameWithId(project.getName(), project.getId()), Config.combineNameWithId(entity.getFilename(), entity.getId())).run();
+            new Upload(uploadedInputStream, ApplicationConfig.combineNameWithId(project.getName(), project.getId()),
+                    ApplicationConfig.combineNameWithId(entity.getFilename(), entity.getId())).run();
             return Response.status(201).build();
         }
         catch(Exception e) {

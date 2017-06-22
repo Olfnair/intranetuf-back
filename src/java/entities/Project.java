@@ -37,6 +37,9 @@ public class Project implements Serializable {
     
     @OneToMany(mappedBy="project", fetch=FetchType.LAZY)
     private List<File> files = new ArrayList<>();
+    
+    @OneToMany(mappedBy="project", fetch=FetchType.LAZY)
+    private List<ProjectRight> projectRights = new ArrayList();
 
     public Long getId() {
         return id;
@@ -69,6 +72,14 @@ public class Project implements Serializable {
     public void setFiles(List<File> files) {
         this.files = files;
     }
+
+    public List<ProjectRight> getProjectRights() {
+        return projectRights;
+    }
+
+    public void setProjectRights(List<ProjectRight> projectRights) {
+        this.projectRights = projectRights;
+    }
     
     @Override
     public int hashCode() {
@@ -76,7 +87,7 @@ public class Project implements Serializable {
         hash += (id != null ? id.hashCode() : 0);
         return hash;
     }
-
+    
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
