@@ -33,7 +33,7 @@ public class AuthToken implements Serializable {
     private static final String ACTIVATION_SECRET;
     
     static {
-        ConfigFile config = new ConfigFile(ApplicationConfig.KEYS_LOCATION);
+        ConfigFile config = new ConfigFile(ApplicationConfig.KEYS_LOCATION + '/' + "keys.properties");
         String auth="jsdhfijsyfsdnfjsqhdfdsjhdsjfjksqd"; // clé par défaut de secours
         String activation="arfùaùfadhskqjfhqsfjdsfdsqfhqsdjh"; // clé par défaut de secours
         try {
