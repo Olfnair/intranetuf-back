@@ -74,6 +74,7 @@ public abstract class AbstractFacade<T> {
             entity = q.query();
         }
         catch(Exception e) {
+            e.printStackTrace();
             return this.buildResponse(400);
         }
         return this.buildResponse(200, entity);
@@ -85,6 +86,7 @@ public abstract class AbstractFacade<T> {
             entitiesList = q.query();
         }
         catch(Exception e) {
+            e.printStackTrace();
             return this.buildResponse(400);
         }
         return this.buildResponse(200, new GenericEntity<List<T>>(entitiesList){});

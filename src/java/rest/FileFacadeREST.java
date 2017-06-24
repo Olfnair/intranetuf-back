@@ -13,6 +13,8 @@ import entities.User;
 import entities.Version;
 import files.Upload;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -101,8 +103,12 @@ public class FileFacadeREST extends AbstractFacade<File> {
     @Path("/project/{id}")
     public Response findByProject(@PathParam("id") Long id) {
         return super.buildResponseList(() -> {
-            javax.persistence.Query filesQuery = em.createNamedQuery("File.byProject");
-            filesQuery.setParameter("projectId", id);
+            //javax.persistence.Query filesQuery = em.createNamedQuery("File.byProject");
+            List<String> where = new ArrayList();
+            File.LIST_BY_PROJECT.addWhereCol("project.id");
+            File.LIST_BY_PROJECT.addOrderByCol("version.filename");
+            javax.persistence.Query filesQuery = File.LIST_BY_PROJECT.buildQuery(em);
+            filesQuery.setParameter(File.LIST_BY_PROJECT.getParamName("project.id"), id);
             return filesQuery.getResultList();
         });
     }

@@ -91,7 +91,8 @@ public class UserFacadeREST extends AbstractFacade<User> {
         //new SendMailThread(new Mail("chalet.florian@gmail.com", "test", "le message de test")).start();
         
         return super.buildResponseList(() -> {
-            javax.persistence.Query usersQuery = em.createNamedQuery("User.ListAllComplete");
+            //javax.persistence.Query usersQuery = em.createNamedQuery("User.ListAllComplete");
+            javax.persistence.Query usersQuery = User.LIST_ALL_COMPLETE.buildQuery(em);
             return usersQuery.getResultList();
         });
     }

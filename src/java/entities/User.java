@@ -5,6 +5,7 @@
  */
 package entities;
 
+import entities.query.ComplexQuery;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,13 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login")
 })
 public class User implements Serializable {
+    
+    public final static ComplexQuery LIST_ALL_COMPLETE;
+    
+    static {
+        LIST_ALL_COMPLETE = new ComplexQuery("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login", "u");
+        //LIST_ALL_COMPLETE.addColumnSpec("dgfd", "dfgfd", "dfdgd");
+    }
 
     private static final long serialVersionUID = 1L;
     @Id

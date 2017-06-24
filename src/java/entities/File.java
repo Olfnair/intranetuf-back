@@ -5,6 +5,7 @@
  */
 package entities;
 
+import entities.query.ComplexQuery;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,14 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name="File.byVersion", query="SELECT f FROM File f JOIN FETCH f.project WHERE f.version.id = :versionId")
 })
 public class File implements Serializable {
+    
+    public final static ComplexQuery LIST_BY_PROJECT;
+    
+    static {
+        LIST_BY_PROJECT = new ComplexQuery("SELECT f FROM File f WHERE f.active = true :where: :orderby:", "f");
+        LIST_BY_PROJECT.addWhereSpec("project.id", "projectId", "=", "AND");
+        LIST_BY_PROJECT.addOrderBySpec("version.filename");
+    }
 
     private static final long serialVersionUID = 1L;
     @Id
