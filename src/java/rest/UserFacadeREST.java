@@ -6,6 +6,7 @@
 package rest;
 
 import config.ApplicationConfig;
+import entities.Credentials;
 import entities.User;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -31,6 +32,7 @@ import mail.SendMailThread;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
 import rest.security.Authentication;
+import rest.security.PasswordHasher;
 
 /**
  *
@@ -52,6 +54,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @POST
     public Response create(User entity) {
         // TODO : check que c'est bien l'admin qui fait la requête
+        entity.setCredentials(new Credentials(entity.getLogin()));
         Response res = super.insert(entity);
         // On signe le token avec la clé pour les activations.
         // Important pour éviter de générer un token qui pourrait aussi servir pour tout le reste
@@ -125,23 +128,36 @@ public class UserFacadeREST extends AbstractFacade<User> {
     
     @PUT
     @Path("activate/{id}")
-    public Response activate(@Context MessageContext jaxrsContext, @PathParam("id") Long id, User entity) {
+    public Response activate(@Context MessageContext jaxrsContext, @PathParam("id") Long id, Credentials entity) {
         AuthToken token = Authentication.validate(jaxrsContext, AuthToken.ACTIVATION_KEY);
         if(token.getUserId() != id) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
         // vérifie que le compte n'est pas déjà pending == false
-        User user = em.find(User.class, id);
+        javax.persistence.Query userQuery = em.createNamedQuery("User.getWithCredentials");
+        userQuery.setParameter("userId", id);
+        User user;
+        try {
+            user = (User) userQuery.getSingleResult();
+        }
+        catch(Exception e) {
+            throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("user").build());
+        }
         if(user == null || ! user.isPending()) {
             throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("user").build());
         }
         // TODO : améliorer le check password
-        if(entity.getPassword() == null || entity.getPassword().length() < 8) {
+        String password = entity.getPassword();
+        if(password == null || password.length() < 8) {
             throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("password").build());
         }
-        entity.setId(id); // on s'assure que l'id soit bon
-        entity.setPending(false); // on active le compte
-        return super.edit(entity);
+        
+        PasswordHasher ph = new PasswordHasher(password);
+        user.getCredentials().setPassword(ph.hash());
+        user.getCredentials().setIteration(ph.getIterations());
+        user.getCredentials().setSalt(ph.getBase64Salt());
+        user.setPending(false);
+        return super.buildResponse(200);
     }
 
     @Override

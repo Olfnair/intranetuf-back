@@ -16,6 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -65,6 +66,7 @@ public class Project implements Serializable {
         this.active = active;
     }
 
+    @XmlTransient
     public List<File> getFiles() {
         return files;
     }
@@ -73,6 +75,7 @@ public class Project implements Serializable {
         this.files = files;
     }
 
+    @XmlTransient
     public List<ProjectRight> getProjectRights() {
         return projectRights;
     }

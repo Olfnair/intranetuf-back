@@ -77,6 +77,7 @@ public class ApplicationConfig extends Application {
         resources.add(rest.FileFacadeREST.class);
         resources.add(rest.LogFacadeREST.class);
         resources.add(rest.ProjectFacadeREST.class);
+        resources.add(rest.ProjectRightFacadeREST.class);
         resources.add(rest.RoleFacadeREST.class);
         resources.add(rest.UserFacadeREST.class);
         resources.add(rest.ValidationFacadeREST.class);

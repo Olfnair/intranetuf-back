@@ -5,6 +5,7 @@
  */
 package entities;
 
+import entities.query.ComplexQuery;
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -24,9 +25,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     // renvoie l'id de l'utilisateur ayant :userId et le droit :right sur :projectId. Utile pour vérifier les droits d'un utilisateur à partir de son ID : retourne userId s'il a le droit, sinon rien
-    @NamedQuery(name="ProjectRight.UserHasRight", query="Select pr.user.id FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId AND MOD(pr.rights/:right, 2) = 1")
+    @NamedQuery(name="ProjectRight.UserHasRight", query="SELECT pr.user.id FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId AND MOD(pr.rights/:right, 2) = 1")
 })
 public class ProjectRight implements Serializable {
+    public final static ComplexQuery LIST_BY_USER;
+    
+    static {
+        LIST_BY_USER = new ComplexQuery("SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId :where: :orderby:", "pr");
+        LIST_BY_USER.addWhereSpec("project.name", "projectName", "LIKE", "AND");
+        LIST_BY_USER.addOrderBySpec("project.name");
+    }
+    
+    
     // droits sur le projet :
     public static final int VIEWPROJECT     =  1; // voir le projet et ses fichiers
     public static final int EDITPROJECT     =  2; // editer le projet (changer le nom)

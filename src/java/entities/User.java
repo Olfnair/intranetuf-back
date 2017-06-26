@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -19,9 +20,11 @@ import javax.persistence.Column;
 import javax.persistence.FetchType;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -30,8 +33,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name="User.Auth", query="Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true AND u.pending = false"),
-    @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login")
+    @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login"),
+    @NamedQuery(name="User.getWithCredentials", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.id = :userId"),
+    @NamedQuery(name="User.getByloginWithCredentialsForAuth", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.login = :login AND u.active = true AND u.pending = false")
 })
 public class User implements Serializable {
     
@@ -80,10 +84,8 @@ public class User implements Serializable {
     @Pattern(regexp = "[a-zA-Z0-9]+", message = "{invalid.login}")
     private String login;
         
-    @Basic(fetch=FetchType.LAZY)
-    //@NotNull // autoriser password NULL comme c'est l'admin qui crée le compte. A ce moment il n'y a pas de mot de passe
-    // hash : utiliser bcrypt
-    private String password;
+    @OneToOne(fetch=FetchType.LAZY, cascade={CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE})
+    Credentials credentials;
         
     private boolean active = true;
     
@@ -141,14 +143,14 @@ public class User implements Serializable {
         this.login = login;
     }
 
-    public String getPassword() {
-        return password;
+    public Credentials getCredentials() {
+        return credentials;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setCredentials(Credentials credentials) {
+        this.credentials = credentials;
     }
-
+    
     public boolean isActive() {
         return active;
     }
@@ -165,6 +167,7 @@ public class User implements Serializable {
         this.pending = pending;
     }
 
+    @XmlTransient
     public List<Log> getLogs() {
         return logs;
     }
@@ -173,6 +176,7 @@ public class User implements Serializable {
         this.logs = logs;
     }
 
+    @XmlTransient
     public List<FileAction> getFileActions() {
         return fileActions;
     }
@@ -181,6 +185,7 @@ public class User implements Serializable {
         this.fileActions = fileActions;
     }
 
+    @XmlTransient
     public List<File> getFiles() {
         return files;
     }
@@ -189,6 +194,7 @@ public class User implements Serializable {
         this.files = files;
     }
 
+    @XmlTransient
     public List<ProjectRight> getProjectRights() {
         return projectRights;
     }

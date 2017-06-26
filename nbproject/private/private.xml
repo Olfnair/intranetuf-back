@@ -3,42 +3,28 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/files/Upload.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/web/WEB-INF/classes/global.properties</file>
             <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Log.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/web/WEB-INF/beans.xml</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/exception/DateException.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/query/ComplexQuery.java</file>
             <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Version.java</file>
             <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/security/AuthToken.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/conf/persistence.xml</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/web/META-INF/context.xml</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/RoleFacadeREST.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Project.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Control.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/utils/ByteUtils.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/AuthenticationEndpoint.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Validation.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/ApplicationConfig.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/AbstractFacade.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/security/Authentification.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/DateFacadeREST.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/UserFacadeREST.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/security/Credentials.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/FileFacadeREST.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/FileAction.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Credentials.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/security/Authentication.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/config/ConfigFile.java</file>
             <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Date.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/ValidationFacadeREST.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/web/WEB-INF/web.xml</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/DownloadFacade.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/files/Config.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/utils/Base.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/config/ApplicationConfig.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Control.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/AuthenticationEndpoint.java</file>
             <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/VersionFacadeREST.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/UploadFacade.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/AbstractFacadeBackup.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Validation.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/ProjectRight.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/AbstractFacade.java</file>
             <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/ProjectFacadeREST.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/Role.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/security/PasswordHasher.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/UserFacadeREST.java</file>
             <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/User.java</file>
             <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/entities/File.java</file>
-            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/ControlFacadeREST.java</file>
+            <file>file:/C:/Users/Florian/Documents/intranetuf-back/src/java/rest/FileFacadeREST.java</file>
         </group>
     </open-files>
 </project-private>

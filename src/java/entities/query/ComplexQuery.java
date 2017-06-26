@@ -85,7 +85,7 @@ public class ComplexQuery {
         StringBuilder orderByBuilder = new StringBuilder(100);
         StringBuilder whereBuilder = new StringBuilder(100);
         this.orderByCols.forEach((col) -> {
-            if(this.orderByColsSpec.containsKey(col)) {
+            if(! count && this.orderByColsSpec.containsKey(col)) {
                 if(orderByBuilder.length() == 0) {
                     orderByBuilder.append("order by ");
                 }
