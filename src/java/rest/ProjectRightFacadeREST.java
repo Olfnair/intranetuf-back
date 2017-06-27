@@ -21,6 +21,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -30,6 +31,8 @@ import javax.ws.rs.core.Response;
  */
 @Stateless
 @Path("entities.projectright")
+@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
 
     @PersistenceContext(unitName = "IUFPU")
@@ -40,14 +43,23 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     }
 
     @POST
-    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response create(ProjectRight entity) {
-        return super.insert(entity);
+    public Response createOrEdit(List<ProjectRight> entities) {
+        entities.forEach((right) -> {
+            if(right.getId() == null) {
+                em.persist(right);
+            }
+            else if (right.getRights() == 0) {
+                em.remove(right);
+            }
+            else {
+                em.merge(right);
+            }
+        });
+        return Response.status(Response.Status.CREATED).build();
     }
 
     @PUT
     @Path("{id}")
-    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response edit(@PathParam("id") Long id, ProjectRight entity) {
         return super.edit(entity);
     }
@@ -69,8 +81,10 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     @Path("user/{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRightsForUser(@PathParam("id") Long id) {
+        //TODO : check token & global rights
         return super.buildResponseList(() -> {
             User user = em.find(User.class, id);
+            ProjectRight.LIST_BY_USER.addOrderByCol("project.name");
             javax.persistence.Query rightsQuery = ProjectRight.LIST_BY_USER.buildQuery(em);
             rightsQuery.setParameter("userId", id);
             List<ProjectRight> fetchedRights = rightsQuery.getResultList();
@@ -82,7 +96,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
                 rights.add(right);
             });
             
-            //Project.LIST_ALL_OTHER_PROJECTS.addOrderByCol("name");
+            Project.LIST_ALL_OTHER_PROJECTS.addOrderByCol("name");
             javax.persistence.Query projectsQuery = Project.LIST_ALL_OTHER_PROJECTS.buildQuery(em);
             projectsQuery.setParameter("fetchedIds", fetchedProjectIds);
             List<Project> projects = projectsQuery.getResultList();

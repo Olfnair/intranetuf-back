@@ -33,17 +33,17 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name="User.ListAllComplete", query="SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login"),
     @NamedQuery(name="User.getWithCredentials", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.id = :userId"),
     @NamedQuery(name="User.getByloginWithCredentialsForAuth", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.login = :login AND u.active = true AND u.pending = false")
 })
 public class User implements Serializable {
     
     public final static ComplexQuery LIST_ALL_COMPLETE;
+    public final static ComplexQuery LIST_BY_RIGHT_ON_PROJECT;
     
     static {
-        LIST_ALL_COMPLETE = new ComplexQuery("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login", "u");
-        //LIST_ALL_COMPLETE.addColumnSpec("dgfd", "dfgfd", "dfdgd");
+        LIST_ALL_COMPLETE = new ComplexQuery("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u");
+        LIST_BY_RIGHT_ON_PROJECT = new ComplexQuery("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id != :userId AND MOD(pr.rights/:right, 2) = 1 :where: :orderby:", "pr");
     }
 
     private static final long serialVersionUID = 1L;
