@@ -5,7 +5,11 @@
  */
 package rest;
 
+import entities.Project;
 import entities.ProjectRight;
+import entities.User;
+import java.util.ArrayList;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -66,10 +70,28 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRightsForUser(@PathParam("id") Long id) {
         return super.buildResponseList(() -> {
-            //ProjectRight.LIST_BY_USER.addWhereCol("");
+            User user = em.find(User.class, id);
             javax.persistence.Query rightsQuery = ProjectRight.LIST_BY_USER.buildQuery(em);
             rightsQuery.setParameter("userId", id);
-            return rightsQuery.getResultList();
+            List<ProjectRight> fetchedRights = rightsQuery.getResultList();
+            List<Long> fetchedProjectIds = new ArrayList(100);
+            List<ProjectRight> rights = new ArrayList(100);
+            
+            fetchedRights.forEach((right) -> {
+                fetchedProjectIds.add(right.getProject().getId());
+                rights.add(right);
+            });
+            
+            //Project.LIST_ALL_OTHER_PROJECTS.addOrderByCol("name");
+            javax.persistence.Query projectsQuery = Project.LIST_ALL_OTHER_PROJECTS.buildQuery(em);
+            projectsQuery.setParameter("fetchedIds", fetchedProjectIds);
+            List<Project> projects = projectsQuery.getResultList();
+            
+            projects.forEach((project) -> {
+                rights.add(new ProjectRight(user, project));
+            });
+            
+            return rights;
         });
     }
 

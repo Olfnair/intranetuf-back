@@ -64,6 +64,14 @@ public class ProjectRight implements Serializable {
     @ManyToOne(fetch=FetchType.EAGER)
     private User user;
 
+    public ProjectRight() {
+    }
+    
+    public ProjectRight(User user, Project project) {
+        this.user = user;
+        this.project = project;
+    }
+    
     public Long getId() {
         return id;
     }

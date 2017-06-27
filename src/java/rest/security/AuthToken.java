@@ -7,11 +7,11 @@ package rest.security;
 
 import config.ApplicationConfig;
 import config.ConfigFile;
-import java.io.IOException;
 import java.io.Serializable;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -19,7 +19,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -34,13 +33,16 @@ public class AuthToken implements Serializable {
     
     static {
         ConfigFile config = new ConfigFile(ApplicationConfig.KEYS_LOCATION + '/' + "keys.properties");
-        String auth="jsdhfijsyfsdnfjsqhdfdsjhdsjfjksqd"; // clé par défaut de secours
-        String activation="arfùaùfadhskqjfhqsfjdsfdsqfhqsdjh"; // clé par défaut de secours
+        String auth="ifDdJaJ+RcWFPUVSymIjLe5PHc4plksmKFwSfa7KNxQ="; // clé par défaut de secours
+        String activation="MRyZ57CFn/h2p4j7co9fUbt18q4nrGj+53nikbvdfHs="; // clé par défaut de secours
         try {
             auth = config.read("auth");
             activation = config.read("activation");
             if(auth == null || activation == null) {
                 throw new Exception("Error in keys.properties");
+            }
+            else if(auth.equals(activation)) {
+                throw new Exception("key for auth is same as activation. Not Recommended : use 2 differents keys.");
             }
         } catch (Exception ex) {
             Logger.getLogger(ApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
@@ -123,11 +125,11 @@ public class AuthToken implements Serializable {
         try {
             String data = Long.toString(this.nonce) + Long.toString(this.userId) + Long.toString(this.roleId);
             
-            Mac HMAC_sha256 = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secret_key = new SecretKeySpec(getSecret(key).getBytes(), "HmacSHA256");
-            HMAC_sha256.init(secret_key);
+            Mac HMAC_sha512 = Mac.getInstance("HmacSHA512");
+            SecretKeySpec secret_key = new SecretKeySpec(getSecret(key).getBytes(), "HmacSHA512");
+            HMAC_sha512.init(secret_key);
             
-            sign = Base64.encodeBase64String(HMAC_sha256.doFinal(data.getBytes()));
+            sign = Base64.getEncoder().encodeToString(HMAC_sha512.doFinal(data.getBytes()));
         }
         catch (IllegalStateException | InvalidKeyException | NoSuchAlgorithmException e){
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
