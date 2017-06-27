@@ -43,7 +43,7 @@ public class User implements Serializable {
     
     static {
         LIST_ALL_COMPLETE = new ComplexQuery("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u");
-        LIST_BY_RIGHT_ON_PROJECT = new ComplexQuery("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id != :userId AND MOD(pr.rights/:right, 2) = 1 :where: :orderby:", "pr");
+        LIST_BY_RIGHT_ON_PROJECT = new ComplexQuery("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "pr");
     }
 
     private static final long serialVersionUID = 1L;

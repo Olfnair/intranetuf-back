@@ -194,7 +194,7 @@ public class AuthToken implements Serializable {
             }
             this.signature = builder.toString();
         }
-        catch (NumberFormatException e) {
+        catch (Exception e) {
             this.setEmpty();
         }
     }

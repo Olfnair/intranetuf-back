@@ -8,6 +8,7 @@ package rest;
 import config.ApplicationConfig;
 import entities.Credentials;
 import entities.User;
+import static entities.User.LIST_BY_RIGHT_ON_PROJECT;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.logging.Level;
@@ -96,6 +97,20 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return super.buildResponseList(() -> {
             //javax.persistence.Query usersQuery = em.createNamedQuery("User.ListAllComplete");
             javax.persistence.Query usersQuery = User.LIST_ALL_COMPLETE.buildQuery(em);
+            return usersQuery.getResultList();
+        });
+    }
+    
+    @GET
+    @Path("rightOnProject/{projectId}/{right}")
+    public Response getByRightOnProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId, @PathParam("right") Long right) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        return super.buildResponseList(() -> {
+            javax.persistence.Query usersQuery = User.LIST_BY_RIGHT_ON_PROJECT.buildQuery(em);
+            usersQuery.setParameter("projectId", projectId);
+            usersQuery.setParameter("userId", token.getUserId());
+            usersQuery.setParameter("right", right);
             return usersQuery.getResultList();
         });
     }
