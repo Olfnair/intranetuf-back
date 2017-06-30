@@ -19,7 +19,7 @@ import javax.persistence.Query;
 // un peu quick & dirty, améliorer si besoin
 // faire attention à fournir des entrées correctes dans le constructeur (d'où le quick & dirty..)
 // pas de vrai contrôle d'erreur
-public class ComplexQuery {     
+public class FlexQuery {     
     // Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true AND u.pending = false :where: :orderby:  
 
     // colonne, operateur : tout ce qui n'est pas dans le hashmap sera refusé.
@@ -43,7 +43,7 @@ public class ComplexQuery {
         orderByCols.clear();
     }
     
-    public ComplexQuery(String baseQuery, String entityName) {
+    public FlexQuery(String baseQuery, String entityName) {
         this.baseQuery = baseQuery;
         this.entityName = entityName;
     }

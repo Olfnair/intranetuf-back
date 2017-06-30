@@ -5,7 +5,7 @@
  */
 package entities;
 
-import entities.query.ComplexQuery;
+import entities.query.FlexQuery;
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -28,10 +28,10 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name="ProjectRight.UserHasRight", query="SELECT pr.user.id FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId AND MOD(pr.rights/:right, 2) >= 1")
 })
 public class ProjectRight implements Serializable {
-    public final static ComplexQuery LIST_BY_USER;
+    public final static FlexQuery LIST_BY_USER;
     
     static {
-        LIST_BY_USER = new ComplexQuery("SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId :where: :orderby:", "pr");
+        LIST_BY_USER = new FlexQuery("SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId :where: :orderby:", "pr");
         LIST_BY_USER.addWhereSpec("project.name", "projectName", "LIKE", "AND");
         LIST_BY_USER.addOrderBySpec("project.name");
     }

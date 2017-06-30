@@ -5,7 +5,7 @@
  */
 package entities;
 
-import entities.query.ComplexQuery;
+import entities.query.FlexQuery;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +26,10 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @XmlRootElement
 public class Project implements Serializable {
-    public static final ComplexQuery LIST_ALL_OTHER_PROJECTS;
+    public static final FlexQuery LIST_ALL_OTHER_PROJECTS;
     
     static {
-        LIST_ALL_OTHER_PROJECTS = new ComplexQuery("SELECT p FROM Project p WHERE p.id NOT IN(:fetchedIds) :where: :orderby:", "p");
+        LIST_ALL_OTHER_PROJECTS = new FlexQuery("SELECT p FROM Project p WHERE p.id NOT IN(:fetchedIds) :where: :orderby:", "p");
         LIST_ALL_OTHER_PROJECTS.addWhereSpec("name", "name", "LIKE", "AND");
         LIST_ALL_OTHER_PROJECTS.addOrderBySpec("name");
     }
