@@ -63,9 +63,6 @@ public class File implements Serializable {
     
     @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
     private List<Log> logs = new ArrayList<>();
-    
-    @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
-    private List<FileAction> fileActions = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -121,14 +118,6 @@ public class File implements Serializable {
 
     public void setLogs(List<Log> logs) {
         this.logs = logs;
-    }
-
-    public List<FileAction> getFileActions() {
-        return fileActions;
-    }
-
-    public void setFileActions(List<FileAction> fileActions) {
-        this.fileActions = fileActions;
     }
 
     @Override

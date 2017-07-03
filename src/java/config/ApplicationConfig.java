@@ -5,7 +5,6 @@
  */
 package config;
 
-import java.io.IOException;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,16 +70,14 @@ public class ApplicationConfig extends Application {
 
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(rest.AuthenticationEndpoint.class);
-        resources.add(rest.ControlFacadeREST.class);
         resources.add(rest.DateFacadeREST.class);
         resources.add(rest.DownloadEndpoint.class);
         resources.add(rest.FileFacadeREST.class);
         resources.add(rest.LogFacadeREST.class);
         resources.add(rest.ProjectFacadeREST.class);
         resources.add(rest.ProjectRightFacadeREST.class);
-        resources.add(rest.RoleFacadeREST.class);
         resources.add(rest.UserFacadeREST.class);
-        resources.add(rest.ValidationFacadeREST.class);
         resources.add(rest.VersionFacadeREST.class);
+        resources.add(rest.WorkflowCheckFacadeREST.class);
     }
 }

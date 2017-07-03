@@ -52,6 +52,8 @@ public class User implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    private Long role = 0L;
+    
     @NotNull
     //@Pattern(regexp = "[a-zA-Z]+", message = "{invalid.name}")
     private String name;
@@ -96,7 +98,7 @@ public class User implements Serializable {
     private List<Log> logs = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)
-    private List<FileAction> fileActions = new ArrayList<>();
+    private List<WorkflowCheck> fileActions = new ArrayList<>();
     
     @OneToMany(mappedBy="author", fetch=FetchType.LAZY)
     private List<File> files = new ArrayList<>();
@@ -112,6 +114,14 @@ public class User implements Serializable {
         this.id = id;
     }
 
+    public Long getRole() {
+        return role;
+    }
+
+    public void setRole(Long role) {
+        this.role = role;
+    }
+    
     public String getName() {
         return name;
     }
@@ -178,11 +188,11 @@ public class User implements Serializable {
     }
 
     @XmlTransient
-    public List<FileAction> getFileActions() {
+    public List<WorkflowCheck> getFileActions() {
         return fileActions;
     }
 
-    public void setFileActions(List<FileAction> fileActions) {
+    public void setFileActions(List<WorkflowCheck> fileActions) {
         this.fileActions = fileActions;
     }
 

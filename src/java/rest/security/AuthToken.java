@@ -42,7 +42,7 @@ public class AuthToken implements Serializable {
                 throw new Exception("Error in keys.properties");
             }
             else if(auth.equals(activation)) {
-                throw new Exception("key for auth is same as activation. Not Recommended : use 2 differents keys.");
+                throw new Exception("key for auth is same as activation. Not Recommended : use 2 different keys.");
             }
         } catch (Exception ex) {
             Logger.getLogger(ApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);

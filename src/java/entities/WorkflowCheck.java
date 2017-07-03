@@ -14,13 +14,25 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
  * @author Florian
  */
 @Entity
-public class FileAction implements Serializable {
+@XmlRootElement
+public class WorkflowCheck implements Serializable {  
+    public enum CheckType {
+        CONTROL (0),
+        VALIDATION (1);
+        
+        private final Integer value;
+        
+        CheckType(Integer value) {
+            this.value = value;
+        }
+    }
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -39,10 +51,12 @@ public class FileAction implements Serializable {
     
     private String comment;
     
-    private Long order_num = 0L;
+    private Integer order_num = 0;
+    
+    private CheckType type;
     
     @ManyToOne
-    private File file;
+    private Version version;
     
     @ManyToOne
     private User user;
@@ -79,12 +93,36 @@ public class FileAction implements Serializable {
         this.comment = comment;
     }
 
-    public Long getOrder_num() {
+    public Integer getOrder_num() {
         return order_num;
     }
 
-    public void setOrder_num(Long order_num) {
+    public void setOrder_num(Integer order_num) {
         this.order_num = order_num;
+    }
+
+    public CheckType getType() {
+        return type;
+    }
+
+    public void setType(CheckType type) {
+        this.type = type;
+    }
+
+    public Version getFile() {
+        return version;
+    }
+
+    public void setFile(Version version) {
+        this.version = version;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
     
     @Override
@@ -97,10 +135,10 @@ public class FileAction implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof FileAction)) {
+        if (!(object instanceof WorkflowCheck)) {
             return false;
         }
-        FileAction other = (FileAction) object;
+        WorkflowCheck other = (WorkflowCheck) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }

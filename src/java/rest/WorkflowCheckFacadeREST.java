@@ -5,7 +5,7 @@
  */
 package rest;
 
-import entities.Validation;
+import entities.WorkflowCheck;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -25,27 +25,27 @@ import javax.ws.rs.core.Response;
  * @author Florian
  */
 @Stateless
-@Path("entities.validation")
+@Path("entities.workflowcheck")
 @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-public class ValidationFacadeREST extends AbstractFacade<Validation> {
+public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
 
     @PersistenceContext(unitName = "IUFPU")
     private EntityManager em;
 
-    public ValidationFacadeREST() {
-        super(Validation.class);
+    public WorkflowCheckFacadeREST() {
+        super(WorkflowCheck.class);
     }
 
     @POST
-    public Response create(Validation entity) {
+    public Response create(WorkflowCheck entity) {
         return super.insert(entity);
     }
 
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response edit(@PathParam("id") Long id, Validation entity) {
+    public Response edit(@PathParam("id") Long id, WorkflowCheck entity) {
         entity.setId(id);
         return super.edit(entity);
     }
