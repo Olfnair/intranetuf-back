@@ -42,16 +42,14 @@ public class Version implements Serializable {
     
     private int status = 0;
     
-    /*@Temporal(javax.persistence.TemporalType.TIMESTAMP)
-    private java.util.Date date_upload;*/
     @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     private Date date_upload;
     
     @ManyToOne(fetch=FetchType.LAZY)
     private File file;
     
-    @OneToMany(mappedBy="version", fetch=FetchType.LAZY)
-    private List<WorkflowCheck> fileActions = new ArrayList<>();
+    @OneToMany(mappedBy="version", fetch=FetchType.LAZY, cascade=CascadeType.PERSIST)
+    private List<WorkflowCheck> workflowChecks = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -101,12 +99,12 @@ public class Version implements Serializable {
         this.file = file;
     }
 
-    public List<WorkflowCheck> getFileActions() {
-        return fileActions;
+    public List<WorkflowCheck> getWorkflowChecks() {
+        return workflowChecks;
     }
 
-    public void setFileActions(List<WorkflowCheck> fileActions) {
-        this.fileActions = fileActions;
+    public void setWorkflowChecks(List<WorkflowCheck> workflowChecks) {
+        this.workflowChecks = workflowChecks;
     }
     
     @Override

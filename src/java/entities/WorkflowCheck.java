@@ -39,13 +39,11 @@ public class WorkflowCheck implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    /*@Temporal(javax.persistence.TemporalType.TIMESTAMP)
-    private java.util.Date date_init;*/
+    private Integer status = 0;
+    
     @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     private Date date_init;
     
-    /*@Temporal(javax.persistence.TemporalType.TIMESTAMP)
-    private java.util.Date date_action;*/
     @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     private Date date_action;
     
@@ -55,10 +53,10 @@ public class WorkflowCheck implements Serializable {
     
     private CheckType type;
     
-    @ManyToOne
+    @ManyToOne(fetch=FetchType.LAZY)
     private Version version;
     
-    @ManyToOne
+    @ManyToOne(fetch=FetchType.LAZY)
     private User user;
 
     public Long getId() {
@@ -69,6 +67,14 @@ public class WorkflowCheck implements Serializable {
         this.id = id;
     }
 
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+    
     public Date getDate_init() {
         return date_init;
     }
@@ -109,11 +115,11 @@ public class WorkflowCheck implements Serializable {
         this.type = type;
     }
 
-    public Version getFile() {
+    public Version getVersion() {
         return version;
     }
 
-    public void setFile(Version version) {
+    public void setVersion(Version version) {
         this.version = version;
     }
 

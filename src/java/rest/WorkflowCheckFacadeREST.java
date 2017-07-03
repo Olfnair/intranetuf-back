@@ -5,7 +5,9 @@
  */
 package rest;
 
+import entities.ProjectRight;
 import entities.WorkflowCheck;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -36,10 +38,13 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     public WorkflowCheckFacadeREST() {
         super(WorkflowCheck.class);
     }
-
+    
     @POST
-    public Response create(WorkflowCheck entity) {
-        return super.insert(entity);
+    public Response create(List<WorkflowCheck> entities) {
+        entities.forEach((check) -> {
+            em.persist(check);
+        });
+        return Response.status(Response.Status.CREATED).build();
     }
 
     @PUT

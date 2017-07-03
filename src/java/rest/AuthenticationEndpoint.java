@@ -73,6 +73,6 @@ public class AuthenticationEndpoint {
         }
         
         // génération du token en fonction du l'utilisateur
-        return Authentication.issueToken(user.getId(), 0L, 60 * 60, AuthToken.AUTH_KEY); // token valable pendent 1h = 60 * 60 = 3600 sec
+        return Authentication.issueToken(user.getId(), 0L, 60 * 60, AuthToken.AUTH_KEY); // token valable pendant 1h = 60 * 60 = 3600 sec
     }
 }
