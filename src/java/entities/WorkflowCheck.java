@@ -8,12 +8,15 @@ package entities;
 import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -23,17 +26,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 public class WorkflowCheck implements Serializable {  
-    public enum CheckType {
-        CONTROL (0),
-        VALIDATION (1);
-        
-        private final Integer value;
-        
-        CheckType(Integer value) {
-            this.value = value;
-        }
-    }
-
+    public final static Integer TYPE_CONTROL = 0;
+    public final static Integer TYPE_VALIDATION = 1;
+    
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,7 +46,8 @@ public class WorkflowCheck implements Serializable {
     
     private Integer order_num = 0;
     
-    private CheckType type;
+    @NotNull
+    private Integer type;
     
     @ManyToOne(fetch=FetchType.LAZY)
     private Version version;
@@ -107,11 +103,11 @@ public class WorkflowCheck implements Serializable {
         this.order_num = order_num;
     }
 
-    public CheckType getType() {
+    public Integer getType() {
         return type;
     }
 
-    public void setType(CheckType type) {
+    public void setType(Integer type) {
         this.type = type;
     }
 

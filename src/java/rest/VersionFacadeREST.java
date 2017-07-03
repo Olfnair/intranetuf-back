@@ -12,6 +12,8 @@ import files.Upload;
 import java.io.InputStream;
 import entities.File;
 import entities.Version;
+import entities.WorkflowCheck;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -64,6 +66,10 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             entity.setFile(file);
             entity.setNum(file.getVersion().getNum() + 1);
             entity.setDate_upload(Date.now());
+            List<WorkflowCheck> checks = entity.getWorkflowChecks();
+            checks.forEach((check) -> {
+                check.setVersion(entity);
+            });
             em.persist(entity);
             file.setVersion(entity);
             em.merge(file);

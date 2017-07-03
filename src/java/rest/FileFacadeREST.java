@@ -11,6 +11,7 @@ import entities.File;
 import entities.Project;
 import entities.User;
 import entities.Version;
+import entities.WorkflowCheck;
 import files.Upload;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -69,6 +70,10 @@ public class FileFacadeREST extends AbstractFacade<File> {
             Version version = entity.getVersion();
             version.setFile(entity);
             version.setDate_upload(Date.now());
+            List<WorkflowCheck> checks = version.getWorkflowChecks();
+            checks.forEach((check) -> {
+                check.setVersion(version);
+            });
             entity.setAuthor(author);
             em.persist(entity);
             Project project = em.find(Project.class, entity.getProject().getId());
