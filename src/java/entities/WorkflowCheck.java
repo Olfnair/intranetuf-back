@@ -8,13 +8,13 @@ package entities;
 import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,9 +25,25 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
+@NamedQueries({
+    @NamedQuery(name="WorkflowCheck.getByVersion", query="SELECT wfc FROM WorkflowCheck wfc WHERE wfc.version.id = :versionId"),
+    @NamedQuery(name="WorkflowCheck.getByStatusUserVersionsOrdered", query="SELECT wfc FROM WorkflowCheck wfc WHERE wfc.user.id = :userId AND wfc.status = :status AND wfc.version.id IN(:versionIds) ORDER BY wfc.version.id ASC"),
+    @NamedQuery(name="WorkflowCheck.getByUser", query="SELECT wfc FROM WorkflowCheck wfc WHERE wfc.user.id = :userId")
+})
 public class WorkflowCheck implements Serializable {  
-    public final static Integer TYPE_CONTROL = 0;
-    public final static Integer TYPE_VALIDATION = 1;
+    
+    // la flemme de faire des enums...
+    public class Type {
+        public final static int CONTROL = 0;
+        public final static int VALIDATION = 1;
+    }
+    
+    public class Status {
+        public final static int WAITING = 0;
+        public final static int TO_CHECK = 1;
+        public final static int CHECK_OK = 2;
+        public final static int CHECK_KO = 3;
+    } 
     
     private static final long serialVersionUID = 1L;
     @Id
@@ -114,7 +130,7 @@ public class WorkflowCheck implements Serializable {
     public Version getVersion() {
         return version;
     }
-
+    
     public void setVersion(Version version) {
         this.version = version;
     }

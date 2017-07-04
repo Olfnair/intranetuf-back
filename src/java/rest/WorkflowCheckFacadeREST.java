@@ -5,7 +5,6 @@
  */
 package rest;
 
-import entities.ProjectRight;
 import entities.WorkflowCheck;
 import java.util.List;
 import javax.ejb.Stateless;
