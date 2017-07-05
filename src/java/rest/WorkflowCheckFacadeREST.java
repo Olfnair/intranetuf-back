@@ -6,6 +6,7 @@
 package rest;
 
 import entities.WorkflowCheck;
+import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -18,8 +19,10 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import rest.objects.RestLong;
 
 /**
  *
@@ -45,10 +48,31 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         });
         return Response.status(Response.Status.CREATED).build();
     }
+    
+    @POST // on passe les id's de versions dans le corps de la requête pour être sur de ne pas être limité par la taille d'un GET
+    @Path("{userId}/{status}")
+    public Response getByStatusUserVersions(
+        @PathParam("userId") Long userId,
+        @PathParam("status") Integer status,
+        List<RestLong> restLongVersionIds
+    ) {       
+        // TODO : check token + check user = userId ou user = admin
+        
+        List<Long> versionIds = new ArrayList(restLongVersionIds.size());
+        restLongVersionIds.forEach((restLongId) -> {
+            versionIds.add(restLongId.getValue());
+        });
+        return super.buildResponseList(() -> {
+            javax.persistence.Query wfcQuery = em.createNamedQuery("WorkflowCheck.getByStatusUserVersions");
+            wfcQuery.setParameter("userId", userId);
+            wfcQuery.setParameter("status", status);
+            wfcQuery.setParameter("versionIds", versionIds);
+            return wfcQuery.getResultList();
+        });
+    }
 
     @PUT
     @Path("{id}")
-    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response edit(@PathParam("id") Long id, WorkflowCheck entity) {
         entity.setId(id);
         return super.edit(entity);
@@ -62,21 +86,18 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
 
     @GET
     @Path("{id}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response find(@PathParam("id") Long id) {
         return super.find(id);
     }
 
     @GET
     @Override
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response findAll() {
         return super.findAll();
     }
 
     @GET
     @Path("{from}/{to}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
         return super.findRange(new int[]{from, to});
     }

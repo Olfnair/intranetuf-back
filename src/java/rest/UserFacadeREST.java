@@ -8,7 +8,6 @@ package rest;
 import config.ApplicationConfig;
 import entities.Credentials;
 import entities.User;
-import static entities.User.LIST_BY_RIGHT_ON_PROJECT;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.logging.Level;

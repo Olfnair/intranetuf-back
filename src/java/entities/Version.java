@@ -28,6 +28,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 public class Version implements Serializable {
+    
+    public final static class Status {
+       public final static int CREATED = 0;
+       public final static int CONTROLLED = 1;
+       public final static int VALIDATED = 2;
+    }
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -104,8 +110,21 @@ public class Version implements Serializable {
     }
 
     public void setWorkflowChecks(List<WorkflowCheck> workflowChecks) {
-        this.workflowChecks = workflowChecks;
+        this.workflowChecks = workflowChecks;   
     }
+    
+    public void initWorkflowChecks() {
+        
+        for(WorkflowCheck check : this.workflowChecks) {
+            check.setVersion(this);
+            if(check.getOrder_num() == 0) {
+                check.setStatus(WorkflowCheck.Status.TO_CHECK);
+            }
+            else {
+                check.setStatus(WorkflowCheck.Status.WAITING);
+            }
+        }
+    }      
     
     @Override
     public int hashCode() {
