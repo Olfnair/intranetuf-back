@@ -33,6 +33,7 @@ public class Version implements Serializable {
        public final static int CREATED = 0;
        public final static int CONTROLLED = 1;
        public final static int VALIDATED = 2;
+       public final static int REFUSED = 3;
     }
 
     private static final long serialVersionUID = 1L;
@@ -124,7 +125,18 @@ public class Version implements Serializable {
                 check.setStatus(WorkflowCheck.Status.WAITING);
             }
         }
-    }      
+    }
+    
+    public void updateStatus(WorkflowCheck updateCheck) {
+        // TODO : bloquer l'update si la version a déjà le statut REFUSED ?
+        if(updateCheck.getStatus() == WorkflowCheck.Status.CHECK_KO) {
+            this.setStatus(Status.REFUSED);
+            return;
+        }
+        for(WorkflowCheck check : this.workflowChecks) {
+            
+        }
+    }
     
     @Override
     public int hashCode() {
