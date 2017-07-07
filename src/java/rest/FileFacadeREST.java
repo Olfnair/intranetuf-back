@@ -9,6 +9,7 @@ import config.ApplicationConfig;
 import entities.Date;
 import entities.File;
 import entities.Project;
+import entities.ProjectRight;
 import entities.User;
 import entities.Version;
 import files.Upload;
@@ -90,8 +91,29 @@ public class FileFacadeREST extends AbstractFacade<File> {
     
     @DELETE
     @Path("{id}")
-    public Response remove(@PathParam("id") Long id) {
-        return super.remove(id);
+    public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        // vérifier que l'utilisateur a le droit de supprimer un fichier ou est admin
+        User user = em.find(User.class, token.getUserId());       
+        if(! user.isAdmin()) {
+            javax.persistence.Query projectQuery = em.createNamedQuery("File.getProject");
+            projectQuery.setParameter("fileId", id);
+            List<Project> projectResult = projectQuery.getResultList();
+            Project project = projectResult.get(0);
+        
+            javax.persistence.Query rightQuery = em.createNamedQuery("ProjectRight.UserHasRight");
+            rightQuery.setParameter("userId", user.getId());
+            rightQuery.setParameter("projectId", project.getId());
+            rightQuery.setParameter("right", ProjectRight.DELETEFILES);
+            List<User> userResult = rightQuery.getResultList();
+            if(userResult == null || userResult.size() <= 0 || userResult.get(0).getId().longValue() != user.getId().longValue()) {
+                throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+            }
+        }
+        File file = em.find(File.class, id);
+        file.setActive(false);
+        return Response.status(Response.Status.OK).build();
     }
     
     @GET

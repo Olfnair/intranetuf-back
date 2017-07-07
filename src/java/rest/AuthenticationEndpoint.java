@@ -36,7 +36,7 @@ public class AuthenticationEndpoint {
     
     @GET
     @Path("adminLoginAs/{login}")
-    public Response authenticateUser(@Context MessageContext jaxrsContext, @PathParam("login") String login) {
+    public Response authenticateAsUser(@Context MessageContext jaxrsContext, @PathParam("login") String login) {
         AuthToken adminToken = Authentication.validate(jaxrsContext);
         
         // TODO : vérifier que c'est le token d'un admin
@@ -51,7 +51,7 @@ public class AuthenticationEndpoint {
         catch(Exception e) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        AuthToken userToken = Authentication.issueToken(user.getId(), 0L, 60 * 60, AuthToken.AUTH_KEY);
+        AuthToken userToken = Authentication.issueToken(user.getId(), user.getRole(), 60 * 60, AuthToken.AUTH_KEY);
         return Response.ok(userToken.toJsonString()).build();
     }
     
@@ -73,6 +73,6 @@ public class AuthenticationEndpoint {
         }
         
         // génération du token en fonction du l'utilisateur
-        return Authentication.issueToken(user.getId(), 0L, 60 * 60, AuthToken.AUTH_KEY); // token valable pendant 1h = 60 * 60 = 3600 sec
+        return Authentication.issueToken(user.getId(), user.getRole(), 60 * 60, AuthToken.AUTH_KEY); // token valable pendant 1h = 60 * 60 = 3600 sec
     }
 }

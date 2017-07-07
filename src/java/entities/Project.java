@@ -14,6 +14,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,6 +27,9 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @XmlRootElement
+@NamedQueries({
+    @NamedQuery(name="Project.ListForUser", query="SELECT p FROM Project p INNER JOIN p.projectRights pr WHERE p.active = true AND pr.user.id = :userId AND pr.project.id = p.id AND MOD(pr.rights/:right, 2) >= 1")
+})
 public class Project implements Serializable {
     public static final FlexQuery LIST_ALL_OTHER_PROJECTS;
     

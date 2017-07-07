@@ -30,7 +30,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name="File.byProject", query="SELECT f FROM File f WHERE f.active = true AND f.project.id = :projectId"),
-    @NamedQuery(name="File.byVersion", query="SELECT f FROM File f JOIN FETCH f.project WHERE f.version.id = :versionId")
+    @NamedQuery(name="File.byVersion", query="SELECT f FROM File f JOIN FETCH f.project WHERE f.version.id = :versionId"),
+    @NamedQuery(name="File.getProject", query="SELECT f.project FROM File f WHERE f.id = :fileId")
 })
 public class File implements Serializable {
     

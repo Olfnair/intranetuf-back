@@ -39,6 +39,12 @@ import javax.xml.bind.annotation.XmlTransient;
 })
 public class User implements Serializable {
     
+    public final static class Roles {
+        public final static int USER = 0;
+        public final static int ADMIN = 1;
+        public final static int SUPERADMIN = 2;
+    }
+    
     public final static FlexQuery LIST_ALL_COMPLETE;
     public final static FlexQuery LIST_BY_RIGHT_ON_PROJECT;
     
@@ -120,6 +126,14 @@ public class User implements Serializable {
 
     public void setRole(Long role) {
         this.role = role;
+    }
+    
+    public boolean hasRole(int role) {
+        return (this.role & role) > 0 || role == Roles.USER;
+    }
+    
+    public boolean isAdmin() {
+        return this.hasRole(Roles.ADMIN) || this.hasRole(Roles.SUPERADMIN);
     }
     
     public String getName() {

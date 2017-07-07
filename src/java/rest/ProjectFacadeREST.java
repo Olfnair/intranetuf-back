@@ -7,6 +7,8 @@ package rest;
 
 import config.ApplicationConfig;
 import entities.Project;
+import entities.ProjectRight;
+import entities.User;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -70,7 +72,20 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     @GET
     public Response findAll(@Context MessageContext jaxrsContext) {
         AuthToken token = Authentication.validate(jaxrsContext);
-        return super.findAll();
+        User user = em.find(User.class, token.getUserId());
+        
+        // si admin : tous les projets
+        if(user.hasRole(User.Roles.ADMIN) || user.hasRole(User.Roles.SUPERADMIN)) {
+            return super.findAll();
+        }
+        
+        // sinon, uniquement les projets que l'utilisateur peut voir
+        return this.buildResponseList(() -> {
+            javax.persistence.Query projectsQuery = em.createNamedQuery("Project.ListForUser");
+            projectsQuery.setParameter("userId", user.getId());
+            projectsQuery.setParameter("right", ProjectRight.VIEWPROJECT);
+            return projectsQuery.getResultList();
+        });
     }
     
     @GET
