@@ -15,6 +15,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.validation.constraints.Min;
@@ -27,6 +29,9 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
+@NamedQueries({
+    @NamedQuery(name="Version.getWithChecks", query="SELECT v FROM Version v JOIN FETCH v.workflowChecks WHERE v.id = :versionId")
+})
 public class Version implements Serializable {
     
     public final static class Status {
@@ -118,7 +123,7 @@ public class Version implements Serializable {
         
         for(WorkflowCheck check : this.workflowChecks) {
             check.setVersion(this);
-            if(check.getOrder_num() == 0) {
+            if(check.getType() == WorkflowCheck.Type.CONTROL && check.getOrder_num() == 0) {
                 check.setStatus(WorkflowCheck.Status.TO_CHECK);
             }
             else {
@@ -127,15 +132,56 @@ public class Version implements Serializable {
         }
     }
     
+    
+    // préconditions :
+    // bloquer l'update si updateCheck n'est pas TO_CHECK ou qu'il existe un check TO_CHECK de type inférieur
+    // bloquer l'update si la version a déjà le statut REFUSED
     public void updateStatus(WorkflowCheck updateCheck) {
-        // TODO : bloquer l'update si la version a déjà le statut REFUSED ?
+        int type = updateCheck.getType();
+        int order_num = updateCheck.getOrder_num();
+        boolean updated;
+        
+        // TODO : envoyer mails, noter dates       
+        
         if(updateCheck.getStatus() == WorkflowCheck.Status.CHECK_KO) {
             this.setStatus(Status.REFUSED);
+            // fichier refusé, tout s'arrête là..
             return;
         }
+        
+        // sinon, vérifier si il existe encore un check du même type à TO_CHECK avec le même numéro d'ordre
         for(WorkflowCheck check : this.workflowChecks) {
-            
+            if(check.getType() == type && check.getOrder_num() == order_num && check.getStatus() == WorkflowCheck.Status.TO_CHECK) {
+                // si oui, fini
+                return;
+            }
         }
+           
+        // si non, regarder s'il existe des checks d'ordre order_num + 1 du même type et les mettre à TO_CHECK
+        updated = false;
+        for(WorkflowCheck check : this.workflowChecks) {
+            if(check.getType() == type && check.getOrder_num() == order_num + 1) {
+                check.setStatus(WorkflowCheck.Status.TO_CHECK);
+                updated = true;
+            }
+        }
+        
+        // si non et que le type == CONTROL, le fichier est contrôlé
+        if(! updated && type == WorkflowCheck.Type.CONTROL) {
+            this.setStatus(Status.CONTROLLED);
+            // préparer les validations :
+            for(WorkflowCheck check : this.workflowChecks) {
+                if(check.getType() == type + 1 && check.getOrder_num() == 0) {
+                    check.setStatus(WorkflowCheck.Status.TO_CHECK);
+                    updated = true;
+                }
+            }
+        }
+
+        // sinon si le type == VALIDATION, le fichier est validé
+        else if(! updated && type == WorkflowCheck.Type.VALIDATION) {
+            this.setStatus(Status.VALIDATED);
+        }      
     }
     
     @Override

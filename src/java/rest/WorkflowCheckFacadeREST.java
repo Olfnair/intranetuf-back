@@ -5,9 +5,11 @@
  */
 package rest;
 
+import entities.Version;
 import entities.WorkflowCheck;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -19,6 +21,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import rest.objects.RestLong;
@@ -73,8 +76,55 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     @PUT
     @Path("{id}")
     public Response edit(@PathParam("id") Long id, WorkflowCheck entity) {
-        entity.setId(id);
-        return super.edit(entity);
+        // TODO : check token + check existe bien pour cet user
+        int status = entity.getStatus();
+        
+        if(status != WorkflowCheck.Status.CHECK_OK && status != WorkflowCheck.Status.CHECK_KO) {
+            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+        }
+        
+        WorkflowCheck check = em.find(WorkflowCheck.class, id);
+        if(check == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        
+        Version version;
+        try {
+            javax.persistence.Query versionQuery = em.createNamedQuery("Version.getWithChecks");
+            versionQuery.setParameter("versionId", check.getVersion().getId());
+            List<Version> result = versionQuery.getResultList();
+            version = result.get(0);
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        
+        // bloquer l'update si la version a déjà le statut REFUSED
+        if(version.getStatus() == Version.Status.REFUSED) {
+            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+        }
+        
+        // bloquer l'update si updateCheck n'est pas TO_CHECK ou qu'il existe un check TO_CHECK de type inférieur
+        // ou un order_num inférieur qui n'est pas CHECK_OK
+        for(WorkflowCheck c : version.getWorkflowChecks()) {
+            if(c.getId().longValue() == id.longValue() && c.getStatus() != WorkflowCheck.Status.TO_CHECK) {
+                throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+            }
+            else if(c.getType() < check.getType() && c.getStatus() != WorkflowCheck.Status.CHECK_OK) {
+                throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+            }
+            else if(c.getType().intValue() == check.getType().intValue() && c.getOrder_num() < check.getOrder_num() && c.getStatus() != WorkflowCheck.Status.CHECK_OK) {
+                throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+            }
+        }
+        
+        // persister       
+        check.setComment(entity.getComment());
+        check.setStatus(status);
+        version.updateStatus(check);
+        
+        return Response.status(Response.Status.OK).build();
     }
 
     @DELETE
