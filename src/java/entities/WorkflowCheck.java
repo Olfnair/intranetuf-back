@@ -26,14 +26,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name="WorkflowCheck.getByVersion", query="SELECT wfc FROM WorkflowCheck wfc WHERE wfc.version.id = :versionId"),
+    @NamedQuery(name="WorkflowCheck.getByVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user WHERE wfc.version.id = :versionId ORDER BY wfc.type ASC, wfc.order_num ASC"),
     @NamedQuery(name="WorkflowCheck.getByStatusUserVersions", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.version WHERE wfc.user.id = :userId AND wfc.status = :status AND wfc.version.id IN(:versionIds)"),
     @NamedQuery(name="WorkflowCheck.getByUser", query="SELECT wfc FROM WorkflowCheck wfc WHERE wfc.user.id = :userId")
 })
 public class WorkflowCheck implements Serializable {  
     
     // la flemme de faire des enums...
-    public final static class Type {
+    public final static class Types {
         public final static int CONTROL = 0;
         public final static int VALIDATION = 1;
     }

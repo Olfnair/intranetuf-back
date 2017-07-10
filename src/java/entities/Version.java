@@ -123,7 +123,7 @@ public class Version implements Serializable {
         
         for(WorkflowCheck check : this.workflowChecks) {
             check.setVersion(this);
-            if(check.getType() == WorkflowCheck.Type.CONTROL && check.getOrder_num() == 0) {
+            if(check.getType() == WorkflowCheck.Types.CONTROL && check.getOrder_num() == 0) {
                 check.setStatus(WorkflowCheck.Status.TO_CHECK);
             }
             else {
@@ -167,7 +167,7 @@ public class Version implements Serializable {
         }
         
         // si non et que le type == CONTROL, le fichier est contrôlé
-        if(! updated && type == WorkflowCheck.Type.CONTROL) {
+        if(! updated && type == WorkflowCheck.Types.CONTROL) {
             this.setStatus(Status.CONTROLLED);
             // préparer les validations :
             for(WorkflowCheck check : this.workflowChecks) {
@@ -179,7 +179,7 @@ public class Version implements Serializable {
         }
 
         // sinon si le type == VALIDATION, le fichier est validé
-        else if(! updated && type == WorkflowCheck.Type.VALIDATION) {
+        else if(! updated && type == WorkflowCheck.Types.VALIDATION) {
             this.setStatus(Status.VALIDATED);
         }      
     }

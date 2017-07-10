@@ -5,6 +5,7 @@
  */
 package rest;
 
+import entities.File;
 import entities.Version;
 import entities.WorkflowCheck;
 import java.util.ArrayList;
@@ -143,7 +144,24 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     public Response findAll() {
         return super.findAll();
     }
-
+    
+    @GET
+    @Path("forVersion/{versionId}")
+    public Response findforVersion(@PathParam("versionId") Long versionId) {    
+        return super.buildResponseList(() -> {
+            javax.persistence.Query checksQuery = em.createNamedQuery("WorkflowCheck.getByVersion");
+            checksQuery.setParameter("versionId", versionId);
+            return checksQuery.getResultList();
+        });
+    }
+      
+    @GET
+    @Path("forLastVersion/{fileId}")
+    public Response findforFile(@PathParam("fileId") Long fileId) {
+        File file = em.find(File.class, fileId);
+        return this.findforVersion(file.getVersion().getId());
+    }
+    
     @GET
     @Path("{from}/{to}")
     public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
