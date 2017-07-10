@@ -105,7 +105,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
             javax.persistence.Query rightQuery = em.createNamedQuery("ProjectRight.UserHasRight");
             rightQuery.setParameter("userId", user.getId());
             rightQuery.setParameter("projectId", project.getId());
-            rightQuery.setParameter("right", ProjectRight.DELETEFILES);
+            rightQuery.setParameter("right", ProjectRight.Rights.DELETEFILES);
             List<User> userResult = rightQuery.getResultList();
             if(userResult == null || userResult.size() <= 0 || userResult.get(0).getId().longValue() != user.getId().longValue()) {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);

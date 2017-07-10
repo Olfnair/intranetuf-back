@@ -38,18 +38,20 @@ public class ProjectRight implements Serializable {
     }
     
     
-    // droits sur le projet :
-    public static final int VIEWPROJECT     =  1; // voir le projet et ses fichiers
-    public static final int EDITPROJECT     =  2; // editer le projet (changer le nom)
-    public static final int DELETEPROJECT   =  4; // supprimer le projet
-    public static final int ADDFILES        =  8; // ajouter des fichiers au projet
-    public static final int DELETEFILES     = 16; // supprimer des fichiers du projet
-    public static final int CONTROLFILE     = 32; // controler des fichiers du projet
-    public static final int VALIDATEFILE    = 64; // valider les fichiers du projet
-    // admin = tous les droits sur tous les projets
-    // combiner les droits : 1 + 8 = 9 => voir projet et ajouter fichiers
-    // Autrement dit, chaque bit de 'rights' correspond à un droit qui est actif ou pas (0 ou 1)
-    // il reste des bits inutilisés pour ajouter des droits si nécessaire
+    public final static class Rights {
+        // droits sur le projet :
+        public static final int VIEWPROJECT     =  1; // voir le projet et ses fichiers
+        public static final int EDITPROJECT     =  2; // editer le projet (changer le nom)
+        public static final int DELETEPROJECT   =  4; // supprimer le projet
+        public static final int ADDFILES        =  8; // ajouter des fichiers au projet
+        public static final int DELETEFILES     = 16; // supprimer des fichiers du projet
+        public static final int CONTROLFILE     = 32; // controler des fichiers du projet
+        public static final int VALIDATEFILE    = 64; // valider les fichiers du projet
+        // admin = tous les droits sur tous les projets
+        // combiner les droits : 1 + 8 = 9 => voir projet et ajouter fichiers
+        // Autrement dit, chaque bit de 'rights' correspond à un droit qui est actif ou pas (0 ou 1)
+        // il reste des bits inutilisés pour ajouter des droits si nécessaire
+    }
     
 
     private static final long serialVersionUID = 1L;

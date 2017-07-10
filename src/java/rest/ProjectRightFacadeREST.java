@@ -85,12 +85,11 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     public Response findForUserByProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
-        return this.buildResponse(() -> {
+        return this.buildResponseList(() -> {
             javax.persistence.Query rightsQuery = em.createNamedQuery("ProjectRight.GetByUserAndProject");
             rightsQuery.setParameter("userId", token.getUserId());
             rightsQuery.setParameter("projectId", projectId);
-            List<ProjectRight> result = rightsQuery.getResultList();
-            return result.get(0);
+            return rightsQuery.getResultList();
         });
     }
     
