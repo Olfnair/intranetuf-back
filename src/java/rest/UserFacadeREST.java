@@ -33,6 +33,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.PasswordHasher;
+import rest.security.RightsChecker;
 
 /**
  *
@@ -52,17 +53,20 @@ public class UserFacadeREST extends AbstractFacade<User> {
     }
 
     @POST
-    public Response create(User entity) {
-        // TODO : check que c'est bien l'admin qui fait la requête
+    public Response create(@Context MessageContext jaxrsContext, User entity) {
+        // droits : admin ou super
+        AuthToken adminToken = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(adminToken, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
         entity.setCredentials(new Credentials(entity.getLogin()));
         Response res = super.insert(entity);
         // On signe le token avec la clé pour les activations.
         // Important pour éviter de générer un token qui pourrait aussi servir pour tout le reste
-        AuthToken token = Authentication.issueToken(entity.getId(), 0L, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
+        AuthToken userToken = Authentication.issueToken(entity.getId(), 0L, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
         String url = "";
         String text = "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : ";
         try {
-            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + URLEncoder.encode(token.toJsonString(), "UTF-8");
+            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + URLEncoder.encode(userToken.toJsonString(), "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(UserFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -90,20 +94,19 @@ public class UserFacadeREST extends AbstractFacade<User> {
 
     @GET
     @Override
-    public Response findAll() {
-        //new SendMailThread(new Mail("chalet.florian@gmail.com", "test", "le message de test")).start();
-        
+    public Response findAll() {        
         return super.buildResponseList(() -> {
-            //javax.persistence.Query usersQuery = em.createNamedQuery("User.ListAllComplete");
             javax.persistence.Query usersQuery = User.LIST_ALL_COMPLETE.buildQuery(em);
             return usersQuery.getResultList();
         });
     }
     
+    // utilisé pour récupérer les controleurs et valideurs par projet
     @GET
     @Path("rightOnProject/{projectId}/{right}")
     public Response getByRightOnProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId, @PathParam("right") Long right) {
         AuthToken token = Authentication.validate(jaxrsContext);
+        // pas de check de droit spécifique
         
         return super.buildResponseList(() -> {
             javax.persistence.Query usersQuery = User.LIST_BY_RIGHT_ON_PROJECT.buildQuery(em);
@@ -145,7 +148,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
     public Response activate(@Context MessageContext jaxrsContext, @PathParam("id") Long id, Credentials entity) {
         AuthToken token = Authentication.validate(jaxrsContext, AuthToken.ACTIVATION_KEY);
         if(token.getUserId() != id) {
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         }
         // vérifie que le compte n'est pas déjà pending == false
         javax.persistence.Query userQuery = em.createNamedQuery("User.getWithCredentials");

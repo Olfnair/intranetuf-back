@@ -91,8 +91,8 @@ public class ProjectRight implements Serializable {
         this.rights = rights;
     }
     
-    public boolean isRightSet(int right) {
-        return (this.rights & right) != 0;
+    public boolean hasRight(int right) {
+        return (this.rights & right) > 0 || right == 0;
     }
     
     public void setRight(int right) {

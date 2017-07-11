@@ -11,6 +11,8 @@ import entities.Project;
 import files.Upload;
 import java.io.InputStream;
 import entities.File;
+import entities.ProjectRight;
+import entities.User;
 import entities.Version;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -32,6 +34,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import rest.security.RightsChecker;
 
 /**
  *
@@ -58,9 +61,32 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             @Multipart("file") InputStream uploadedInputStream,
             @Multipart("file") Attachment attachment) {       
         AuthToken token = Authentication.validate(jaxrsContext);
-        // TODO : vérifier que le token est bien celui de l'auteur ou de l'admin
+        
+        File file;
+        Project project;
+        User user;
         try {
-            File file = em.find(File.class, entity.getFile().getId());  
+            file = em.find(File.class, entity.getFile().getId());
+            project = em.find(Project.class, file.getProject().getId());
+        }
+        catch(Exception e) {
+           throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        
+        // droits :
+        try { // ajouter un fichier au projet
+            user = RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.ADDFILES);
+        }
+        catch(WebApplicationException e) { // ou admin
+            user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
+        
+        // vérifie que le token est bien celui de l'auteur ou de l'admin
+        if(file.getAuthor().getId().longValue() != user.getId().longValue() && ! user.isAdmin()) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+        
+        try { 
             entity.setFile(file);
             entity.setNum(file.getVersion().getNum() + 1);
             entity.setDate_upload(Date.now());
@@ -68,13 +94,12 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             em.persist(entity);
             file.setVersion(entity);
             em.merge(file);
-            Project project = em.find(Project.class, file.getProject().getId());
             new Upload(uploadedInputStream, ApplicationConfig.combineNameWithId(project.getName(), project.getId()),
                     ApplicationConfig.combineNameWithId(entity.getFilename(), entity.getId())).run();
             return Response.status(201).build();
         }
         catch(Exception e) {
-            throw new WebApplicationException(Response.status(500).build());
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

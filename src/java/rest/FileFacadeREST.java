@@ -36,6 +36,7 @@ import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
 import rest.security.Authentication;
+import rest.security.RightsChecker;
 
 /**
  *
@@ -61,19 +62,27 @@ public class FileFacadeREST extends AbstractFacade<File> {
             @Multipart("entity") File entity,
             @Multipart("file") InputStream uploadedInputStream,
             @Multipart("file") Attachment attachment) {
-        // TODO : vérifier droits
         // TODO : check extension
         // TODO : check file_size et décider d'un max
         AuthToken token = Authentication.validate(jaxrsContext);
+        Project project = em.find(Project.class, entity.getProject().getId());
+        
+        User author;
+        // check droits
+        try { // seulement si l'utilisateur peut ajouter des fichiers à ce project
+            author = RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.ADDFILES);
+        }
+        catch(WebApplicationException e) { // ou qu'il est admin
+            author = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
+        
         try {
-            User author = em.find(User.class, token.getUserId());
             Version version = entity.getVersion();
             version.setFile(entity);
             version.setDate_upload(Date.now());
             version.initWorkflowChecks();
             entity.setAuthor(author);
             em.persist(entity);
-            Project project = em.find(Project.class, entity.getProject().getId());
             new Upload(uploadedInputStream, ApplicationConfig.combineNameWithId(project.getName(), project.getId()),
                     ApplicationConfig.combineNameWithId(version.getFilename(), version.getId())).run();
             return Response.status(201).build();
@@ -94,23 +103,22 @@ public class FileFacadeREST extends AbstractFacade<File> {
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
-        // vérifier que l'utilisateur a le droit de supprimer un fichier ou est admin
-        User user = em.find(User.class, token.getUserId());       
-        if(! user.isAdmin()) {
-            javax.persistence.Query projectQuery = em.createNamedQuery("File.getProject");
-            projectQuery.setParameter("fileId", id);
-            List<Project> projectResult = projectQuery.getResultList();
-            Project project = projectResult.get(0);
-        
-            javax.persistence.Query rightQuery = em.createNamedQuery("ProjectRight.UserHasRight");
-            rightQuery.setParameter("userId", user.getId());
-            rightQuery.setParameter("projectId", project.getId());
-            rightQuery.setParameter("right", ProjectRight.Rights.DELETEFILES);
-            List<User> userResult = rightQuery.getResultList();
-            if(userResult == null || userResult.size() <= 0 || userResult.get(0).getId().longValue() != user.getId().longValue()) {
-                throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-            }
+        javax.persistence.Query projectQuery = em.createNamedQuery("File.getProject");
+        projectQuery.setParameter("fileId", id);
+        List<Project> projectResult = projectQuery.getResultList();
+        if(projectResult == null || projectResult.size() < 1) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
+        Project project = projectResult.get(0);
+        
+        // vérifie que l'utilisateur a le droit de supprimer un fichier ou est admin
+        try {
+            RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.DELETEFILES);
+        }
+        catch(WebApplicationException e) {
+            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
+        
         File file = em.find(File.class, id);
         file.setActive(false);
         return Response.status(Response.Status.OK).build();
@@ -124,7 +132,17 @@ public class FileFacadeREST extends AbstractFacade<File> {
     
     @GET
     @Path("/project/{id}")
-    public Response findByProject(@PathParam("id") Long id) {
+    public Response findByProject(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        // droits
+        try { // voir le projet
+            RightsChecker.getInstance(em).validate(token, User.Roles.USER, id, ProjectRight.Rights.VIEWPROJECT);
+        }
+        catch(WebApplicationException e) { // ou role admin
+            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
+        
         return super.buildResponseList(() -> {
             List<String> where = new ArrayList();
             File.LIST_BY_PROJECT.addWhereCol("project.id");

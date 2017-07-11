@@ -6,6 +6,9 @@
 package rest;
 
 import entities.File;
+import entities.Project;
+import entities.ProjectRight;
+import entities.User;
 import entities.Version;
 import entities.WorkflowCheck;
 import java.util.ArrayList;
@@ -22,9 +25,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.objects.RestLong;
+import rest.security.AuthToken;
+import rest.security.Authentication;
+import rest.security.RightsChecker;
 
 /**
  *
@@ -43,8 +51,47 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         super(WorkflowCheck.class);
     }
     
+    private Project getProjectFromVersion(Long versionId) {
+        javax.persistence.Query filesQuery = em.createNamedQuery("File.byVersion");
+        filesQuery.setParameter("versionId", versionId);
+        List<File> fileList = filesQuery.getResultList();
+        if(fileList == null || fileList.size() < 1) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        File file = fileList.get(0);
+        Project project = file.getProject();
+        if(project == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        return project;
+    }
+    
     @POST
-    public Response create(List<WorkflowCheck> entities) {
+    public Response create(@Context MessageContext jaxrsContext, List<WorkflowCheck> entities) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        if(entities == null || entities.size() < 1) {
+            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+        }
+        Long versionId = entities.get(0).getVersion().getId();
+        // check cohérence données
+        for(WorkflowCheck check: entities) {
+            if(check.getVersion().getId().longValue() != versionId.longValue()) {
+                throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+            }
+        }
+        
+        // récup du projet...
+        Project project = this.getProjectFromVersion(versionId);
+        
+        // droits :
+        try { // ajouter des fichiers au projet
+            RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.ADDFILES);
+        }
+        catch(WebApplicationException e) { // ou admin
+            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
+        
         entities.forEach((check) -> {
             em.persist(check);
         });
@@ -54,11 +101,17 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     @POST // on passe les id's de versions dans le corps de la requête pour être sur de ne pas être limité par la taille d'un GET
     @Path("{userId}/{status}")
     public Response getByStatusUserVersions(
+        @Context MessageContext jaxrsContext,
         @PathParam("userId") Long userId,
         @PathParam("status") Integer status,
         List<RestLong> restLongVersionIds
-    ) {       
-        // TODO : check token + check user = userId ou user = admin
+    ) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        // check user = userId ou user = admin
+        if(token.getUserId() != userId) {
+            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
         
         List<Long> versionIds = new ArrayList(restLongVersionIds.size());
         restLongVersionIds.forEach((restLongId) -> {
@@ -75,17 +128,26 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
 
     @PUT
     @Path("{id}")
-    public Response edit(@PathParam("id") Long id, WorkflowCheck entity) {
-        // TODO : check token + check existe bien pour cet user
-        int status = entity.getStatus();
+    public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, WorkflowCheck entity) {
+        AuthToken token = Authentication.validate(jaxrsContext);
         
-        if(status != WorkflowCheck.Status.CHECK_OK && status != WorkflowCheck.Status.CHECK_KO) {
-            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+        javax.persistence.Query wfcQuery = em.createNamedQuery("WorkflowCheck.getWithUser");
+        wfcQuery.setParameter("wfcId", id);
+        List<WorkflowCheck> wfcResults = wfcQuery.getResultList();
+        if(wfcResults == null || wfcResults.size() < 1) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        WorkflowCheck check = wfcResults.get(0);
+        
+        // droits :
+        // check que l'utilisateur est bien celui qui peut modifier ce WorkflowCheck
+        if(token.getUserId() != check.getUser().getId()) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         }
         
-        WorkflowCheck check = em.find(WorkflowCheck.class, id);
-        if(check == null) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        int status = entity.getStatus();
+        if(status != WorkflowCheck.Status.CHECK_OK && status != WorkflowCheck.Status.CHECK_KO) {
+            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
         }
         
         Version version;
@@ -119,7 +181,8 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
             }
         }
         
-        // persister       
+        // persister (on récupère le comment et le status, mais on ne touche pas au reste,
+        // question d'intégrité (sinon on pourrait modifier user ou version..)
         check.setComment(entity.getComment());
         check.setStatus(status);
         version.updateStatus(check);
@@ -147,7 +210,16 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     
     @GET
     @Path("forVersion/{versionId}")
-    public Response findforVersion(@PathParam("versionId") Long versionId) {    
+    public Response findforVersion(@Context MessageContext jaxrsContext, @PathParam("versionId") Long versionId) {
+        AuthToken token = Authentication.validate(jaxrsContext);      
+        Project project = this.getProjectFromVersion(versionId);       
+        // droits :
+        try {
+            RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.VIEWPROJECT);
+        }
+        catch(WebApplicationException e) {
+            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
         return super.buildResponseList(() -> {
             javax.persistence.Query checksQuery = em.createNamedQuery("WorkflowCheck.getByVersion");
             checksQuery.setParameter("versionId", versionId);
@@ -157,9 +229,14 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
       
     @GET
     @Path("forLastVersion/{fileId}")
-    public Response findforFile(@PathParam("fileId") Long fileId) {
+    public Response findforFile(@Context MessageContext jaxrsContext, @PathParam("fileId") Long fileId) {
+        AuthToken token = Authentication.validate(jaxrsContext);
         File file = em.find(File.class, fileId);
-        return this.findforVersion(file.getVersion().getId());
+        if(file == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        // auth et droits vérifiés ici :
+        return this.findforVersion(jaxrsContext, file.getVersion().getId());
     }
     
     @GET

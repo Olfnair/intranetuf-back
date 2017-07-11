@@ -128,7 +128,7 @@ public class User implements Serializable {
         this.role = role;
     }
     
-    public boolean hasRole(int role) {
+    public boolean hasRole(long role) {
         return (this.role & role) > 0 || role == Roles.USER;
     }
     

@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
 import rest.security.Authentication;
+import rest.security.RightsChecker;
 
 /**
  *
@@ -45,7 +46,11 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     }
     
     @POST
-    public Response create(Project entity) {
+    public Response create(@Context MessageContext jaxrsContext, Project entity) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        // réservé aux admin & superadmins
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
         Response res = super.insert(entity);
         new java.io.File(ApplicationConfig.PROJECTS_LOCATION + '/' + ApplicationConfig.combineNameWithId(entity.getName(), entity.getId())).mkdirs();
         return res;
@@ -74,8 +79,8 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         AuthToken token = Authentication.validate(jaxrsContext);
         User user = em.find(User.class, token.getUserId());
         
-        // si admin : tous les projets
-        if(user.hasRole(User.Roles.ADMIN) || user.hasRole(User.Roles.SUPERADMIN)) {
+        // si admin (ou superadmin) : tous les projets
+        if(user.isAdmin()) {
             return super.findAll();
         }
         

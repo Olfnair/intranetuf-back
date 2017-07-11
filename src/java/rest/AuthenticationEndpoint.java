@@ -20,6 +20,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.PasswordHasher;
+import rest.security.RightsChecker;
 
 @Path("auth")
 @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -27,6 +28,9 @@ import rest.security.PasswordHasher;
 public class AuthenticationEndpoint {
     @PersistenceContext(unitName = "IUFPU")
     private EntityManager em;
+    
+    public AuthenticationEndpoint() {
+    }
     
     @POST
     public Response authenticateUser(Credentials credentials) {       
@@ -36,20 +40,21 @@ public class AuthenticationEndpoint {
     
     @GET
     @Path("adminLoginAs/{login}")
-    public Response authenticateAsUser(@Context MessageContext jaxrsContext, @PathParam("login") String login) {
-        AuthToken adminToken = Authentication.validate(jaxrsContext);
-        
-        // TODO : vérifier que c'est le token d'un admin
+    public Response authenticateAsUser(@Context MessageContext jaxrsContext, @PathParam("login") String login) {       
+        AuthToken token = Authentication.validate(jaxrsContext);
+        User admin = RightsChecker.getInstance(em).validate(token, User.Roles.SUPERADMIN);
         
         Query userQuery = em.createNamedQuery("User.getByLogin");
         userQuery.setParameter("login", login);
         User user;
         try {
             user = (User)userQuery.getSingleResult();
-            // TODO : vérifier qu'on ne cherche pas à utiliser un compte de même niveau (superadmin)
         }
         catch(Exception e) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        if(user.hasRole(User.Roles.SUPERADMIN)) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         }
         AuthToken userToken = Authentication.issueToken(user.getId(), user.getRole(), 60 * 60, AuthToken.AUTH_KEY);
         return Response.ok(userToken.toJsonString()).build();

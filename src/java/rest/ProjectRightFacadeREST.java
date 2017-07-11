@@ -21,12 +21,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
 import rest.security.Authentication;
+import rest.security.RightsChecker;
 
 /**
  *
@@ -51,7 +53,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
             if(right.getId() == null) {
                 em.persist(right);
             }
-            else if (right.getRights() == 0) {
+            else if(right.getRights() == 0) {
                 em.remove(right);
             }
             else {
@@ -84,6 +86,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     @Path("{projectId}")
     public Response findForUserByProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId) {
         AuthToken token = Authentication.validate(jaxrsContext);
+        // pas de droits à vérifier, on récupère automatiquement les droits pour l'user qui les demande après authentification
         
         return this.buildResponseList(() -> {
             javax.persistence.Query rightsQuery = em.createNamedQuery("ProjectRight.GetByUserAndProject");
@@ -96,10 +99,16 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     @GET
     @Path("user/{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getRightsForUser(@PathParam("id") Long id) {
-        //TODO : check token & global rights
+    public Response getRightsForUser(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        // droits : uniquement les admins (ou super)
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
         return super.buildResponseList(() -> {
             User user = em.find(User.class, id);
+            if(user == null) {
+                throw new WebApplicationException(Response.Status.NOT_FOUND);
+            }
             ProjectRight.LIST_BY_USER.addOrderByCol("project.name");
             javax.persistence.Query rightsQuery = ProjectRight.LIST_BY_USER.buildQuery(em);
             rightsQuery.setParameter("userId", id);
