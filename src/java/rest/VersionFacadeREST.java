@@ -94,8 +94,7 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             em.persist(entity);
             file.setVersion(entity);
             em.merge(file);
-            new Upload(uploadedInputStream, ApplicationConfig.combineNameWithId(project.getName(), project.getId()),
-                    ApplicationConfig.combineNameWithId(entity.getFilename(), entity.getId())).run();
+            new Upload(uploadedInputStream, project.getId().toString(), entity.getId().toString()).run();
             return Response.status(201).build();
         }
         catch(Exception e) {

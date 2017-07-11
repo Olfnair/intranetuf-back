@@ -83,8 +83,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
             version.initWorkflowChecks();
             entity.setAuthor(author);
             em.persist(entity);
-            new Upload(uploadedInputStream, ApplicationConfig.combineNameWithId(project.getName(), project.getId()),
-                    ApplicationConfig.combineNameWithId(version.getFilename(), version.getId())).run();
+            new Upload(uploadedInputStream, project.getId().toString(), version.getId().toString()).run();
             return Response.status(201).build();
         }
         catch(Exception e) {

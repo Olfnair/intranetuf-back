@@ -20,6 +20,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -52,20 +53,53 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
         Response res = super.insert(entity);
-        new java.io.File(ApplicationConfig.PROJECTS_LOCATION + '/' + ApplicationConfig.combineNameWithId(entity.getName(), entity.getId())).mkdirs();
+        new java.io.File(ApplicationConfig.PROJECTS_LOCATION + '/' + entity.getId().toString()).mkdirs();
         return res;
     }
     
     @PUT
     @Path("{id}")
-    public Response edit(@PathParam("id") Long id, Project entity) {
+    public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, Project entity) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        User user;
+        // droits
+        try {
+            user = RightsChecker.getInstance(em).validate(token, User.Roles.USER, id, ProjectRight.Rights.EDITPROJECT);
+        }
+        catch(WebApplicationException e) {
+            user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
+        
+        Project project = em.find(Project.class, id);
+        if(project == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        if(! user.isAdmin()) {
+            entity.setActive(project.isActive());
+        }
+        entity.setId(project.getId());   
         return super.edit(entity);
     }
     
     @DELETE
     @Path("{id}")
-    public Response remove(@PathParam("id") Long id) {
-        return super.remove(id);
+    public Response remove(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        // droits:
+        try { // supprimer le projet
+            RightsChecker.getInstance(em).validate(token, User.Roles.USER, id, ProjectRight.Rights.DELETEPROJECT);
+        }
+        catch(WebApplicationException e) { // ou admins
+            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
+        Project project = em.find(Project.class, id);
+        if(project == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        
+        // suppression logique
+        project.setActive(false);       
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
     
     @GET

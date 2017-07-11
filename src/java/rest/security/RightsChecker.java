@@ -5,6 +5,7 @@
 */
 package rest.security;
 
+import entities.Project;
 import entities.ProjectRight;
 import entities.User;
 import java.util.List;
@@ -19,7 +20,7 @@ import javax.ws.rs.core.Response;
 public class RightsChecker {
     private EntityManager em;
     
-    private static RightsChecker CHECKER;
+    private static final RightsChecker CHECKER;
     
     static {
         CHECKER = new RightsChecker();
@@ -55,6 +56,10 @@ public class RightsChecker {
         }
         
         if(projectId >= 0) {
+            Project project = em.find(Project.class, projectId);
+            if(project == null || ! project.isActive() && ! user.isAdmin()) {
+                throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+            }     
             javax.persistence.Query rightsQuery = em.createNamedQuery("ProjectRight.GetByUserAndProject");
             rightsQuery.setParameter("userId", user.getId());
             rightsQuery.setParameter("projectId", projectId);

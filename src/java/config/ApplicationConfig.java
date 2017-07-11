@@ -53,7 +53,7 @@ public class ApplicationConfig extends Application {
     }
 
     
-    private static String nameFormat(String name) {
+    /*private static String nameFormat(String name) {
         return name.replaceAll("\\s", "_"); // remplace tous les caractères d'espacement par '_'
     }
     
@@ -66,7 +66,7 @@ public class ApplicationConfig extends Application {
         String file = name.substring(0, extIndex);
         String ext = name.substring(extIndex);
         return file + '_' + id.toString() + ext;
-    }  
+    }*/
 
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(rest.AuthenticationEndpoint.class);

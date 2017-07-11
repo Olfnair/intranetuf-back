@@ -73,8 +73,7 @@ public class DownloadEndpoint {
         }
         
         try {
-            return new Download(version.getFilename(), ApplicationConfig.combineNameWithId(project.getName(), project.getId()),
-                    ApplicationConfig.combineNameWithId(version.getFilename(), versionId)).run();
+            return new Download(version.getFilename(), project.getId().toString(), version.getId().toString()).run();
         }
         catch(Exception e) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
