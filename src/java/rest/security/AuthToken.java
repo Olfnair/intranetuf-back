@@ -8,6 +8,7 @@ package rest.security;
 import config.ApplicationConfig;
 import config.ConfigFile;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
@@ -123,16 +124,18 @@ public class AuthToken implements Serializable {
     private String generateSignature(int key) {
         String sign;
         try {
-            String data = Long.toString(this.nonce) + Long.toString(this.userId) + Long.toString(this.roleId);
+            String data = Long.toString(this.nonce) + Long.toString(this.userId) + Long.toString(this.roleId) + Long.toString(this.expDate);
             
             Mac HMAC_sha512 = Mac.getInstance("HmacSHA512");
-            SecretKeySpec secret_key = new SecretKeySpec(getSecret(key).getBytes(), "HmacSHA512");
+            SecretKeySpec secret_key = new SecretKeySpec(getSecret(key).getBytes("ISO-8859-1"), "HmacSHA512");
             HMAC_sha512.init(secret_key);
             
-            sign = Base64.getEncoder().encodeToString(HMAC_sha512.doFinal(data.getBytes()));
+            sign = Base64.getEncoder().encodeToString(HMAC_sha512.doFinal(data.getBytes("ISO-8859-1")));
         }
         catch (IllegalStateException | InvalidKeyException | NoSuchAlgorithmException e){
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        } catch (UnsupportedEncodingException ex) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         return sign;
     }

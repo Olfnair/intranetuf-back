@@ -10,6 +10,7 @@ import entities.Credentials;
 import entities.User;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
@@ -34,6 +35,7 @@ import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.PasswordHasher;
 import rest.security.RightsChecker;
+import utils.UrlBase64;
 
 /**
  *
@@ -66,9 +68,10 @@ public class UserFacadeREST extends AbstractFacade<User> {
         String url = "";
         String text = "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : ";
         try {
-            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + URLEncoder.encode(userToken.toJsonString(), "UTF-8");
+            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + UrlBase64.encode(userToken.toJsonString(), "ISO-8859-1");
         } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(UserFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{error: \"UnsupportedEncodingException\"}").build());
         }
         new SendMailThread(new Mail(entity.getEmail(), "Activer votre compte", text + url)).start();
         return res;

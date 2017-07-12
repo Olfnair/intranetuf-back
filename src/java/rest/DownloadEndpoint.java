@@ -5,13 +5,13 @@
 */
 package rest;
 
-import config.ApplicationConfig;
 import entities.File;
 import entities.Version;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
 import files.Download;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.RightsChecker;
+import utils.UrlBase64;
 
 /**
  *
@@ -43,7 +44,14 @@ public class DownloadEndpoint {
     @Path("{versionId}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response getFile(@QueryParam("token") String jsonToken, @PathParam("versionId") Long versionId) {
-        AuthToken token = Authentication.validate(jsonToken);
+        AuthToken token;
+        try {
+            token = Authentication.validate(UrlBase64.decode(jsonToken, "ISO-8859-1"));
+        }
+        catch(UnsupportedEncodingException e) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{error: \"Token error\"").build());
+        }
         
         javax.persistence.Query filesQuery = em.createNamedQuery("File.byVersion");
         filesQuery.setParameter("versionId", versionId);
