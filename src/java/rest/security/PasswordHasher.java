@@ -39,10 +39,10 @@ public class PasswordHasher {
         String peper = "pLKvnBOx1V5qIxtblHUbdGQpTyifH0/Qbefppez0Kcg=";
         
         try {
-            iteration = Integer.parseInt(config.read("iteration"), 10);
+            iteration = Integer.parseInt(config.read("iteration", Integer.toString(iteration)), 10);
             peper = config.read("peper");
-            output_len = Integer.parseInt(config.read("output_len"), 10);
-            salt_len = Integer.parseInt(config.read("salt_len"), 10);
+            output_len = Integer.parseInt(config.read("output_len", Integer.toString(output_len)), 10);
+            salt_len = Integer.parseInt(config.read("salt_len", Integer.toString(salt_len)), 10);
             if(peper == null) {
                 throw new Exception("Error in hashpass.properties");
             }

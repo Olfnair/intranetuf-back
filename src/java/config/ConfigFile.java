@@ -21,6 +21,10 @@ public class ConfigFile {
     }
     
     public String read(String property) throws IOException {
+        return read(property, null);
+    }      
+    
+    public String read(String property, String defaultValue) throws IOException {
         if(! this.loaded) {
             if(! isResource) {
                 try (InputStream input = new FileInputStream(filename)) {
@@ -36,6 +40,9 @@ public class ConfigFile {
             }
             loaded = true;
         }
-        return prop.getProperty(property);
+        if(defaultValue == null) {
+            return prop.getProperty(property);
+        }
+        return prop.getProperty(property, defaultValue);
     }
 }
