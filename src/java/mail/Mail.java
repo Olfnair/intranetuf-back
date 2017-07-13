@@ -49,8 +49,8 @@ public class Mail {
             Mail.PROPS.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory"); 
             Mail.PROPS.put("mail.smtp.socketFactory.fallback", "false");
         }
-        Mail.PROPS.put("mail.smtp.host", config.read("host")); // smtp.gmail.com
-        Mail.PROPS.put("mail.smtp.port", config.read("port")); // 587
+        Mail.PROPS.put("mail.smtp.host", config.read("host"));
+        Mail.PROPS.put("mail.smtp.port", config.read("port"));
         Mail.PROPS.put("mail.smtp.user", config.read("user"));
         Mail.PROPS.put("mail.smtp.password", config.read("password"));
     }
