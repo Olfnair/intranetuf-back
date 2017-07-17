@@ -54,8 +54,8 @@ public class Version implements Serializable {
     
     private int status = 0;
     
-    @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
-    private Date date_upload;
+    @NotNull
+    private Long date_upload;
     
     @ManyToOne(fetch=FetchType.LAZY)
     private File file;
@@ -95,11 +95,11 @@ public class Version implements Serializable {
         this.status = status;
     }
 
-    public Date getDate_upload() {
+    public Long getDate_upload() {
         return date_upload;
     }
 
-    public void setDate_upload(Date date_upload) {
+    public void setDate_upload(Long date_upload) {
         this.date_upload = date_upload;
     }
 

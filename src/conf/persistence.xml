@@ -4,7 +4,6 @@
     <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
     <jta-data-source>JNDI_intranetuf</jta-data-source>
     <class>entities.Credentials</class>
-    <class>entities.Date</class>
     <class>entities.File</class>
     <class>entities.Log</class>
     <class>entities.Project</class>

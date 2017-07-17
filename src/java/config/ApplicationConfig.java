@@ -70,7 +70,6 @@ public class ApplicationConfig extends Application {
 
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(rest.AuthenticationEndpoint.class);
-        resources.add(rest.DateFacadeREST.class);
         resources.add(rest.DownloadEndpoint.class);
         resources.add(rest.FileFacadeREST.class);
         resources.add(rest.LogFacadeREST.class);

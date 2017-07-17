@@ -5,8 +5,6 @@
 */
 package rest;
 
-import config.ApplicationConfig;
-import entities.Date;
 import entities.File;
 import entities.Project;
 import entities.ProjectRight;
@@ -14,6 +12,7 @@ import entities.User;
 import entities.Version;
 import files.Upload;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -79,7 +78,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
         try {
             Version version = entity.getVersion();
             version.setFile(entity);
-            version.setDate_upload(Date.now());
+            version.setDate_upload(Instant.now().getEpochSecond());
             version.initWorkflowChecks();
             entity.setAuthor(author);
             em.persist(entity);

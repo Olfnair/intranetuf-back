@@ -36,8 +36,7 @@ public class Log implements Serializable {
     /*@Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private java.util.Date logdate;*/
     @NotNull
-    @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
-    private Date logdate;
+    private Long logdate;
     
     @ManyToOne(fetch=FetchType.EAGER)
     private User user;
@@ -69,11 +68,11 @@ public class Log implements Serializable {
         this.message = message;
     }
 
-    public Date getLogdate() {
+    public Long getLogdate() {
         return logdate;
     }
 
-    public void setLogdate(Date logdate) {
+    public void setLogdate(Long logdate) {
         this.logdate = logdate;
     }
     

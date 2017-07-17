@@ -53,11 +53,9 @@ public class WorkflowCheck implements Serializable {
     
     private Integer status = 0;
     
-    @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
-    private Date date_init;
+    private Long date_init;
     
-    @OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)
-    private Date date_action;
+    private Long date_action;
     
     private String comment;
     
@@ -88,19 +86,19 @@ public class WorkflowCheck implements Serializable {
         this.status = status;
     }
     
-    public Date getDate_init() {
+    public Long getDate_init() {
         return date_init;
     }
 
-    public void setDate_init(Date date_init) {
+    public void setDate_init(Long date_init) {
         this.date_init = date_init;
     }
 
-    public Date getDate_action() {
+    public Long getDate_action() {
         return date_action;
     }
 
-    public void setDate_action(Date date_action) {
+    public void setDate_action(Long date_action) {
         this.date_action = date_action;
     }
 

@@ -12,21 +12,23 @@ import entities.ProjectRight;
 import entities.User;
 import files.Download;
 import java.io.UnsupportedEncodingException;
+import java.util.Base64;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.ws.rs.GET;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import rest.objects.RestError;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.RightsChecker;
-import utils.UrlBase64;
 
 /**
  *
@@ -40,17 +42,18 @@ public class DownloadEndpoint {
     public DownloadEndpoint() {
     }
     
-    @GET
+    @POST
     @Path("{versionId}")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response getFile(@QueryParam("token") String jsonToken, @PathParam("versionId") Long versionId) {
+    public Response getFile(@FormParam("token") String jsonToken, @PathParam("versionId") Long versionId) {
         AuthToken token;
         try {
-            token = Authentication.validate(UrlBase64.decode(jsonToken, "ISO-8859-1"));
+            token = Authentication.validate(new String(Base64.getDecoder().decode(jsonToken), "ISO-8859-1"));
         }
         catch(UnsupportedEncodingException e) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("{error: \"Token error\"").build());
+                    .entity(new RestError("Token Error")).build());
         }
         
         javax.persistence.Query filesQuery = em.createNamedQuery("File.byVersion");
