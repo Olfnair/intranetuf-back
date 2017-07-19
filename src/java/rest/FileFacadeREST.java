@@ -129,8 +129,9 @@ public class FileFacadeREST extends AbstractFacade<File> {
     }
     
     @GET
-    @Path("/project/{id}")
-    public Response findByProject(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+    @Path("/project/{id}/{whereParams}/{orderbyParams}")
+    public Response findByProject(@Context MessageContext jaxrsContext, @PathParam("id") Long id,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
         // droits
@@ -142,7 +143,6 @@ public class FileFacadeREST extends AbstractFacade<File> {
         }
         
         return super.buildResponseList(() -> {
-            List<String> where = new ArrayList();
             File.LIST_BY_PROJECT.addWhereCol("project.id");
             File.LIST_BY_PROJECT.addOrderByCol("version.filename");
             javax.persistence.Query filesQuery = File.LIST_BY_PROJECT.buildQuery(em);

@@ -28,7 +28,7 @@ public class FlexQuery {
     private final HashMap<String, String> whereColsParameterNames = new HashMap();
     
     // spec order by
-    private final HashMap<String, Boolean> orderByColsSpec  = new HashMap();
+    private final HashMap<String, Boolean> orderByColsSpec = new HashMap();
     
     private final List<String> whereCols = new ArrayList();
     private final List<String> orderByCols = new ArrayList();
