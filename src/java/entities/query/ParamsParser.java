@@ -32,6 +32,7 @@ public class ParamsParser {
         this.params = params;
     }
     
+    // quick & dirty, mais fera le job
     public HashMap<String, String> parse() {
         //params.trim(); // normalement pas utile, faire attention à ne pas insérer d'espace, mais en cas de besoin...
         HashMap<String, String> resmap = new HashMap<>();
