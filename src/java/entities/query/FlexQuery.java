@@ -69,6 +69,9 @@ public class FlexQuery {
     // permet de remplacer n'importe quelle colonne du where par autre chose (une fonction plus complexe par exemple...)
     private final HashMap<String, String> whereColsReplacers = new HashMap();
     
+    // semblable pour order by (on peut spécifier une liste de colonnes à la place)
+    private final HashMap<String, String> orderByColsReplacers = new HashMap();
+    
     private final String baseQuery;
     private final String entityName;
     
@@ -126,6 +129,11 @@ public class FlexQuery {
     public void addWhereColReplacer(String col, String replacer) {
         if(! whereColInSpec(col)) { return; }
         whereColsReplacers.put(col, replacer);
+    }
+    
+    public void addOrderByColReplacer(String col, String replacer) {
+        if(! orderByColInSpec(col)) { return; }
+        orderByColsReplacers.put(col, replacer.trim());
     }
     
     // renvoie le nom d'un paramètre pour une colonne donnée
