@@ -52,22 +52,6 @@ public class ApplicationConfig extends Application {
         return resources;
     }
 
-    
-    /*private static String nameFormat(String name) {
-        return name.replaceAll("\\s", "_"); // remplace tous les caractères d'espacement par '_'
-    }
-    
-    public static String combineNameWithId(String name, Long id) {
-        name = nameFormat(name);
-        int extIndex = name.lastIndexOf('.');
-        if(extIndex == -1) {
-            extIndex = name.length();
-        }
-        String file = name.substring(0, extIndex);
-        String ext = name.substring(extIndex);
-        return file + '_' + id.toString() + ext;
-    }*/
-
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(rest.AuthenticationEndpoint.class);
         resources.add(rest.DownloadEndpoint.class);

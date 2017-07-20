@@ -6,6 +6,7 @@
 package entities.query;
 
 import java.util.HashMap;
+import java.util.StringTokenizer;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
@@ -28,27 +29,28 @@ public class FlexQuery {
     protected final static String WHERE_SELECTOR = ":where:";
     protected final static String ORDERBY_SELECTOR = ":orderby:";
     
-    protected final static HashMap<Class, TypeCaster> CASTMAP;
-    protected final static HashMap<String, OperatorAdapter> OPERATORADAPTMAP;
+    protected final static HashMap<Class, TypeCaster> CAST_MAP;
+    protected final static HashMap<String, OperatorAdapter> OPERATOR_ADAPT_MAP;
     
     static {
-        CASTMAP = new HashMap();
-        CASTMAP.put(Long.class, (String value) -> {
+        CAST_MAP = new HashMap();
+        CAST_MAP.put(Long.class, (String value) -> {
             return Long.parseLong(value);
         });
-        CASTMAP.put(long.class, (String value) -> {
+        CAST_MAP.put(long.class, (String value) -> {
             return Long.parseLong(value);
         });
-        CASTMAP.put(Integer.class, (String value) -> {
+        CAST_MAP.put(Integer.class, (String value) -> {
             return Integer.parseInt(value);
         });
-        CASTMAP.put(int.class, (String value) -> {
+        CAST_MAP.put(int.class, (String value) -> {
             return Integer.parseInt(value);
         });
         // ajouter les types nécessaires...
         
-        OPERATORADAPTMAP = new HashMap();
-        OPERATORADAPTMAP.put("like", (String value) -> {
+        // enter les operateurs en lowercase :
+        OPERATOR_ADAPT_MAP = new HashMap();
+        OPERATOR_ADAPT_MAP.put("like", (String value) -> {
             return '%' + value + '%';
         });
         // ajouter les opérateurs particuliers utilisés...
@@ -63,7 +65,7 @@ public class FlexQuery {
     // spec order by
     private final HashMap<String, Boolean> orderByColsSpec = new HashMap();
     
-    private final HashMap<String, String> whereCols = new HashMap();
+    private final HashMap<String, Object> whereCols = new HashMap();
     private final HashMap<String, String> orderByCols = new HashMap();
     
     // permet de remplacer n'importe quelle colonne du where par autre chose (une fonction plus complexe par exemple...)
@@ -115,25 +117,55 @@ public class FlexQuery {
     }
     
     // ajoute une une colonne dans le WHERE
-    public void addWhereCol(String col, String param) {
-        if(! whereColInSpec(col)) { return; }
-        whereCols.put(col, param);
+    public boolean addWhereCol(String col, String param) {
+        if(! whereColInSpec(col)) { return false; }
+        
+        String operator = whereColsOperators.get(col);
+        Class classType = whereColsParameterClass.get(col);
+        // suppression des espaces pas nécessaires dans param
+        param = param.trim().replaceAll("[\n\t ]+", " ");
+        Object value = param;
+        if(OPERATOR_ADAPT_MAP.containsKey(operator.toLowerCase())) {
+            // adaptation de la valeur pour certains opérateurs (LIKE, ...)
+            OperatorAdapter operatorAdapter = OPERATOR_ADAPT_MAP.get(operator.toLowerCase());
+            try {
+                value = operatorAdapter.adapt(param);
+            } catch (Exception e) {
+                // en cas d'erreur, on ignore simplement cet ajout
+                return false;
+            }
+        }
+        if(CAST_MAP.containsKey(classType)) {
+            // cast de la valeur pour certains types (Long, Integer, ..)
+            TypeCaster typeCaster = CAST_MAP.get(classType);
+            try {
+                value = typeCaster.cast(param);
+            } catch(Exception e) {
+                // en cas d'erreur, on ignore simplement cet ajout
+                return false;
+            }
+        }
+        whereCols.put(col, value);
+        return true;
     }
     
     // ajoute une colonne order by à la requete
-    public void addOrderByCol(String col, String param) {
-        if(! orderByColInSpec(col)) { return; }
+    public boolean addOrderByCol(String col, String param) {
+        if(! orderByColInSpec(col)) { return false; }
+        
         orderByCols.put(col, param);
+        return true;
     }
     
     public void addWhereColReplacer(String col, String replacer) {
         if(! whereColInSpec(col)) { return; }
-        whereColsReplacers.put(col, replacer);
+        whereColsReplacers.put(col, replacer.trim().replaceAll("[\n\t ]+", " "));
     }
     
     public void addOrderByColReplacer(String col, String replacer) {
         if(! orderByColInSpec(col)) { return; }
-        orderByColsReplacers.put(col, replacer.trim());
+        // supprime absolument tous les espaces :
+        orderByColsReplacers.put(col, replacer.trim().replaceAll("[\n\t ]", ""));
     }
     
     // renvoie le nom d'un paramètre pour une colonne donnée
@@ -169,6 +201,30 @@ public class FlexQuery {
         });
     }
     
+    public String getSortOrder(String column) {
+        String order = orderByCols.get(column);
+        if(order.equals("DESC") || order.equals("desc")) {
+            return "desc";
+        }
+        return "asc";
+    }
+    
+    protected boolean buildReplacerOrderBy(String column, StringBuilder orderByBuilder) {
+        if(! orderByColsReplacers.containsKey(column)) { return false; }
+        
+        String sortOrder = getSortOrder(column);
+        StringTokenizer tokens = new StringTokenizer(orderByColsReplacers.get(column), ",;/");
+        boolean comma = false;
+        while(tokens.hasMoreElements()) {
+            if(comma) {
+                orderByBuilder.append(',');
+            }
+            orderByBuilder.append(tokens.nextElement()).append(' ').append(sortOrder);
+            comma = true;
+        }
+        return true;
+    }
+    
     // construit la clause ORDER BY
     protected void buildOrderBy(StringBuilder orderByBuilder) {
         if(count) { return; }
@@ -179,13 +235,8 @@ public class FlexQuery {
             else {
                 orderByBuilder.append(',');
             }
-            orderByBuilder.append(entityName).append('.').append(col);
-            String order = orderByCols.get(col);
-            if(order.equals("DESC") || order.equals("desc")) {
-                orderByBuilder.append(" desc");
-            }
-            else {
-                orderByBuilder.append(" asc");
+            if(! buildReplacerOrderBy(col, orderByBuilder)) {
+                orderByBuilder.append(entityName).append('.').append(col).append(' ').append(getSortOrder(col));
             }
         });
     }
@@ -195,18 +246,6 @@ public class FlexQuery {
         whereCols.keySet().forEach((col) -> {
             String paramName = getParamName(col);
             Object value = whereCols.get(col);
-            String operator = whereColsOperators.get(col);
-            Class classType = whereColsParameterClass.get(col);
-            if(OPERATORADAPTMAP.containsKey(operator.toLowerCase())) {
-                // adaptation de la valeur pour certains opérateurs (LIKE, ...)
-                OperatorAdapter operatorAdapter = OPERATORADAPTMAP.get(operator.toLowerCase());
-                value = operatorAdapter.adapt((String) value);
-            }
-            if(CASTMAP.containsKey(classType)) {
-                // cast de la valeur pour certains types (Long, Integer, ..)
-                TypeCaster typeCaster = CASTMAP.get(classType);
-                value = typeCaster.cast((String)value);
-            }
             query.setParameter(paramName, value);
         });
     }

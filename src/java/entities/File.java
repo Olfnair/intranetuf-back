@@ -48,6 +48,7 @@ public class File implements Serializable {
         LIST_BY_PROJECT.addOrderBySpec("version.num");
         LIST_BY_PROJECT.addOrderBySpec("version.date_upload");
         LIST_BY_PROJECT.addOrderBySpec("author");
+        LIST_BY_PROJECT.addOrderByColReplacer("author", "f.author.name, f.author.firstname");
     }
 
     private static final long serialVersionUID = 1L;
