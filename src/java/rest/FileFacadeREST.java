@@ -10,11 +10,15 @@ import entities.Project;
 import entities.ProjectRight;
 import entities.User;
 import entities.Version;
+import entities.query.ParamsParser;
 import files.Upload;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -36,6 +40,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.RightsChecker;
+import utils.UrlBase64;
 
 /**
  *
@@ -142,11 +147,39 @@ public class FileFacadeREST extends AbstractFacade<File> {
             RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         }
         
+        HashMap<String, String> whereMap;
+        HashMap<String, String> orderbyMap;
+        
+        try {
+            whereMap = new ParamsParser(UrlBase64.decode(whereParams, "UTF-8")).parse();
+            orderbyMap = new ParamsParser(UrlBase64.decode(orderbyParams, "UTF-8")).parse();
+        } catch (UnsupportedEncodingException ex) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        
+        whereMap.keySet().forEach((String col) -> {
+            File.LIST_BY_PROJECT.addWhereCol(col, whereMap.get(col));
+        });
+        
+        orderbyMap.keySet().forEach((String col) -> {
+            File.LIST_BY_PROJECT.addOrderByCol(col, orderbyMap.get(col));
+        });
+        
+        File.LIST_BY_PROJECT.addWhereCol("project.id", id.toString());
+        
+        javax.persistence.Query filesQuery = File.LIST_BY_PROJECT.getQuery(em);
+        
+        //filesQuery.setParameter(File.LIST_BY_PROJECT.getParamName("project.id"), id);
+        
+        /*whereMap.keySet().forEach((String col) -> {
+            filesQuery.setParameter(File.LIST_BY_PROJECT.getParamName(col), '%' + whereMap.get(col) + '%');
+        });*/
+        
         return super.buildResponseList(() -> {
-            File.LIST_BY_PROJECT.addWhereCol("project.id");
+            /*File.LIST_BY_PROJECT.addWhereCol("project.id");
             File.LIST_BY_PROJECT.addOrderByCol("version.filename");
             javax.persistence.Query filesQuery = File.LIST_BY_PROJECT.buildQuery(em);
-            filesQuery.setParameter(File.LIST_BY_PROJECT.getParamName("project.id"), id);
+            filesQuery.setParameter(File.LIST_BY_PROJECT.getParamName("project.id"), id);*/
             return filesQuery.getResultList();
         });
     }

@@ -99,7 +99,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @Override
     public Response findAll() {        
         return super.buildResponseList(() -> {
-            javax.persistence.Query usersQuery = User.LIST_ALL_COMPLETE.buildQuery(em);
+            javax.persistence.Query usersQuery = User.LIST_ALL_COMPLETE.getQuery(em);
             return usersQuery.getResultList();
         });
     }
@@ -112,7 +112,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
         // pas de check de droit spécifique
         
         return super.buildResponseList(() -> {
-            javax.persistence.Query usersQuery = User.LIST_BY_RIGHT_ON_PROJECT.buildQuery(em);
+            javax.persistence.Query usersQuery = User.LIST_BY_RIGHT_ON_PROJECT.getQuery(em);
             usersQuery.setParameter("projectId", projectId);
             usersQuery.setParameter("userId", token.getUserId());
             usersQuery.setParameter("right", right);

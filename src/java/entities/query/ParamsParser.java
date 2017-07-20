@@ -64,7 +64,7 @@ public class ParamsParser {
         }
         delimiter = c;
         c = 0;
-        for(++index; index < params.length() && (c = params.charAt(index)) != delimiter; ++ index) {
+        for(++index; index < params.length() && (c = params.charAt(index)) != delimiter; ++index) {
             buffer.append(c);
         }
         if(index >= params.length()) {

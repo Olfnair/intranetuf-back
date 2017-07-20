@@ -109,8 +109,8 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
             if(user == null) {
                 throw new WebApplicationException(Response.Status.NOT_FOUND);
             }
-            ProjectRight.LIST_BY_USER.addOrderByCol("project.name");
-            javax.persistence.Query rightsQuery = ProjectRight.LIST_BY_USER.buildQuery(em);
+            ProjectRight.LIST_BY_USER.addOrderByCol("project.name", "ASC");
+            javax.persistence.Query rightsQuery = ProjectRight.LIST_BY_USER.getQuery(em);
             rightsQuery.setParameter("userId", id);
             List<ProjectRight> fetchedRights = rightsQuery.getResultList();
             List<Long> fetchedProjectIds = new ArrayList(100);
@@ -121,8 +121,8 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
                 rights.add(right);
             });
             
-            Project.LIST_ALL_OTHER_PROJECTS.addOrderByCol("name");
-            javax.persistence.Query projectsQuery = Project.LIST_ALL_OTHER_PROJECTS.buildQuery(em);
+            Project.LIST_ALL_OTHER_PROJECTS.addOrderByCol("name", "ASC");
+            javax.persistence.Query projectsQuery = Project.LIST_ALL_OTHER_PROJECTS.getQuery(em);
             projectsQuery.setParameter("fetchedIds", fetchedProjectIds);
             List<Project> projects = projectsQuery.getResultList();
             

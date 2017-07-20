@@ -39,9 +39,14 @@ public class File implements Serializable {
     
     static {
         LIST_BY_PROJECT = new FlexQuery("SELECT f FROM File f WHERE f.active = true :where: :orderby:", "f");
-        LIST_BY_PROJECT.addWhereSpec("project.id", "projectId", "=", "AND");
-        LIST_BY_PROJECT.addWhereSpec("version.filename", "versionFilename", "LIKE", "AND");
+        LIST_BY_PROJECT.addWhereSpec("project.id", "projectId", "=", "AND", Long.class);
+        LIST_BY_PROJECT.addWhereSpec("version.filename", "versionFilename", "LIKE", "AND", String.class);
+        LIST_BY_PROJECT.addWhereSpec("version.num", "versionNum", "=", "AND", Long.class);
+        LIST_BY_PROJECT.addWhereSpec("author", "authorName", "LIKE", "AND", String.class);
+        LIST_BY_PROJECT.addWhereColReplacer("author", "concat(f.author.firstname, ' ', f.author.name)");
         LIST_BY_PROJECT.addOrderBySpec("version.filename");
+        LIST_BY_PROJECT.addOrderBySpec("version.num");
+        LIST_BY_PROJECT.addOrderBySpec("version.date_upload");
     }
 
     private static final long serialVersionUID = 1L;

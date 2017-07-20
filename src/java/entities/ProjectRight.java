@@ -33,7 +33,7 @@ public class ProjectRight implements Serializable {
     
     static {
         LIST_BY_USER = new FlexQuery("SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId :where: :orderby:", "pr");
-        LIST_BY_USER.addWhereSpec("project.name", "projectName", "LIKE", "AND");
+        LIST_BY_USER.addWhereSpec("project.name", "projectName", "LIKE", "AND", String.class);
         LIST_BY_USER.addOrderBySpec("project.name");
     }
     

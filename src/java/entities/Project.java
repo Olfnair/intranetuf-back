@@ -35,7 +35,7 @@ public class Project implements Serializable {
     
     static {
         LIST_ALL_OTHER_PROJECTS = new FlexQuery("SELECT p FROM Project p WHERE p.id NOT IN(:fetchedIds) :where: :orderby:", "p");
-        LIST_ALL_OTHER_PROJECTS.addWhereSpec("name", "name", "LIKE", "AND");
+        LIST_ALL_OTHER_PROJECTS.addWhereSpec("name", "name", "LIKE", "AND", String.class);
         LIST_ALL_OTHER_PROJECTS.addOrderBySpec("name");
     }
 
