@@ -17,8 +17,6 @@ import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -40,7 +38,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.RightsChecker;
-import utils.UrlBase64;
+import utils.Base64Url;
 
 /**
  *
@@ -151,8 +149,8 @@ public class FileFacadeREST extends AbstractFacade<File> {
         HashMap<String, String> orderbyMap;
         
         try {
-            whereMap = new ParamsParser(UrlBase64.decode(whereParams, "UTF-8")).parse();
-            orderbyMap = new ParamsParser(UrlBase64.decode(orderbyParams, "UTF-8")).parse();
+            whereMap = new ParamsParser(Base64Url.decode(whereParams, "ISO-8859-1")).parse();
+            orderbyMap = new ParamsParser(Base64Url.decode(orderbyParams, "ISO-8859-1")).parse();
         } catch (UnsupportedEncodingException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }

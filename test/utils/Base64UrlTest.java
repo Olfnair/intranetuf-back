@@ -19,9 +19,9 @@ import static org.junit.Assert.*;
  *
  * @author Florian
  */
-public class UrlBase64Test {
+public class Base64UrlTest {
     
-    public UrlBase64Test() {
+    public Base64UrlTest() {
     }
     
     @BeforeClass
@@ -46,47 +46,51 @@ public class UrlBase64Test {
             String str;
             
             // decodage(encodage(str)) = str
-            str = UrlBase64.encode("abcdefghi", "UTF-8");
-            str = UrlBase64.decode(str, "UTF-8");
+            str = Base64Url.encode("abcdefghi", "UTF-8");
+            str = Base64Url.decode(str, "UTF-8");
             assertEquals("abcdefghi", str);
             
             // test décodage padding 1 =
-            str = UrlBase64.decode("YWJjZGVmamhpamtsbW4=", "UTF-8");
+            str = Base64Url.decode("YWJjZGVmamhpamtsbW4=", "UTF-8");
             assertEquals("abcdefjhijklmn", str);
             
             // test décodage padding 1 .
-            str = UrlBase64.decode("YWJjZGVmamhpamtsbW4.", "UTF-8");
+            str = Base64Url.decode("YWJjZGVmamhpamtsbW4.", "UTF-8");
             assertEquals("abcdefjhijklmn", str);
             
             // test décodage padding 1 omis
-            str = UrlBase64.decode("YWJjZGVmamhpamtsbW4", "UTF-8");
+            str = Base64Url.decode("YWJjZGVmamhpamtsbW4", "UTF-8");
             assertEquals("abcdefjhijklmn", str);
             
             // test encodage, + remplacé par -
-            str = UrlBase64.encode("^a~", "UTF-8");
+            str = Base64Url.encode("^a~", "UTF-8");
             assertEquals("XmF-", str);
             
             // test décodage padding 2 =
-            str = UrlBase64.decode("c2tqZGhmanNkaGZqc2RoZnNkYQ==", "UTF-8");
+            str = Base64Url.decode("c2tqZGhmanNkaGZqc2RoZnNkYQ==", "UTF-8");
             assertEquals("skjdhfjsdhfjsdhfsda", str);
             
             // test décodage padding 2 .
-            str = UrlBase64.decode("c2tqZGhmanNkaGZqc2RoZnNkYQ..", "UTF-8");
+            str = Base64Url.decode("c2tqZGhmanNkaGZqc2RoZnNkYQ..", "UTF-8");
             assertEquals("skjdhfjsdhfjsdhfsda", str);
             
             // test décodage padding 2 omis
-            str = UrlBase64.decode("c2tqZGhmanNkaGZqc2RoZnNkYQ", "UTF-8");
+            str = Base64Url.decode("c2tqZGhmanNkaGZqc2RoZnNkYQ", "UTF-8");
             assertEquals("skjdhfjsdhfjsdhfsda", str);
             
             // encodage sans padding en sortie
-            str = UrlBase64.encode("skjdhfjsdhfjsdhfsda", "UTF-8");
+            str = Base64Url.encode("skjdhfjsdhfjsdhfsda", "UTF-8");
             assertEquals("c2tqZGhmanNkaGZqc2RoZnNkYQ", str);
             
             // décodage : on récupère bien l'entrée précédente
-            str = UrlBase64.decode(str, "UTF-8");
+            str = Base64Url.decode(str, "UTF-8");
             assertEquals("skjdhfjsdhfjsdhfsda", str);
+            
+            str = Base64Url.decode("aOly6Q", "ISO-8859-1");
+            assertEquals("héré", str);
         } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(UrlBase64Test.class.getName()).log(Level.SEVERE, null, ex);
+            assertTrue(false);
+            Logger.getLogger(Base64UrlTest.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }

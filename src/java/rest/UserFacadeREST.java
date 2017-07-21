@@ -35,7 +35,7 @@ import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.PasswordHasher;
 import rest.security.RightsChecker;
-import utils.UrlBase64;
+import utils.Base64Url;
 
 /**
  *
@@ -68,7 +68,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
         String url = "";
         String text = "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : ";
         try {
-            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + UrlBase64.encode(userToken.toJsonString(), "ISO-8859-1");
+            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + Base64Url.encode(userToken.toJsonString(), "ISO-8859-1");
         } catch (UnsupportedEncodingException ex) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{error: \"UnsupportedEncodingException\"}").build());
