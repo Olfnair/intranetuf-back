@@ -77,6 +77,9 @@ public class FlexQuery {
     private final String baseQuery;
     private final String entityName;
     
+    private Integer index = 0;
+    private Integer limit = 0;
+    
     // variables de travail :
     private boolean count = false;
     private StringBuilder queryBuilder = null;
@@ -173,6 +176,11 @@ public class FlexQuery {
         return whereColsParameterNames.get(col);
     }
     
+    public void setLimits(Integer index, Integer limit) {
+        this.index = index;
+        this.limit = limit;
+    }
+    
     // data
     public Query getQuery(EntityManager em) {
         count = false;
@@ -183,6 +191,14 @@ public class FlexQuery {
     public Query getCountQuery(EntityManager em) {
         count = true;
         return buildQuery(em);
+    }
+    
+    public String getSortOrder(String column) {
+        String order = orderByCols.get(column);
+        if(order.equals("DESC") || order.equals("desc")) {
+            return "desc";
+        }
+        return "asc";
     }
     
     // construit la clause WHERE
@@ -199,14 +215,6 @@ public class FlexQuery {
             whereBuilder.append(' ').append(whereColsOperators.get(col)).append(" :")
                     .append(whereColsParameterNames.get(col)); // id du param;
         });
-    }
-    
-    public String getSortOrder(String column) {
-        String order = orderByCols.get(column);
-        if(order.equals("DESC") || order.equals("desc")) {
-            return "desc";
-        }
-        return "asc";
     }
     
     protected boolean buildReplacerOrderBy(String column, StringBuilder orderByBuilder) {
@@ -303,6 +311,8 @@ public class FlexQuery {
         
         Query query = em.createQuery(queryBuilder.toString());
         bindParams(query);
+        query.setFirstResult(index); 
+        query.setMaxResults(limit);
         clear(); // reset des paramètres pour les prochaines requêtes
         return query;
     }

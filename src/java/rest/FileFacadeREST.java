@@ -132,9 +132,10 @@ public class FileFacadeREST extends AbstractFacade<File> {
     }
     
     @GET
-    @Path("/project/{id}/{whereParams}/{orderbyParams}")
+    @Path("/project/{id}/{whereParams}/{orderbyParams}/{index}/{limit}")
     public Response findByProject(@Context MessageContext jaxrsContext, @PathParam("id") Long id,
-            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams) {
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
         // droits
@@ -163,21 +164,12 @@ public class FileFacadeREST extends AbstractFacade<File> {
             File.LIST_BY_PROJECT.addOrderByCol(col, orderbyMap.get(col));
         });
         
-        File.LIST_BY_PROJECT.addWhereCol("project.id", id.toString());
+        File.LIST_BY_PROJECT.addWhereCol("project.id", id.toString());        
+        File.LIST_BY_PROJECT.setLimits(index, limit);
         
         javax.persistence.Query filesQuery = File.LIST_BY_PROJECT.getQuery(em);
         
-        //filesQuery.setParameter(File.LIST_BY_PROJECT.getParamName("project.id"), id);
-        
-        /*whereMap.keySet().forEach((String col) -> {
-            filesQuery.setParameter(File.LIST_BY_PROJECT.getParamName(col), '%' + whereMap.get(col) + '%');
-        });*/
-        
         return super.buildResponseList(() -> {
-            /*File.LIST_BY_PROJECT.addWhereCol("project.id");
-            File.LIST_BY_PROJECT.addOrderByCol("version.filename");
-            javax.persistence.Query filesQuery = File.LIST_BY_PROJECT.buildQuery(em);
-            filesQuery.setParameter(File.LIST_BY_PROJECT.getParamName("project.id"), id);*/
             return filesQuery.getResultList();
         });
     }

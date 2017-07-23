@@ -14,6 +14,7 @@
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/conf/persistence.xml</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/rest/AbstractFacade.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/entities/query/FlexQuery.java</file>
+            <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/rest/objects/RestError.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/rest/security/PasswordHasher.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/files/Upload.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/config/ConfigFile.java</file>
@@ -21,6 +22,7 @@
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/rest/security/RightsChecker.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/rest/LogFacadeREST.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/web/WEB-INF/resources.xml</file>
+            <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/entities/query/ParamsParser.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/entities/ProjectRight.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/rest/VersionFacadeREST.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/config/ApplicationConfig.java</file>
@@ -34,6 +36,9 @@
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/rest/security/Authentication.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/entities/User.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/rest/WorkflowCheckFacadeREST.java</file>
+            <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/test/utils/UrlBase64Test.java</file>
+            <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/utils/UrlBase64.java</file>
+            <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/conf/MANIFEST.MF</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/entities/Project.java</file>
             <file>file:/D:/$$Data/NetBeansProjects/intranetuf-back/src/java/entities/Version.java</file>
         </group>
