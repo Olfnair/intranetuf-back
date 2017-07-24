@@ -10,11 +10,13 @@ import entities.Project;
 import entities.ProjectRight;
 import entities.User;
 import entities.Version;
+import entities.query.FlexQueryResult;
 import entities.query.ParamsParser;
 import files.Upload;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -165,19 +167,31 @@ public class FileFacadeREST extends AbstractFacade<File> {
         });
         
         File.LIST_BY_PROJECT.addWhereCol("project.id", id.toString());        
-        File.LIST_BY_PROJECT.setLimits(index, limit);
+        File.LIST_BY_PROJECT.setPaginationParams(index, limit);
         
-        javax.persistence.Query filesQuery = File.LIST_BY_PROJECT.getQuery(em);
+        File.LIST_BY_PROJECT.prepareCountQuery(em);
         
-        return super.buildResponseList(() -> {
-            return filesQuery.getResultList();
-        });
+        FlexQueryResult<File> files = File.LIST_BY_PROJECT.execute();
+        return Response.ok(files).build();
     }
     
     @GET
     @Override
     public Response findAll() {
-        return super.findAll();
+        FlexQueryResult<File> result;
+        File a = new File();
+        File b = new File();
+        File c = new File();
+        a.setId(1L);
+        b.setId(2L);
+        c.setId(3L);
+        List<File> files = new ArrayList<>(3);
+        files.add(a);
+        files.add(b);
+        files.add(c);
+        result = new FlexQueryResult<>(files, 45L);
+        return Response.ok(result).build();
+        //return super.findAll();
     }
     
     @GET

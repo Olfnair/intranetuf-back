@@ -45,8 +45,8 @@ public class User implements Serializable {
         public final static int SUPERADMIN = 2;
     }
     
-    public final static FlexQuery LIST_ALL_COMPLETE;
-    public final static FlexQuery LIST_BY_RIGHT_ON_PROJECT;
+    public final static FlexQuery<User> LIST_ALL_COMPLETE;
+    public final static FlexQuery<User> LIST_BY_RIGHT_ON_PROJECT;
     
     static {
         LIST_ALL_COMPLETE = new FlexQuery("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u");

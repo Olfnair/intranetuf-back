@@ -6,6 +6,7 @@
 package entities.query;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.StringTokenizer;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -13,11 +14,12 @@ import javax.persistence.Query;
 /**
  *
  * @author Florian
+ * @param <T>
  */
 
 // Exemple d'utilisation :
 // Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true AND u.pending = false :where: :orderby:
-public class FlexQuery {
+public class FlexQuery<T> {
     protected interface TypeCaster {
         public Object cast(String value);
     }
@@ -76,19 +78,25 @@ public class FlexQuery {
     
     private final String baseQuery;
     private final String entityName;
+    private Query query = null;
     
     private Integer index = 0;
     private Integer limit = 0;
+    private boolean paginate = false;
     
     // variables de travail :
     private boolean count = false;
     private StringBuilder queryBuilder = null;
     private StringBuilder searchBuilder = null;
+    private EntityManager em = null;
     
     // reset pour une prochaine requête éventuelle
     protected void clear() {
         whereCols.clear();
         orderByCols.clear();
+        paginate = false;
+        query = null;
+        em = null;
     }
     
     public FlexQuery(String baseQuery, String entityName) {
@@ -176,21 +184,22 @@ public class FlexQuery {
         return whereColsParameterNames.get(col);
     }
     
-    public void setLimits(Integer index, Integer limit) {
+    public void setPaginationParams(Integer index, Integer limit) {
         this.index = index;
         this.limit = limit;
+        this.paginate = true;
     }
     
     // data
-    public Query getQuery(EntityManager em) {
+    public void prepareQuery(EntityManager em) {
         count = false;
-        return buildQuery(em);
+        buildQuery(em);
     }
     
     // count
-    public Query getCountQuery(EntityManager em) {
+    public void prepareCountQuery(EntityManager em) {
         count = true;
-        return buildQuery(em);
+        buildQuery(em);
     }
     
     public String getSortOrder(String column) {
@@ -199,6 +208,45 @@ public class FlexQuery {
             return "desc";
         }
         return "asc";
+    }
+    
+    public void setParameter(String name, Object value) {
+        if(query == null) {
+            // TODO : lancer exception ?
+            return;
+        }      
+        query.setParameter(name, value);
+    }
+    
+    public FlexQueryResult<T> execute() {
+        Long totalCount = -1L;
+        
+        // total count
+        if(count) {
+            List<Long> countResult = query.getResultList();
+            if(countResult == null || countResult.size() < 1) {
+                // exception ?
+                clear();
+                return null;
+            }
+            totalCount = countResult.get(0);
+            count = false;
+            buildQuery(em);
+        }
+        
+        // filtered results
+        List<T> results = query.getResultList();
+        if(results == null) {
+            // exception ?
+            clear();
+            return null;
+        }
+        
+        // reset des paramètres pour les requêtes suivantes éventuelles
+        clear();
+        
+        // retour
+        return new FlexQueryResult<>(results, (totalCount < 0) ? results.size() : totalCount);
     }
     
     // construit la clause WHERE
@@ -254,7 +302,7 @@ public class FlexQuery {
         whereCols.keySet().forEach((col) -> {
             String paramName = getParamName(col);
             Object value = whereCols.get(col);
-            query.setParameter(paramName, value);
+            setParameter(paramName, value);
         });
     }
     
@@ -278,19 +326,19 @@ public class FlexQuery {
     
     // insère une clause (WHERE ou ORDER BY) dans la requête en cours de construction
     protected void insertClause(String selector, StringBuilder clauseBuilder) {
-        int index = searchBuilder.indexOf(selector);
-        if(index >= 0) {
-            searchBuilder.replace(index, index + selector.length(), clauseBuilder.toString());
-            queryBuilder.replace(index, index + selector.length(), clauseBuilder.toString());
-        }
+        int i = searchBuilder.indexOf(selector);
+        if(i < 0) { return ; }
+        searchBuilder.replace(i, i + selector.length(), clauseBuilder.toString());
+        queryBuilder.replace(i, i + selector.length(), clauseBuilder.toString());
     }
     
-    // Query setFirstResult and setMaxResult pour le limit
-    protected Query buildQuery(EntityManager em) {
+    protected void buildQuery(EntityManager em) {
         StringBuilder whereBuilder = new StringBuilder(100);
         StringBuilder orderByBuilder = new StringBuilder(100);
         queryBuilder = new StringBuilder(255);
         searchBuilder = new StringBuilder(255);
+        
+        this.em = em;
         
         // construit les clauses WHERE et ORDER BY en fonction des paramètres ajoutés avant l'appel
         buildWhere(whereBuilder);
@@ -309,11 +357,16 @@ public class FlexQuery {
         // n'agira que si c'est un count
         prepareForCount();
         
-        Query query = em.createQuery(queryBuilder.toString());
+        instanciateQuery();
+    }
+    
+    // Query setFirstResult and setMaxResult pour le limit
+    protected void instanciateQuery() {
+        query = em.createQuery(queryBuilder.toString());
         bindParams(query);
-        query.setFirstResult(index); 
-        query.setMaxResults(limit);
-        clear(); // reset des paramètres pour les prochaines requêtes
-        return query;
+        if(paginate && ! count) {
+            query.setFirstResult(index); 
+            query.setMaxResults(limit);
+        }
     }
 }

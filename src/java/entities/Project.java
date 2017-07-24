@@ -31,7 +31,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name="Project.ListForUser", query="SELECT p FROM Project p INNER JOIN p.projectRights pr WHERE p.active = true AND pr.user.id = :userId AND pr.project.id = p.id AND MOD(pr.rights/:right, 2) >= 1")
 })
 public class Project implements Serializable {
-    public static final FlexQuery LIST_ALL_OTHER_PROJECTS;
+    public static final FlexQuery<Project> LIST_ALL_OTHER_PROJECTS;
     
     static {
         LIST_ALL_OTHER_PROJECTS = new FlexQuery("SELECT p FROM Project p WHERE p.id NOT IN(:fetchedIds) :where: :orderby:", "p");
