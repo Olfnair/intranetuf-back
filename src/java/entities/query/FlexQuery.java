@@ -131,6 +131,8 @@ public class FlexQuery<T> {
         HashMap<String, String> whereMap = new ParamsParser(whereParams).parse();
         HashMap<String, String> orderbyMap = new ParamsParser(orderByParams).parse();
         
+        clear();
+        
         whereMap.keySet().forEach((String col) -> {
             addWhereCol(col, whereMap.get(col));
         });
