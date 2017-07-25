@@ -148,26 +148,16 @@ public class FileFacadeREST extends AbstractFacade<File> {
             RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         }
         
-        HashMap<String, String> whereMap;
-        HashMap<String, String> orderbyMap;
-        
         try {
-            whereMap = new ParamsParser(Base64Url.decode(whereParams, "ISO-8859-1")).parse();
-            orderbyMap = new ParamsParser(Base64Url.decode(orderbyParams, "ISO-8859-1")).parse();
+            File.LIST_BY_PROJECT.setParameters(
+                    Base64Url.decode(whereParams, "ISO-8859-1") + "col: 'project.id', param: '" + id + "'",
+                    Base64Url.decode(orderbyParams, "ISO-8859-1"),
+                    index,
+                    limit
+            );
         } catch (UnsupportedEncodingException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
-        
-        whereMap.keySet().forEach((String col) -> {
-            File.LIST_BY_PROJECT.addWhereCol(col, whereMap.get(col));
-        });
-        
-        orderbyMap.keySet().forEach((String col) -> {
-            File.LIST_BY_PROJECT.addOrderByCol(col, orderbyMap.get(col));
-        });
-        
-        File.LIST_BY_PROJECT.addWhereCol("project.id", id.toString());        
-        File.LIST_BY_PROJECT.setPaginationParams(index, limit);
         
         File.LIST_BY_PROJECT.prepareCountQuery(em);
         
@@ -178,20 +168,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
     @GET
     @Override
     public Response findAll() {
-        FlexQueryResult<File> result;
-        File a = new File();
-        File b = new File();
-        File c = new File();
-        a.setId(1L);
-        b.setId(2L);
-        c.setId(3L);
-        List<File> files = new ArrayList<>(3);
-        files.add(a);
-        files.add(b);
-        files.add(c);
-        result = new FlexQueryResult<>(files, 45L);
-        return Response.ok(result).build();
-        //return super.findAll();
+        return super.findAll();
     }
     
     @GET

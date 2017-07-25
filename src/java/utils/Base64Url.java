@@ -34,6 +34,10 @@ public class Base64Url {
         return new String(output, "ISO-8859-1");
     }
     
+    public static String decode(String data) throws UnsupportedEncodingException {
+        return decode(data, "ISO-8859-1");
+    }
+    
     @SuppressWarnings("empty-statement")
     public static String decode(String data, String charset) throws UnsupportedEncodingException {
        byte[] encoded = data.getBytes("ISO-8859-1");

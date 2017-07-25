@@ -127,6 +127,21 @@ public class FlexQuery<T> {
         return orderByColsSpec.containsKey(col);
     }
     
+    public void setParameters(String whereParams, String orderByParams, Integer index, Integer limit) {
+        HashMap<String, String> whereMap = new ParamsParser(whereParams).parse();
+        HashMap<String, String> orderbyMap = new ParamsParser(orderByParams).parse();
+        
+        whereMap.keySet().forEach((String col) -> {
+            addWhereCol(col, whereMap.get(col));
+        });
+        
+        orderbyMap.keySet().forEach((String col) -> {
+            addOrderByCol(col, orderbyMap.get(col));
+        });
+                
+        setPaginationParams(index, limit);
+    }
+    
     // ajoute une une colonne dans le WHERE
     public boolean addWhereCol(String col, String param) {
         if(! whereColInSpec(col)) { return false; }
@@ -252,7 +267,13 @@ public class FlexQuery<T> {
     // construit la clause WHERE
     protected void buildWhere(StringBuilder whereBuilder) {
         whereCols.keySet().forEach((col) -> {
-            whereBuilder.append(' ').append(whereColsLinkers.get(col)).append(' ');
+            if(whereBuilder.length() == 0 && this.searchBuilder.indexOf(" where ") < 0) {
+                // il n'y a pas de clause where dans la requête de base : on l'ajoute
+                whereBuilder.append("where ");
+            }
+            else {
+                whereBuilder.append(' ').append(whereColsLinkers.get(col)).append(' ');
+            }
             if(whereColsReplacers.containsKey(col)) {
                 String replacer = whereColsReplacers.get(col);
                 whereBuilder.append(replacer);
@@ -340,15 +361,15 @@ public class FlexQuery<T> {
         
         this.em = em;
         
-        // construit les clauses WHERE et ORDER BY en fonction des paramètres ajoutés avant l'appel
-        buildWhere(whereBuilder);
-        buildOrderBy(orderByBuilder);
-        
         // tout en minuscle pour simplifier les recherches.
         // (les entités doivent garder leurs majuscules et on ne peut donc pas juste se contenter
         //  de mettre la requête en minuscules)
         searchBuilder.append(baseQuery.toLowerCase());
         queryBuilder.append(baseQuery);
+        
+        // construit les clauses WHERE et ORDER BY en fonction des paramètres ajoutés avant l'appel
+        buildWhere(whereBuilder);
+        buildOrderBy(orderByBuilder);
         
         // on insère les clauses WHERE et ORDER BY qu'on vient de construire
         insertClause(WHERE_SELECTOR, whereBuilder);

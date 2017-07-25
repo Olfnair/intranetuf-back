@@ -9,6 +9,8 @@ import config.ApplicationConfig;
 import entities.Credentials;
 import entities.User;
 import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -92,12 +94,27 @@ public class UserFacadeREST extends AbstractFacade<User> {
     }
 
     @GET
-    @Override
-    public Response findAll() {
-        return super.buildResponseList(() -> {
-            User.LIST_ALL_COMPLETE.prepareQuery(em);
-            return User.LIST_ALL_COMPLETE.execute().getList();
-        });
+    @Path("{whereParams}/{orderbyParams}/{index}/{limit}")
+    public Response findAll(@Context MessageContext jaxrsContext,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
+        
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        try {
+            User.LIST_ALL_COMPLETE.setParameters(
+                    Base64Url.decode(whereParams),
+                    Base64Url.decode(orderbyParams),
+                    index, limit
+            );
+        } catch (UnsupportedEncodingException ex) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        
+        User.LIST_ALL_COMPLETE.prepareCountQuery(em);
+        
+        return Response.ok(User.LIST_ALL_COMPLETE.execute()).build();
     }
     
     // utilisé pour récupérer les controleurs et valideurs par projet

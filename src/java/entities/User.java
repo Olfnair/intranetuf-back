@@ -51,6 +51,17 @@ public class User implements Serializable {
     static {
         LIST_ALL_COMPLETE = new FlexQuery("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u");
         LIST_BY_RIGHT_ON_PROJECT = new FlexQuery("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "pr");
+        
+        LIST_ALL_COMPLETE.addWhereSpec("name", "name", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addWhereSpec("firstname", "firstname", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addWhereSpec("email", "email", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addWhereSpec("login", "login", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addOrderBySpec("name");
+        LIST_ALL_COMPLETE.addOrderBySpec("firstname");
+        LIST_ALL_COMPLETE.addOrderBySpec("email");
+        LIST_ALL_COMPLETE.addOrderBySpec("login");
+        LIST_ALL_COMPLETE.addOrderBySpec("active");
+        LIST_ALL_COMPLETE.addOrderBySpec("pending");
     }
 
     private static final long serialVersionUID = 1L;
