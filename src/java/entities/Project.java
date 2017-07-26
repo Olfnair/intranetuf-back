@@ -33,15 +33,16 @@ public class Project implements Serializable {
     public static final FlexQuerySpecification LIST_ALL_OTHER_PROJECTS;
     
     static {
-        LIST_FOR_USER = new FlexQuerySpecification("SELECT p FROM Project p INNER JOIN p.projectRights pr"
-                + "WHERE p.active = true AND pr.user.id = :userId AND pr.project.id = p.id"
-                + "AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "p");
+        // attention à conserver un espace lors des retoyrs à la ligne dans l'écriture des requêtes...
+        LIST_FOR_USER = new FlexQuerySpecification("SELECT p FROM Project p INNER JOIN p.projectRights pr "
+                + "WHERE p.active = true AND pr.user.id = :userId AND pr.project.id = p.id "
+                + "AND MOD(pr.rights/:right, 2) >= 1 :where: ORDER BY p.name ASC", "p");
         LIST_FOR_USER.addWhereSpec("name", "projectName", "LIKE", "AND", String.class);
         
-        LIST_FOR_ADMIN = new FlexQuerySpecification("SELECT p FROM Project p :where: ORDER BY p.active ASC", "p");
+        LIST_FOR_ADMIN = new FlexQuerySpecification("SELECT p FROM Project p :where: ORDER BY p.active DESC, p.name ASC", "p");
         LIST_FOR_ADMIN.addWhereSpec("name", "projectName", "LIKE", "AND", String.class);
         
-        LIST_ALL_OTHER_PROJECTS = new FlexQuerySpecification("SELECT p FROM Project p"
+        LIST_ALL_OTHER_PROJECTS = new FlexQuerySpecification("SELECT p FROM Project p "
                 + "WHERE p.id NOT IN(:fetchedIds) :where: :orderby:", "p");
         LIST_ALL_OTHER_PROJECTS.addWhereSpec("name", "name", "LIKE", "AND", String.class);
         LIST_ALL_OTHER_PROJECTS.addOrderBySpec("name");

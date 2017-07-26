@@ -112,8 +112,8 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     }
     
     @GET
-    @Path("{whereParams}")
-    public Response findAll(@Context MessageContext jaxrsContext, @PathParam("whereParams") String whereParams) {
+    @Path("query/{whereParams}")
+    public Response findAll(@Context MessageContext jaxrsContext, @PathParam("whereParams") String whereParams) {       
         AuthToken token = Authentication.validate(jaxrsContext);
         User user = em.find(User.class, token.getUserId());
         
@@ -132,10 +132,9 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
             projectsQuery.setParameter("right", ProjectRight.Rights.VIEWPROJECT);
         }
         
-        /*return this.buildResponseList(() -> {
+        return this.buildResponseList(() -> {
             return projectsQuery.execute().getList();
-        });*/
-        return Response.ok(projectsQuery.execute()).build();
+        });
     }
     
     @GET

@@ -135,7 +135,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
     }
     
     @GET
-    @Path("/project/{id}/{whereParams}/{orderbyParams}/{index}/{limit}")
+    @Path("/project/{id}/query/{whereParams}/{orderbyParams}/{index}/{limit}")
     public Response findByProject(@Context MessageContext jaxrsContext, @PathParam("id") Long id,
             @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
             @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
