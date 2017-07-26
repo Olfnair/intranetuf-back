@@ -8,6 +8,7 @@ package rest;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
+import entities.query.FlexQuery;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -109,10 +110,11 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
             if(user == null) {
                 throw new WebApplicationException(Response.Status.NOT_FOUND);
             }
-            ProjectRight.LIST_BY_USER.addOrderByCol("project.name", "ASC");
-            ProjectRight.LIST_BY_USER.prepareQuery(em);
-            ProjectRight.LIST_BY_USER.setParameter("userId", id);
-            List<ProjectRight> fetchedRights = ProjectRight.LIST_BY_USER.execute().getList();
+            FlexQuery<ProjectRight> rightsQuery = new FlexQuery<>(ProjectRight.LIST_BY_USER);
+            rightsQuery.addOrderByCol("project.name", "ASC");
+            rightsQuery.prepareQuery(em);
+            rightsQuery.setParameter("userId", id);
+            List<ProjectRight> fetchedRights = rightsQuery.execute().getList();
             List<Long> fetchedProjectIds = new ArrayList(100);
             List<ProjectRight> rights = new ArrayList(100);
             
@@ -121,10 +123,11 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
                 rights.add(right);
             });
             
-            Project.LIST_ALL_OTHER_PROJECTS.addOrderByCol("name", "ASC");
-            Project.LIST_ALL_OTHER_PROJECTS.prepareQuery(em);
-            Project.LIST_ALL_OTHER_PROJECTS.setParameter("fetchedIds", fetchedProjectIds);
-            List<Project> projects = Project.LIST_ALL_OTHER_PROJECTS.execute().getList();
+            FlexQuery<Project> projectsQuery = new FlexQuery<>(Project.LIST_ALL_OTHER_PROJECTS);
+            projectsQuery.addOrderByCol("name", "ASC");
+            projectsQuery.prepareQuery(em);
+            projectsQuery.setParameter("fetchedIds", fetchedProjectIds);
+            List<Project> projects = projectsQuery.execute().getList();
             
             projects.forEach((project) -> {
                 rights.add(new ProjectRight(user, project));

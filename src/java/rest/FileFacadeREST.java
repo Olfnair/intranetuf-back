@@ -10,6 +10,7 @@ import entities.Project;
 import entities.ProjectRight;
 import entities.User;
 import entities.Version;
+import entities.query.FlexQuery;
 import entities.query.FlexQueryResult;
 import entities.query.ParamsParser;
 import files.Upload;
@@ -148,20 +149,20 @@ public class FileFacadeREST extends AbstractFacade<File> {
             RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         }
         
+        FlexQuery<File> filesQuery = new FlexQuery<>(File.LIST_BY_PROJECT);
         try {
-            File.LIST_BY_PROJECT.setParameters(
-                    Base64Url.decode(whereParams, "ISO-8859-1") + "col: 'project.id', param: '" + id + "'",
-                    Base64Url.decode(orderbyParams, "ISO-8859-1"),
-                    index,
-                    limit
+            filesQuery.setParameters(
+                    Base64Url.decode(whereParams) + "col: 'project.id', param: '" + id + "'",
+                    Base64Url.decode(orderbyParams),
+                    index, limit
             );
         } catch (UnsupportedEncodingException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         
-        File.LIST_BY_PROJECT.prepareCountQuery(em);
+        filesQuery.prepareCountQuery(em);
         
-        FlexQueryResult<File> files = File.LIST_BY_PROJECT.execute();
+        FlexQueryResult<File> files = filesQuery.execute();
         return Response.ok(files).build();
     }
     

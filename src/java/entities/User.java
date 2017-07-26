@@ -5,7 +5,7 @@
  */
 package entities;
 
-import entities.query.FlexQuery;
+import entities.query.FlexQuerySpecification;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,12 +45,12 @@ public class User implements Serializable {
         public final static int SUPERADMIN = 2;
     }
     
-    public final static FlexQuery<User> LIST_ALL_COMPLETE;
-    public final static FlexQuery<User> LIST_BY_RIGHT_ON_PROJECT;
+    public final static FlexQuerySpecification LIST_ALL_COMPLETE;
+    public final static FlexQuerySpecification LIST_BY_RIGHT_ON_PROJECT;
     
     static {
-        LIST_ALL_COMPLETE = new FlexQuery("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u");
-        LIST_BY_RIGHT_ON_PROJECT = new FlexQuery("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "pr");
+        LIST_ALL_COMPLETE = new FlexQuerySpecification("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u");
+        LIST_BY_RIGHT_ON_PROJECT = new FlexQuerySpecification("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "pr");
         
         LIST_ALL_COMPLETE.addWhereSpec("name", "name", "LIKE", "AND", String.class);
         LIST_ALL_COMPLETE.addWhereSpec("firstname", "firstname", "LIKE", "AND", String.class);

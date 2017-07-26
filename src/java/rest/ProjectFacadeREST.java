@@ -9,6 +9,8 @@ import config.ApplicationConfig;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
+import entities.query.FlexQuery;
+import java.io.UnsupportedEncodingException;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -28,6 +30,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.RightsChecker;
+import utils.Base64Url;
 
 /**
  *
@@ -109,22 +112,30 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     }
     
     @GET
-    public Response findAll(@Context MessageContext jaxrsContext) {
+    @Path("{whereParams}")
+    public Response findAll(@Context MessageContext jaxrsContext, @PathParam("whereParams") String whereParams) {
         AuthToken token = Authentication.validate(jaxrsContext);
         User user = em.find(User.class, token.getUserId());
         
-        // si admin (ou superadmin) : tous les projets
-        if(user.isAdmin()) {
-            return super.findAll();
+        FlexQuery<Project> projectsQuery = user.isAdmin() ?
+                new FlexQuery(Project.LIST_FOR_ADMIN) : new FlexQuery(Project.LIST_FOR_USER);
+        try {
+            projectsQuery.setParameters(Base64Url.decode(whereParams), "default");
+        } catch (UnsupportedEncodingException ex) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         
-        // sinon, uniquement les projets que l'utilisateur peut voir
-        return this.buildResponseList(() -> {
-            javax.persistence.Query projectsQuery = em.createNamedQuery("Project.ListForUser");
+        projectsQuery.prepareQuery(em);
+        
+        if(! user.isAdmin()) {
             projectsQuery.setParameter("userId", user.getId());
             projectsQuery.setParameter("right", ProjectRight.Rights.VIEWPROJECT);
-            return projectsQuery.getResultList();
-        });
+        }
+        
+        /*return this.buildResponseList(() -> {
+            return projectsQuery.execute().getList();
+        });*/
+        return Response.ok(projectsQuery.execute()).build();
     }
     
     @GET

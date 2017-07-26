@@ -15,10 +15,10 @@ import javax.persistence.Query;
  *
  * @author Florian
  * @param <T>
+ * 
+ * Exemple d'utilisation :
+ * Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true AND u.pending = false :where: :orderby:
  */
-
-// Exemple d'utilisation :
-// Select u From User u WHERE u.password = :password AND u.login = :login AND u.active = true AND u.pending = false :where: :orderby:
 public class FlexQuery<T> {
     protected interface TypeCaster {
         public Object cast(String value);
@@ -57,32 +57,16 @@ public class FlexQuery<T> {
         });
         // ajouter les opérateurs particuliers utilisés...
     }
-            
-    // spec where colonne, operateur : tout ce qui n'est pas dans le hashmap sera refusé.
-    private final HashMap<String, String> whereColsOperators  = new HashMap();
-    private final HashMap<String, String> whereColsLinkers = new HashMap(); // indique s'il faut employer OR ou AND pour ajouter la colonne à la requête.
-    private final HashMap<String, String> whereColsParameterNames = new HashMap();
-    private final HashMap<String, Class> whereColsParameterClass = new HashMap();
     
-    // spec order by
-    private final HashMap<String, Boolean> orderByColsSpec = new HashMap();
+    private final FlexQuerySpecification specification;
     
     private final HashMap<String, Object> whereCols = new HashMap();
     private final HashMap<String, String> orderByCols = new HashMap();
     
-    // permet de remplacer n'importe quelle colonne du where par autre chose (une fonction plus complexe par exemple...)
-    private final HashMap<String, String> whereColsReplacers = new HashMap();
-    
-    // semblable pour order by (on peut spécifier une liste de colonnes à la place)
-    private final HashMap<String, String> orderByColsReplacers = new HashMap();
-    
-    private final String baseQuery;
-    private final String entityName;
     private Query query = null;
     
     private Integer index = 0;
     private Integer limit = 0;
-    private boolean paginate = false;
     
     // variables de travail :
     private boolean count = false;
@@ -94,37 +78,23 @@ public class FlexQuery<T> {
     protected void clear() {
         whereCols.clear();
         orderByCols.clear();
-        paginate = false;
+        index = 0;
+        limit = 0;
         query = null;
         em = null;
+        count = false;
     }
     
-    public FlexQuery(String baseQuery, String entityName) {
-        this.baseQuery = baseQuery;
-        this.entityName = entityName;
+    public FlexQuery(FlexQuerySpecification specification) {
+        this.specification = specification;
     }
     
-    // spec pour ce qui est accepté en WHERE
-    public void addWhereSpec(String column, String paramName, String operator, String link, Class classType) {
-        whereColsOperators.put(column, operator);
-        whereColsLinkers.put(column, link);
-        whereColsParameterNames.put(column, paramName);
-        whereColsParameterClass.put(column, classType);
+    public void setParameters(String whereParams, String orderByParams) {
+        setParameters(whereParams, orderByParams, 0, 0);
     }
     
-    // spec pour ce qui est accepté en ORDER BY
-    public void addOrderBySpec(String column) {
-        orderByColsSpec.put(column, Boolean.TRUE);
-    }
-    
-    // est-ce que la colonne est dans la spec ?
-    public boolean whereColInSpec(String col) {
-        return whereColsOperators.containsKey(col);
-    }
-    
-    // est-ce que la colonne est dans la spec ?
-    public boolean orderByColInSpec(String col) {
-        return orderByColsSpec.containsKey(col);
+    public void setParameters(String whereParams, String orderByParams, Integer index) {
+        setParameters(whereParams, orderByParams, index, 0);
     }
     
     public void setParameters(String whereParams, String orderByParams, Integer index, Integer limit) {
@@ -144,10 +114,10 @@ public class FlexQuery<T> {
     
     // ajoute une une colonne dans le WHERE
     public boolean addWhereCol(String col, String param) {
-        if(! whereColInSpec(col)) { return false; }
+        if(! specification.whereColInSpec(col)) { return false; }
         
-        String operator = whereColsOperators.get(col);
-        Class classType = whereColsParameterClass.get(col);
+        String operator = specification.getWhereColsOperators().get(col);
+        Class classType = specification.getWhereColsParameterClass().get(col);
         // suppression des espaces pas nécessaires dans param
         param = param.trim().replaceAll("[\n\t ]+", " ");
         Object value = param;
@@ -177,32 +147,20 @@ public class FlexQuery<T> {
     
     // ajoute une colonne order by à la requete
     public boolean addOrderByCol(String col, String param) {
-        if(! orderByColInSpec(col)) { return false; }
+        if(! specification.orderByColInSpec(col)) { return false; }
         
         orderByCols.put(col, param);
         return true;
     }
     
-    public void addWhereColReplacer(String col, String replacer) {
-        if(! whereColInSpec(col)) { return; }
-        whereColsReplacers.put(col, replacer.trim().replaceAll("[\n\t ]+", " "));
-    }
-    
-    public void addOrderByColReplacer(String col, String replacer) {
-        if(! orderByColInSpec(col)) { return; }
-        // supprime absolument tous les espaces :
-        orderByColsReplacers.put(col, replacer.trim().replaceAll("[\n\t ]", ""));
-    }
-    
     // renvoie le nom d'un paramètre pour une colonne donnée
     public String getParamName(String col) {
-        return whereColsParameterNames.get(col);
+        return specification.getWhereColsParameterNames().get(col);
     }
     
     public void setPaginationParams(Integer index, Integer limit) {
         this.index = index;
         this.limit = limit;
-        this.paginate = true;
     }
     
     // data
@@ -261,7 +219,7 @@ public class FlexQuery<T> {
         clear();
         
         // retour
-        return new FlexQueryResult<>(results, (totalCount < 0) ? results.size() : totalCount);
+        return new FlexQueryResult<>(results, (totalCount < 0L) ? results.size() : totalCount);
     }
     
     // construit la clause WHERE
@@ -272,25 +230,25 @@ public class FlexQuery<T> {
                 whereBuilder.append("where ");
             }
             else {
-                whereBuilder.append(' ').append(whereColsLinkers.get(col)).append(' ');
+                whereBuilder.append(' ').append(specification.getWhereColsLinkers().get(col)).append(' ');
             }
-            if(whereColsReplacers.containsKey(col)) {
-                String replacer = whereColsReplacers.get(col);
+            if(specification.getWhereColsReplacers().containsKey(col)) {
+                String replacer = specification.getWhereColsReplacers().get(col);
                 whereBuilder.append(replacer);
             }
             else {
-                whereBuilder.append(entityName).append('.').append(col);
+                whereBuilder.append(specification.getEntityName()).append('.').append(col);
             }
-            whereBuilder.append(' ').append(whereColsOperators.get(col)).append(" :")
-                    .append(whereColsParameterNames.get(col)); // id du param;
+            whereBuilder.append(' ').append(specification.getWhereColsOperators().get(col)).append(" :")
+                    .append(specification.getWhereColsParameterNames().get(col)); // id du param;
         });
     }
     
     protected boolean buildReplacerOrderBy(String column, StringBuilder orderByBuilder) {
-        if(! orderByColsReplacers.containsKey(column)) { return false; }
+        if(! specification.getOrderByColsReplacers().containsKey(column)) { return false; }
         
         String sortOrder = getSortOrder(column);
-        StringTokenizer tokens = new StringTokenizer(orderByColsReplacers.get(column), ",;/");
+        StringTokenizer tokens = new StringTokenizer(specification.getOrderByColsReplacers().get(column), ",;/");
         boolean comma = false;
         while(tokens.hasMoreElements()) {
             if(comma) {
@@ -313,7 +271,7 @@ public class FlexQuery<T> {
                 orderByBuilder.append(',');
             }
             if(! buildReplacerOrderBy(col, orderByBuilder)) {
-                orderByBuilder.append(entityName).append('.').append(col).append(' ').append(getSortOrder(col));
+                orderByBuilder.append(specification.getEntityName()).append('.').append(col).append(' ').append(getSortOrder(col));
             }
         });
     }
@@ -328,8 +286,8 @@ public class FlexQuery<T> {
     }
     
     // remplace ce qu'il faut dans la requête en cours de construction pour faire un count si besoin
-    protected StringBuilder prepareForCount() {
-        if(! count) { return queryBuilder; }
+    protected void prepareForCount() {
+        if(! count) { return; }
         // on va remplacer tout ce qui est entre le SELECT et le FROM par un COUNT
         final String select = "select";
         final String from = "from";
@@ -337,18 +295,17 @@ public class FlexQuery<T> {
         int selectIndex = searchBuilder.indexOf(select);
         int fromIndex = searchBuilder.indexOf(from);
         StringBuilder countBuilder = new StringBuilder();
-        countBuilder.append(' ').append("count(").append(entityName).append(") ");
+        countBuilder.append(' ').append("count(").append(specification.getEntityName()).append(") ");
         if(selectIndex >= 0 && fromIndex >= 0) {
             searchBuilder.replace(selectIndex + select.length(), fromIndex, countBuilder.toString());
             queryBuilder.replace(selectIndex + select.length(), fromIndex, countBuilder.toString());
         }
-        return queryBuilder;
     }
     
     // insère une clause (WHERE ou ORDER BY) dans la requête en cours de construction
     protected void insertClause(String selector, StringBuilder clauseBuilder) {
         int i = searchBuilder.indexOf(selector);
-        if(i < 0) { return ; }
+        if(i < 0) { return; }
         searchBuilder.replace(i, i + selector.length(), clauseBuilder.toString());
         queryBuilder.replace(i, i + selector.length(), clauseBuilder.toString());
     }
@@ -364,8 +321,8 @@ public class FlexQuery<T> {
         // tout en minuscle pour simplifier les recherches.
         // (les entités doivent garder leurs majuscules et on ne peut donc pas juste se contenter
         //  de mettre la requête en minuscules)
-        searchBuilder.append(baseQuery.toLowerCase());
-        queryBuilder.append(baseQuery);
+        searchBuilder.append(specification.getBaseQuery().toLowerCase());
+        queryBuilder.append(specification.getBaseQuery());
         
         // construit les clauses WHERE et ORDER BY en fonction des paramètres ajoutés avant l'appel
         buildWhere(whereBuilder);
@@ -385,8 +342,10 @@ public class FlexQuery<T> {
     protected void instanciateQuery() {
         query = em.createQuery(queryBuilder.toString());
         bindParams(query);
-        if(paginate && ! count) {
-            query.setFirstResult(index); 
+        if(index > 0 && ! count) {
+            query.setFirstResult(index);
+        }
+        if(limit > 0 && ! count) {
             query.setMaxResults(limit);
         }
     }
