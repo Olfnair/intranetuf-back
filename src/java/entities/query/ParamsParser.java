@@ -29,7 +29,7 @@ public class ParamsParser {
         StringBuilder col;
         StringBuilder param;
         // valeur par défaut :
-        if(params.equals("default")) {
+        if(params.equals("default") || params.equals("")) {
             return resmap; // map vide
         }
         // on crée un map (colonne, param) :

@@ -8,9 +8,8 @@ package rest;
 import config.ApplicationConfig;
 import entities.Credentials;
 import entities.User;
+import entities.query.FlexQuery;
 import java.io.UnsupportedEncodingException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -29,6 +28,8 @@ import javax.ws.rs.core.Response;
 import mail.Mail;
 import mail.SendMailThread;
 import org.apache.cxf.jaxrs.ext.MessageContext;
+import org.apache.openjpa.persistence.EntityExistsException;
+import rest.objects.RestError;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.PasswordHasher;
@@ -62,7 +63,14 @@ public class UserFacadeREST extends AbstractFacade<User> {
         Response res = super.insert(entity);
         // On signe le token avec la clé pour les activations.
         // Important pour éviter de générer un token qui pourrait aussi servir pour tout le reste
-        AuthToken userToken = Authentication.issueToken(entity.getId(), 0L, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
+        Long id;
+        try {
+            id = entity.getId();
+        } catch(EntityExistsException e) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE)
+                    .entity(new RestError("login")).build());
+        }
+        AuthToken userToken = Authentication.issueToken(id, 0L, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
         String url = "";
         String text = "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : ";
         try {
@@ -102,8 +110,9 @@ public class UserFacadeREST extends AbstractFacade<User> {
         AuthToken token = Authentication.validate(jaxrsContext);
         RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
+        FlexQuery<User> usersQuery = new FlexQuery<>(User.LIST_ALL_COMPLETE);
         try {
-            User.LIST_ALL_COMPLETE.setParameters(
+            usersQuery.setParameters(
                     Base64Url.decode(whereParams),
                     Base64Url.decode(orderbyParams),
                     index, limit
@@ -112,9 +121,9 @@ public class UserFacadeREST extends AbstractFacade<User> {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         
-        User.LIST_ALL_COMPLETE.prepareCountQuery(em);
+        usersQuery.prepareCountQuery(em);
         
-        return Response.ok(User.LIST_ALL_COMPLETE.execute()).build();
+        return Response.ok(usersQuery.execute()).build();
     }
     
     // utilisé pour récupérer les controleurs et valideurs par projet
@@ -125,11 +134,12 @@ public class UserFacadeREST extends AbstractFacade<User> {
         // pas de check de droit spécifique
         
         return super.buildResponseList(() -> {
-            User.LIST_BY_RIGHT_ON_PROJECT.prepareQuery(em);
-            User.LIST_BY_RIGHT_ON_PROJECT.setParameter("projectId", projectId);
-            User.LIST_BY_RIGHT_ON_PROJECT.setParameter("userId", token.getUserId());
-            User.LIST_BY_RIGHT_ON_PROJECT.setParameter("right", right);
-            return User.LIST_BY_RIGHT_ON_PROJECT.execute().getList();
+            FlexQuery<User> usersQuery = new FlexQuery<>(User.LIST_BY_RIGHT_ON_PROJECT);
+            usersQuery.prepareQuery(em);
+            usersQuery.setParameter("projectId", projectId);
+            usersQuery.setParameter("userId", token.getUserId());
+            usersQuery.setParameter("right", right);
+            return usersQuery.execute().getList();
         });
     }
 

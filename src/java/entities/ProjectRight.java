@@ -5,7 +5,7 @@
  */
 package entities;
 
-import entities.query.FlexQuery;
+import entities.query.FlexQuerySpecification;
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -29,10 +29,10 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name="ProjectRight.GetByUserAndProject", query="SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId")
 })
 public class ProjectRight implements Serializable {
-    public final static FlexQuery LIST_BY_USER;
+    public final static FlexQuerySpecification LIST_BY_USER;
     
     static {
-        LIST_BY_USER = new FlexQuery("SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId :where: :orderby:", "pr");
+        LIST_BY_USER = new FlexQuerySpecification("SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId :where: :orderby:", "pr");
         LIST_BY_USER.addWhereSpec("project.name", "projectName", "LIKE", "AND", String.class);
         LIST_BY_USER.addOrderBySpec("project.name");
     }
