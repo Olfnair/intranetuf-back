@@ -53,7 +53,7 @@ public class WorkflowCheck implements Serializable {
     
     private Long date_init;
     
-    private Long date_action;
+    private Long date_checked;
     
     private String comment;
     
@@ -92,12 +92,12 @@ public class WorkflowCheck implements Serializable {
         this.date_init = date_init;
     }
 
-    public Long getDate_action() {
-        return date_action;
+    public Long getDate_checked() {
+        return date_checked;
     }
 
-    public void setDate_action(Long date_action) {
-        this.date_action = date_action;
+    public void setDate_checked(Long date_checked) {
+        this.date_checked = date_checked;
     }
 
     public String getComment() {
