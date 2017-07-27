@@ -30,6 +30,7 @@ import mail.SendMailThread;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.openjpa.persistence.EntityExistsException;
 import rest.objects.RestError;
+import rest.objects.RestLong;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.PasswordHasher;
@@ -99,6 +100,17 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @Path("{id}")
     public Response find(@PathParam("id") Long id) {
         return super.find(id);
+    }
+    
+    @GET
+    @Path("{id}/role")
+    public Response getRole(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        if(token.getUserId() != id) {
+            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        }
+        User user = em.find(User.class, id);
+        return Response.ok(new RestLong(user.getRole())).build();
     }
 
     @GET
