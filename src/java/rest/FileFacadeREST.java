@@ -12,13 +12,10 @@ import entities.User;
 import entities.Version;
 import entities.query.FlexQuery;
 import entities.query.FlexQueryResult;
-import entities.query.ParamsParser;
 import files.Upload;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -38,6 +35,7 @@ import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.apache.cxf.jaxrs.ext.MessageContext;
+import rest.objects.RestLong;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.RightsChecker;
@@ -132,6 +130,30 @@ public class FileFacadeREST extends AbstractFacade<File> {
     @Path("{id}")
     public Response find(@PathParam("id") Long id) {
         return super.find(id);
+    }
+    
+    @GET
+    @Path("{fileId}/isauthor/{userId}")
+    public Response find(
+            @Context MessageContext jaxrsContext,
+            @PathParam("fileId") Long fileId,
+            @PathParam("userId") Long userId
+    ) {     
+        try {
+            AuthToken token = Authentication.validate(jaxrsContext);
+            if(token.getUserId() != userId) {
+                RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+            }
+        } catch(WebApplicationException e) {
+            return Response.ok(new RestLong(0)).build();
+        }
+        User user = em.find(User.class, userId);
+        File file = em.find(File.class, fileId);
+        if(user == null || file == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        boolean userIsAuthor = (user.getId().longValue() == file.getAuthor().getId().longValue());
+        return Response.ok(new RestLong(userIsAuthor ? 1 : 0)).build();
     }
     
     @GET
