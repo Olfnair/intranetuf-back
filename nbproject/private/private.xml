@@ -16,6 +16,7 @@
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/config/ConfigFile.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/File.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/Version.java</file>
+            <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/web/WEB-INF/beans.xml</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/conf/persistence.xml</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/config/ApplicationConfig.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/rest/VersionFacadeREST.java</file>
@@ -24,16 +25,20 @@
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/utils/Base64Url.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/Credentials.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/query/FlexQueryResult.java</file>
+            <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/web/WEB-INF/web.xml</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/test/entities/query/ParamsParserTest.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/rest/AbstractFacade.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/Project.java</file>
+            <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/rest/ProjectFacadeREST.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/rest/security/RightsChecker.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/files/Download.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/rest/DownloadEndpoint.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/rest/security/AuthToken.java</file>
-            <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/query/FlexQuery.java</file>
+            <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/query/FlexQuerySpecification.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/query/ParamsParser.java</file>
+            <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/query/FlexQuery.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/entities/ProjectRight.java</file>
+            <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/web/META-INF/context.xml</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/rest/ProjectRightFacadeREST.java</file>
             <file>file:/C:/Users/Florian/Documents/Intranet_UF/intranetuf-back/src/java/rest/objects/RestLong.java</file>
         </group>

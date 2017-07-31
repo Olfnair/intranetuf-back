@@ -105,11 +105,18 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @GET
     @Path("{id}/role")
     public Response getRole(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
-        AuthToken token = Authentication.validate(jaxrsContext);
-        if(token.getUserId() != id) {
-            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        try {
+            AuthToken token = Authentication.validate(jaxrsContext);
+            if(token.getUserId() != id) {
+                RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+            }
+        } catch(WebApplicationException e) {
+            return Response.ok(new RestLong(0)).build();
         }
         User user = em.find(User.class, id);
+        if(user == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
         return Response.ok(new RestLong(user.getRole())).build();
     }
 
