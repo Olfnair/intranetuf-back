@@ -37,20 +37,26 @@ public class FlexQuery<T> {
     static {
         CAST_MAP = new HashMap();
         CAST_MAP.put(Long.class, (String value) -> {
-            return Long.parseLong(value);
+            return Long.valueOf(value);
         });
         CAST_MAP.put(long.class, (String value) -> {
-            return Long.parseLong(value);
+            return Long.valueOf(value);
         });
         CAST_MAP.put(Integer.class, (String value) -> {
-            return Integer.parseInt(value);
+            return Integer.valueOf(value);
         });
         CAST_MAP.put(int.class, (String value) -> {
-            return Integer.parseInt(value);
+            return Integer.valueOf(value);
+        });
+        CAST_MAP.put(Boolean.class, (String value) -> {
+            return Boolean.valueOf(value);
+        });
+        CAST_MAP.put(boolean.class, (String value) -> {
+            return Boolean.valueOf(value);
         });
         // ajouter les types nécessaires...
         
-        // enter les operateurs en lowercase :
+        // entrer les operateurs en lowercase :
         OPERATOR_ADAPT_MAP = new HashMap();
         OPERATOR_ADAPT_MAP.put("like", (String value) -> {
             return '%' + value + '%';

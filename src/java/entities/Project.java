@@ -41,6 +41,7 @@ public class Project implements Serializable {
         
         LIST_FOR_ADMIN = new FlexQuerySpecification("SELECT p FROM Project p :where: ORDER BY p.active DESC, p.name ASC", "p");
         LIST_FOR_ADMIN.addWhereSpec("name", "projectName", "LIKE", "AND", String.class);
+        LIST_FOR_ADMIN.addWhereSpec("active", "projectActive", "=", "AND", boolean.class);
         
         LIST_ALL_OTHER_PROJECTS = new FlexQuerySpecification("SELECT p FROM Project p "
                 + "WHERE p.id NOT IN(:fetchedIds) :where: :orderby:", "p");
