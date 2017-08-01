@@ -55,7 +55,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
                 em.persist(right);
             }
             else if(right.getRights() == 0) {
-                em.remove(right);
+                em.remove(em.merge(right));
             }
             else {
                 em.merge(right);
