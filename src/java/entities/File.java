@@ -35,10 +35,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 })
 public class File implements Serializable {
     
-    public final static FlexQuerySpecification LIST_BY_PROJECT; // utilisé pour afficher la liste des fichiers contenus dans un projet
+    public final static FlexQuerySpecification<File> LIST_BY_PROJECT; // utilisé pour afficher la liste des fichiers contenus dans un projet
     
     static {
-        LIST_BY_PROJECT = new FlexQuerySpecification("SELECT f FROM File f WHERE f.active = true :where: :orderby:", "f");
+        LIST_BY_PROJECT = new FlexQuerySpecification<>("SELECT f FROM File f WHERE f.active = true :where: :orderby:", "f", File.class);
         LIST_BY_PROJECT.addWhereSpec("project.id", "projectId", "=", "AND", Long.class);
         LIST_BY_PROJECT.addWhereSpec("version.filename", "versionFilename", "LIKE", "AND", String.class);
         LIST_BY_PROJECT.addWhereSpec("version.num", "versionNum", "=", "AND", Long.class);

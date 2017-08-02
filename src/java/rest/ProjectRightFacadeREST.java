@@ -16,6 +16,7 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -92,7 +93,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         // pas de droits à vérifier, on récupère automatiquement les droits pour l'user qui les demande après authentification
         
         return this.buildResponseList(() -> {
-            javax.persistence.Query rightsQuery = em.createNamedQuery("ProjectRight.GetByUserAndProject");
+            TypedQuery<ProjectRight> rightsQuery = em.createNamedQuery("ProjectRight.GetByUserAndProject", ProjectRight.class);
             rightsQuery.setParameter("userId", token.getUserId());
             rightsQuery.setParameter("projectId", projectId);
             return rightsQuery.getResultList();
@@ -109,7 +110,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         
         return super.buildResponseList(() -> {
             // selection des projets demandés :
-            FlexQuery<Project> queryProjects = new FlexQuery(Project.LIST_FOR_RIGHTS);
+            FlexQuery<Project> queryProjects = new FlexQuery<>(Project.LIST_FOR_RIGHTS);
             queryProjects.prepareCountQuery(em);
             FlexQueryResult<Project> flexQueryResultProjects = queryProjects.execute();
             if(flexQueryResultProjects == null) {
@@ -120,14 +121,14 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
             if(projects == null) {
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
-            List<Long> projectsIds = new ArrayList(projects.size());
+            List<Long> projectsIds = new ArrayList<>(projects.size());
             projects.forEach((project) -> {
                 projectsIds.add(project.getId());
             });
             
             // selection des droits existants éventuels sur ces projets
             User user = em.find(User.class, userId);
-            javax.persistence.Query queryRights = em.createNamedQuery("ProjectRight.ListForUserAndProjects");
+            TypedQuery<ProjectRight> queryRights = em.createNamedQuery("ProjectRight.ListForUserAndProjects", ProjectRight.class);
             queryRights.setParameter("userId", userId);
             queryRights.setParameter("projectIds", projectsIds);
             List<ProjectRight> existingRights = queryRights.getResultList();
@@ -142,7 +143,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
             });
             
             // on construit l'output
-            List<ProjectRight> outputRights = new ArrayList(projects.size());
+            List<ProjectRight> outputRights = new ArrayList<>(projects.size());
             projects.forEach((project) -> {
                 if(rightsMap.containsKey(project.getId())) {
                     // on récupère le droit existant dans le mapping

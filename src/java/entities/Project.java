@@ -31,22 +31,22 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name="Project.ListForRights", query="SELECT p FROM Project p")
 })
 public class Project implements Serializable {
-    public static final FlexQuerySpecification PROJECTLIST_FOR_USER;
-    public static final FlexQuerySpecification PROJECTLIST_FOR_ADMIN;
-    public static final FlexQuerySpecification LIST_FOR_RIGHTS;
+    public static final FlexQuerySpecification<Project> PROJECTLIST_FOR_USER;
+    public static final FlexQuerySpecification<Project> PROJECTLIST_FOR_ADMIN;
+    public static final FlexQuerySpecification<Project> LIST_FOR_RIGHTS;
     
     static {
         // attention à conserver un espace lors des retoyrs à la ligne dans l'écriture des requêtes...
-        PROJECTLIST_FOR_USER = new FlexQuerySpecification("SELECT p FROM Project p INNER JOIN p.projectRights pr "
+        PROJECTLIST_FOR_USER = new FlexQuerySpecification<>("SELECT p FROM Project p INNER JOIN p.projectRights pr "
                 + "WHERE p.active = true AND pr.user.id = :userId AND pr.project.id = p.id "
-                + "AND MOD(pr.rights/:right, 2) >= 1 :where: ORDER BY p.name ASC", "p");
+                + "AND MOD(pr.rights/:right, 2) >= 1 :where: ORDER BY p.name ASC", "p", Project.class);
         PROJECTLIST_FOR_USER.addWhereSpec("name", "projectName", "LIKE", "AND", String.class);
         
-        PROJECTLIST_FOR_ADMIN = new FlexQuerySpecification("SELECT p FROM Project p :where: ORDER BY p.active DESC, p.name ASC", "p");
+        PROJECTLIST_FOR_ADMIN = new FlexQuerySpecification<>("SELECT p FROM Project p :where: ORDER BY p.active DESC, p.name ASC", "p", Project.class);
         PROJECTLIST_FOR_ADMIN.addWhereSpec("name", "projectName", "LIKE", "AND", String.class);
         PROJECTLIST_FOR_ADMIN.addWhereSpec("active", "projectActive", "=", "AND", boolean.class);
         
-        LIST_FOR_RIGHTS = new FlexQuerySpecification("SELECT p FROM Project p :where: :orderby:", "p");
+        LIST_FOR_RIGHTS = new FlexQuerySpecification<>("SELECT p FROM Project p :where: :orderby:", "p", Project.class);
         LIST_FOR_RIGHTS.addWhereSpec("name", "projectName", "LIKE", "AND", String.class);
         LIST_FOR_RIGHTS.addOrderBySpec("name");
         LIST_FOR_RIGHTS.addOrderBySpec("active");
@@ -66,7 +66,7 @@ public class Project implements Serializable {
     private List<File> files = new ArrayList<>();
     
     @OneToMany(mappedBy="project", fetch=FetchType.LAZY)
-    private List<ProjectRight> projectRights = new ArrayList();
+    private List<ProjectRight> projectRights = new ArrayList<>();
 
     public Long getId() {
         return id;

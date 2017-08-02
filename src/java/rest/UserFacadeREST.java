@@ -13,6 +13,7 @@ import java.io.UnsupportedEncodingException;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -196,11 +197,11 @@ public class UserFacadeREST extends AbstractFacade<User> {
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         }
         // vérifie que le compte n'est pas déjà pending == false
-        javax.persistence.Query userQuery = em.createNamedQuery("User.getWithCredentials");
+        TypedQuery<User> userQuery = em.createNamedQuery("User.getWithCredentials", User.class);
         userQuery.setParameter("userId", id);
         User user;
         try {
-            user = (User) userQuery.getSingleResult();
+            user = userQuery.getSingleResult();
         }
         catch(Exception e) {
             throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).entity("user").build());

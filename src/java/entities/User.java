@@ -45,13 +45,11 @@ public class User implements Serializable {
         public final static int SUPERADMIN = 2;
     }
     
-    public final static FlexQuerySpecification LIST_ALL_COMPLETE;
-    public final static FlexQuerySpecification LIST_BY_RIGHT_ON_PROJECT;
+    public final static FlexQuerySpecification<User> LIST_ALL_COMPLETE;
+    public final static FlexQuerySpecification<User> LIST_BY_RIGHT_ON_PROJECT;
     
     static {
-        LIST_ALL_COMPLETE = new FlexQuerySpecification("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u");
-        LIST_BY_RIGHT_ON_PROJECT = new FlexQuerySpecification("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "pr");
-        
+        LIST_ALL_COMPLETE = new FlexQuerySpecification<>("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u", User.class);   
         LIST_ALL_COMPLETE.addWhereSpec("name", "name", "LIKE", "AND", String.class);
         LIST_ALL_COMPLETE.addWhereSpec("firstname", "firstname", "LIKE", "AND", String.class);
         LIST_ALL_COMPLETE.addWhereSpec("email", "email", "LIKE", "AND", String.class);
@@ -62,6 +60,9 @@ public class User implements Serializable {
         LIST_ALL_COMPLETE.addOrderBySpec("login");
         LIST_ALL_COMPLETE.addOrderBySpec("active");
         LIST_ALL_COMPLETE.addOrderBySpec("pending");
+        
+        LIST_BY_RIGHT_ON_PROJECT = new FlexQuerySpecification<>("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId "
+                + "AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "pr", User.class);
     }
 
     private static final long serialVersionUID = 1L;
@@ -121,7 +122,7 @@ public class User implements Serializable {
     private List<File> files = new ArrayList<>();
     
     @OneToMany(mappedBy="user", fetch=FetchType.LAZY)
-    private List<ProjectRight> projectRights = new ArrayList();
+    private List<ProjectRight> projectRights = new ArrayList<>();
 
     public Long getId() {
         return id;

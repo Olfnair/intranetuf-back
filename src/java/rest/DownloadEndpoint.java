@@ -16,6 +16,7 @@ import java.util.Base64;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -56,7 +57,7 @@ public class DownloadEndpoint {
                     .entity(new RestError("Token Error")).build());
         }
         
-        javax.persistence.Query filesQuery = em.createNamedQuery("File.byVersion");
+        TypedQuery<File> filesQuery = em.createNamedQuery("File.byVersion", File.class);
         filesQuery.setParameter("versionId", versionId);
         List<File> fileList = filesQuery.getResultList();
         if(fileList == null || fileList.size() < 1) {

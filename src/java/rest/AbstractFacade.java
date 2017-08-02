@@ -7,6 +7,10 @@ package rest;
 
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 
@@ -30,13 +34,6 @@ public abstract class AbstractFacade<T> {
     }
 
     private final Class<T> entityClass;
-    
-    /*public static final HashMap<String, String> HEADERS;
-    
-    static {
-        HEADERS = new HashMap<>();
-        // HEADERS.put("Access-Control-Allow-Origin", "http://localhost:4200");
-    }*/
 
     public AbstractFacade(Class<T> entityClass) {
         this.entityClass = entityClass;
@@ -44,13 +41,8 @@ public abstract class AbstractFacade<T> {
     
     protected abstract EntityManager getEntityManager();
     
-    public Response buildResponse(int status, Object entity) {
-        Response.ResponseBuilder resp = Response.status(status);
-        
-        /*HEADERS.keySet().forEach((key) -> {
-            resp.header(key, HEADERS.get(key));
-        });*/
-        return resp.entity(entity).build();
+    public Response buildResponse(int status, Object entity) {      
+        return Response.status(status).entity(entity).build();
     }
     
     public Response buildResponse(int status) {
@@ -62,7 +54,6 @@ public abstract class AbstractFacade<T> {
             q.query(entity);
         }
         catch(Exception e) {
-            e.printStackTrace();
             return this.buildResponse(400);
         }
         return this.buildResponse(200, entity);
@@ -74,7 +65,6 @@ public abstract class AbstractFacade<T> {
             entity = q.query();
         }
         catch(Exception e) {
-            e.printStackTrace();
             return this.buildResponse(400);
         }
         return this.buildResponse(200, entity);
@@ -86,13 +76,12 @@ public abstract class AbstractFacade<T> {
             entitiesList = q.query();
         }
         catch(Exception e) {
-            e.printStackTrace();
             return this.buildResponse(400);
         }
         return this.buildResponse(200, new GenericEntity<List<T>>(entitiesList){});
     }
 
-    // !!! ne pas surcharger directement cette méthode dans les api rest : tjrs donner un nom différent que celui de la méthode exposée !!!
+    // !!! ne pas surcharger directement cette méthode dans les endpoints rest : tjrs donner un nom différent que celui de la méthode exposée !!!
     public Response insert(T entity) {
         return buildResponse((T ent) -> { 
             getEntityManager().persist(ent);
@@ -120,7 +109,7 @@ public abstract class AbstractFacade<T> {
 
     public Response findAll() {
         return buildResponseList(() -> {
-            javax.persistence.criteria.CriteriaQuery cq = getEntityManager().getCriteriaBuilder().createQuery();
+            CriteriaQuery<T> cq = getEntityManager().getCriteriaBuilder().createQuery(entityClass);
             cq.select(cq.from(entityClass));
             return getEntityManager().createQuery(cq).getResultList();
         });
@@ -128,9 +117,9 @@ public abstract class AbstractFacade<T> {
 
     public Response findRange(int[] range) {
         return buildResponseList(() -> {
-            javax.persistence.criteria.CriteriaQuery cq = getEntityManager().getCriteriaBuilder().createQuery();
+            CriteriaQuery<T> cq = getEntityManager().getCriteriaBuilder().createQuery(entityClass);
             cq.select(cq.from(entityClass));
-            javax.persistence.Query q = getEntityManager().createQuery(cq);
+            TypedQuery<T> q = getEntityManager().createQuery(cq);
             q.setMaxResults(range[1] - range[0] + 1);
             q.setFirstResult(range[0]);
             return q.getResultList();
@@ -138,11 +127,11 @@ public abstract class AbstractFacade<T> {
     }
 
     public Response count() {
-        javax.persistence.criteria.CriteriaQuery cq = getEntityManager().getCriteriaBuilder().createQuery();
-        javax.persistence.criteria.Root<T> rt = cq.from(entityClass);
+        CriteriaQuery<Long> cq = getEntityManager().getCriteriaBuilder().createQuery(Long.class);
+        Root<T> rt = cq.from(entityClass);
         cq.select(getEntityManager().getCriteriaBuilder().count(rt));
-        javax.persistence.Query q = getEntityManager().createQuery(cq);
-        return buildResponse(200, ((Long) q.getSingleResult()).intValue());
+        TypedQuery<Long> q = getEntityManager().createQuery(cq);
+        return buildResponse(200, q.getSingleResult().intValue());
     }
     
 }

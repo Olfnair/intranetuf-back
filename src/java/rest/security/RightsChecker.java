@@ -10,6 +10,7 @@ import entities.ProjectRight;
 import entities.User;
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
@@ -60,7 +61,7 @@ public class RightsChecker {
             if(project == null || ! project.isActive() && ! user.isAdmin()) {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }     
-            javax.persistence.Query rightsQuery = em.createNamedQuery("ProjectRight.GetByUserAndProject");
+            TypedQuery<ProjectRight> rightsQuery = em.createNamedQuery("ProjectRight.GetByUserAndProject", ProjectRight.class);
             rightsQuery.setParameter("userId", user.getId());
             rightsQuery.setParameter("projectId", projectId);
             List<ProjectRight> rightsResult = rightsQuery.getResultList();

@@ -118,7 +118,7 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         User user = em.find(User.class, token.getUserId());
         
         FlexQuery<Project> projectsQuery = user.isAdmin() ?
-                new FlexQuery(Project.PROJECTLIST_FOR_ADMIN) : new FlexQuery(Project.PROJECTLIST_FOR_USER);
+                new FlexQuery<>(Project.PROJECTLIST_FOR_ADMIN) : new FlexQuery<>(Project.PROJECTLIST_FOR_USER);
         try {
             projectsQuery.setParameters(Base64Url.decode(whereParams), "default");
         } catch (UnsupportedEncodingException ex) {

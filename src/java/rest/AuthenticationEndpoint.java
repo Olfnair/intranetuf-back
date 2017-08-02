@@ -4,7 +4,7 @@ import entities.User;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path; 
@@ -44,7 +44,7 @@ public class AuthenticationEndpoint {
         AuthToken token = Authentication.validate(jaxrsContext);
         User admin = RightsChecker.getInstance(em).validate(token, User.Roles.SUPERADMIN);
         
-        Query userQuery = em.createNamedQuery("User.getByLogin");
+        TypedQuery<User> userQuery = em.createNamedQuery("User.getByLogin", User.class);
         userQuery.setParameter("login", login);
         User user;
         try {
@@ -61,7 +61,7 @@ public class AuthenticationEndpoint {
     }
     
     private AuthToken authenticate(Credentials credentials) {
-        Query authQuery = em.createNamedQuery("User.getByloginWithCredentialsForAuth");
+        TypedQuery<User> authQuery = em.createNamedQuery("User.getByloginWithCredentialsForAuth", User.class);
         authQuery.setParameter("login", credentials.getLogin());
         List<User> users = authQuery.getResultList();
 

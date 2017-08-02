@@ -20,6 +20,7 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -105,7 +106,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
-        javax.persistence.Query projectQuery = em.createNamedQuery("File.getProject");
+        TypedQuery<Project> projectQuery = em.createNamedQuery("File.getProject", Project.class);
         projectQuery.setParameter("fileId", id);
         List<Project> projectResult = projectQuery.getResultList();
         if(projectResult == null || projectResult.size() < 1) {

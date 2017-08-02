@@ -11,28 +11,35 @@ import java.util.HashMap;
  *
  * @author Florian
  */
-public class FlexQuerySpecification {
+public class FlexQuerySpecification<T> {
+    private final Class<T> resultClass;
+    
     // spec where colonne, operateur : tout ce qui n'est pas dans le hashmap sera refusé.
-    private final HashMap<String, String> whereColsOperators  = new HashMap();
-    private final HashMap<String, String> whereColsLinkers = new HashMap(); // indique s'il faut employer OR ou AND pour ajouter la colonne à la requête.
-    private final HashMap<String, String> whereColsParameterNames = new HashMap();
-    private final HashMap<String, Class> whereColsParameterClass = new HashMap();
+    private final HashMap<String, String> whereColsOperators  = new HashMap<>();
+    private final HashMap<String, String> whereColsLinkers = new HashMap<>(); // indique s'il faut employer OR ou AND pour ajouter la colonne à la requête.
+    private final HashMap<String, String> whereColsParameterNames = new HashMap<>();
+    private final HashMap<String, Class> whereColsParameterClass = new HashMap<>();
     
     // spec order by
-    private final HashMap<String, Boolean> orderByColsSpec = new HashMap();
+    private final HashMap<String, Boolean> orderByColsSpec = new HashMap<>();
     
     // permet de remplacer n'importe quelle colonne du where par autre chose (une fonction plus complexe par exemple...)
-    private final HashMap<String, String> whereColsReplacers = new HashMap();
+    private final HashMap<String, String> whereColsReplacers = new HashMap<>();
     
     // semblable pour order by (on peut spécifier une liste de colonnes à la place)
-    private final HashMap<String, String> orderByColsReplacers = new HashMap();
+    private final HashMap<String, String> orderByColsReplacers = new HashMap<>();
     
     private final String baseQuery;
     private final String entityName;
     
-    public FlexQuerySpecification(String baseQuery, String entityName) {
+    public FlexQuerySpecification(String baseQuery, String entityName, Class<T> resultClass) {
         this.baseQuery = baseQuery;
         this.entityName = entityName;
+        this.resultClass = resultClass;
+    }
+    
+    public Class<T> getResultClass() {
+        return this.resultClass;
     }
     
     // spec pour ce qui est accepté en WHERE

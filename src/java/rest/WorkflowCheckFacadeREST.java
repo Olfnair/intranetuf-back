@@ -16,6 +16,7 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -52,7 +53,7 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     }
     
     private Project getProjectFromVersion(Long versionId) {
-        javax.persistence.Query filesQuery = em.createNamedQuery("File.byVersion");
+        TypedQuery<File> filesQuery = em.createNamedQuery("File.byVersion", File.class);
         filesQuery.setParameter("versionId", versionId);
         List<File> fileList = filesQuery.getResultList();
         if(fileList == null || fileList.size() < 1) {
@@ -113,12 +114,12 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
             RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         }
         
-        List<Long> versionIds = new ArrayList(restLongVersionIds.size());
+        List<Long> versionIds = new ArrayList<>(restLongVersionIds.size());
         restLongVersionIds.forEach((restLongId) -> {
             versionIds.add(restLongId.getValue());
         });
         return super.buildResponseList(() -> {
-            javax.persistence.Query wfcQuery = em.createNamedQuery("WorkflowCheck.getByStatusUserVersions");
+            TypedQuery<WorkflowCheck> wfcQuery = em.createNamedQuery("WorkflowCheck.getByStatusUserVersions", WorkflowCheck.class);
             wfcQuery.setParameter("userId", userId);
             wfcQuery.setParameter("status", status);
             wfcQuery.setParameter("versionIds", versionIds);
@@ -131,7 +132,7 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, WorkflowCheck entity) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
-        javax.persistence.Query wfcQuery = em.createNamedQuery("WorkflowCheck.getWithUser");
+        TypedQuery<WorkflowCheck> wfcQuery = em.createNamedQuery("WorkflowCheck.getWithUser", WorkflowCheck.class);
         wfcQuery.setParameter("wfcId", id);
         List<WorkflowCheck> wfcResults = wfcQuery.getResultList();
         if(wfcResults == null || wfcResults.size() < 1) {
@@ -152,13 +153,12 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         
         Version version;
         try {
-            javax.persistence.Query versionQuery = em.createNamedQuery("Version.getWithChecks");
+            TypedQuery<Version> versionQuery = em.createNamedQuery("Version.getWithChecks", Version.class);
             versionQuery.setParameter("versionId", check.getVersion().getId());
             List<Version> result = versionQuery.getResultList();
             version = result.get(0);
         }
         catch(Exception e) {
-            e.printStackTrace();
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         
@@ -221,7 +221,7 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
             RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         }
         return super.buildResponseList(() -> {
-            javax.persistence.Query checksQuery = em.createNamedQuery("WorkflowCheck.getByVersion");
+            TypedQuery<WorkflowCheck> checksQuery = em.createNamedQuery("WorkflowCheck.getByVersion", WorkflowCheck.class);
             checksQuery.setParameter("versionId", versionId);
             return checksQuery.getResultList();
         });

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -35,7 +36,7 @@ public class FlexQuery<T> {
     protected final static HashMap<String, OperatorAdapter> OPERATOR_ADAPT_MAP;
     
     static {
-        CAST_MAP = new HashMap();
+        CAST_MAP = new HashMap<>();
         CAST_MAP.put(Long.class, (String value) -> {
             return Long.valueOf(value);
         });
@@ -57,19 +58,22 @@ public class FlexQuery<T> {
         // ajouter les types nécessaires...
         
         // entrer les operateurs en lowercase :
-        OPERATOR_ADAPT_MAP = new HashMap();
+        OPERATOR_ADAPT_MAP = new HashMap<>();
         OPERATOR_ADAPT_MAP.put("like", (String value) -> {
             return '%' + value + '%';
         });
         // ajouter les opérateurs particuliers utilisés...
     }
     
-    private final FlexQuerySpecification specification;
+    private final FlexQuerySpecification<T> specification;
     
-    private final HashMap<String, Object> whereCols = new HashMap();
-    private final HashMap<String, String> orderByCols = new HashMap();
+    private final Class<T> resultClass;
     
-    private Query query = null;
+    private final HashMap<String, Object> whereCols = new HashMap<>();
+    private final HashMap<String, String> orderByCols = new HashMap<>();
+    
+    private TypedQuery<T> query = null;
+    private TypedQuery<Long> countQuery = null;
     
     private Integer index = 0;
     private Integer limit = 0;
@@ -87,12 +91,14 @@ public class FlexQuery<T> {
         index = 0;
         limit = 0;
         query = null;
+        countQuery = null;
         em = null;
         count = false;
     }
     
-    public FlexQuery(FlexQuerySpecification specification) {
+    public FlexQuery(FlexQuerySpecification<T> specification) {
         this.specification = specification;
+        this.resultClass = specification.getResultClass();
     }
     
     public void setParameters(String whereParams, String orderByParams) {
@@ -192,11 +198,12 @@ public class FlexQuery<T> {
     }
     
     public void setParameter(String name, Object value) {
-        if(query == null) {
+        Query q = getQuery(count);
+        if(q == null) {
             // TODO : lancer exception ?
             return;
         }      
-        query.setParameter(name, value);
+        q.setParameter(name, value);
     }
     
     public FlexQueryResult<T> execute() {
@@ -204,7 +211,7 @@ public class FlexQuery<T> {
         
         // total count
         if(count) {
-            List<Long> countResult = query.getResultList();
+            List<Long> countResult = countQuery.getResultList();
             if(countResult == null || countResult.size() < 1) {
                 // exception ?
                 clear();
@@ -228,6 +235,10 @@ public class FlexQuery<T> {
         
         // retour
         return new FlexQueryResult<>(results, (totalCount < 0L) ? results.size() : totalCount);
+    }
+    
+    protected Query getQuery(boolean cq) {
+        return cq ? countQuery : query;
     }
     
     // construit la clause WHERE
@@ -285,7 +296,7 @@ public class FlexQuery<T> {
     }
      
     // bind les params de la clause WHERE en fonction de ce qui a été donné en paramètre
-    protected void bindParams(Query query) {
+    protected void bindParams() {
         whereCols.keySet().forEach((col) -> {
             String paramName = getParamName(col);
             Object value = whereCols.get(col);
@@ -344,16 +355,26 @@ public class FlexQuery<T> {
         prepareForCount();
         
         instanciateQuery();
+        bindParams();
+        setLimits();
     }
     
     // Query setFirstResult and setMaxResult pour le limit
-    protected void instanciateQuery() {
-        query = em.createQuery(queryBuilder.toString());
-        bindParams(query);
-        if(index > 0 && ! count) {
+    protected void instanciateQuery() {     
+        if(count) {
+            countQuery = em.createQuery(queryBuilder.toString(), Long.class);
+        }
+        else {
+            query = em.createQuery(queryBuilder.toString(), resultClass);
+        }
+    }
+    
+    protected void setLimits() {
+        if(count) { return; }
+        if(index > 0) {
             query.setFirstResult(index);
         }
-        if(limit > 0 && ! count) {
+        if(limit > 0) {
             query.setMaxResults(limit);
         }
     }
