@@ -9,7 +9,9 @@ import entities.Project;
 import entities.ProjectRight;
 import entities.User;
 import entities.query.FlexQuery;
+import entities.query.FlexQueryResult;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -76,15 +78,15 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         return super.remove(super.find(id));
     }
 
-    /*@GET
+    @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response find(@PathParam("id") Long id) {
         return super.find(id);
-    }*/
+    }
     
     @GET
-    @Path("{projectId}")
+    @Path("project/{projectId}")
     public Response findForUserByProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId) {
         AuthToken token = Authentication.validate(jaxrsContext);
         // pas de droits à vérifier, on récupère automatiquement les droits pour l'user qui les demande après authentification
@@ -98,42 +100,62 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     }
     
     @GET
-    @Path("user/{id}")
+    @Path("user/{userId}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getRightsForUser(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+    public Response getRightsForUser(@Context MessageContext jaxrsContext, @PathParam("userId") Long userId) {
         // droits : uniquement les admins (ou super)
         AuthToken token = Authentication.validate(jaxrsContext);
         RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
         return super.buildResponseList(() -> {
-            User user = em.find(User.class, id);
-            if(user == null) {
-                throw new WebApplicationException(Response.Status.NOT_FOUND);
+            // selection des projets demandés :
+            FlexQuery<Project> queryProjects = new FlexQuery(Project.LIST_FOR_RIGHTS);
+            queryProjects.prepareCountQuery(em);
+            FlexQueryResult<Project> flexQueryResultProjects = queryProjects.execute();
+            if(flexQueryResultProjects == null) {
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
-            FlexQuery<ProjectRight> rightsQuery = new FlexQuery<>(ProjectRight.LIST_BY_USER);
-            rightsQuery.addOrderByCol("project.name", "ASC");
-            rightsQuery.prepareQuery(em);
-            rightsQuery.setParameter("userId", id);
-            List<ProjectRight> fetchedRights = rightsQuery.execute().getList();
-            List<Long> fetchedProjectIds = new ArrayList(100);
-            List<ProjectRight> rights = new ArrayList(100);
+            List<Project> projects= flexQueryResultProjects.getList();
             
-            fetchedRights.forEach((right) -> {
-                fetchedProjectIds.add(right.getProject().getId());
-                rights.add(right);
-            });
-            
-            FlexQuery<Project> projectsQuery = new FlexQuery<>(Project.LIST_ALL_OTHER_PROJECTS);
-            projectsQuery.addOrderByCol("name", "ASC");
-            projectsQuery.prepareQuery(em);
-            projectsQuery.setParameter("fetchedIds", fetchedProjectIds);
-            List<Project> projects = projectsQuery.execute().getList();
-            
+            if(projects == null) {
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+            List<Long> projectsIds = new ArrayList(projects.size());
             projects.forEach((project) -> {
-                rights.add(new ProjectRight(user, project));
+                projectsIds.add(project.getId());
             });
             
-            return rights;
+            // selection des droits existants éventuels sur ces projets
+            User user = em.find(User.class, userId);
+            javax.persistence.Query queryRights = em.createNamedQuery("ProjectRight.ListForUserAndProjects");
+            queryRights.setParameter("userId", userId);
+            queryRights.setParameter("projectIds", projectsIds);
+            List<ProjectRight> existingRights = queryRights.getResultList();
+            if(existingRights == null) {
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+            
+            // on map l'id du projet vers les droits existants
+            HashMap<Long, ProjectRight> rightsMap = new HashMap<>();
+            existingRights.forEach((right) -> {
+                rightsMap.put(right.getProject().getId(), right);
+            });
+            
+            // on construit l'output
+            List<ProjectRight> outputRights = new ArrayList(projects.size());
+            projects.forEach((project) -> {
+                if(rightsMap.containsKey(project.getId())) {
+                    // on récupère le droit existant dans le mapping
+                    outputRights.add(rightsMap.get(project.getId()));
+                }
+                else {
+                    // on crée un objet droit pour le front
+                    outputRights.add(new ProjectRight(user, project));
+                }
+            });
+            
+            // sortie
+            return outputRights;
         });
     }
 

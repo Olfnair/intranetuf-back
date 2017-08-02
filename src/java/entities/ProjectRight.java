@@ -26,7 +26,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     // renvoie l'id de l'utilisateur ayant :userId et le droit :right sur :projectId. Utile pour vérifier les droits d'un utilisateur à partir de son ID : retourne userId s'il a le droit, sinon rien
     @NamedQuery(name="ProjectRight.UserHasRight", query="SELECT pr.user FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId AND MOD(pr.rights/:right, 2) >= 1"),
-    @NamedQuery(name="ProjectRight.GetByUserAndProject", query="SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId")
+    @NamedQuery(name="ProjectRight.GetByUserAndProject", query="SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId"),
+    @NamedQuery(name="ProjectRight.ListForUserAndProjects", query="SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id IN(:projectIds)")
 })
 public class ProjectRight implements Serializable {
     public final static FlexQuerySpecification LIST_BY_USER;
