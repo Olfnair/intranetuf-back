@@ -32,6 +32,10 @@ public class FlexQuery<T> {
     protected final static String WHERE_SELECTOR = ":where:";
     protected final static String ORDERBY_SELECTOR = ":orderby:";
     
+    protected final static boolean WHERE = true;
+    protected final static boolean ORDERBY = false;
+    
+    @SuppressWarnings("rawtypes")
     protected final static HashMap<Class, TypeCaster> CAST_MAP;
     protected final static HashMap<String, OperatorAdapter> OPERATOR_ADAPT_MAP;
     
@@ -131,6 +135,7 @@ public class FlexQuery<T> {
         if(! specification.whereColInSpec(col)) { return false; }
         
         String operator = specification.getWhereColsOperators().get(col);
+        @SuppressWarnings("rawtypes")
         Class classType = specification.getWhereColsParameterClass().get(col);
         // suppression des espaces pas nécessaires dans param
         param = param.trim().replaceAll("[\n\t ]+", " ");
@@ -241,8 +246,26 @@ public class FlexQuery<T> {
         return cq ? countQuery : query;
     }
     
+    protected void checkForDefaultParams(boolean where) {
+        if(where ? ! whereCols.isEmpty() : ! orderByCols.isEmpty()) {
+            // rien à faire
+            return;
+        }
+        HashMap<String, String> defaultCols = where ? specification.getDefaultWhereCols()
+                : specification.getDefaultOrderByCols();
+        defaultCols.keySet().forEach((col) -> {
+            if(where) {
+                addWhereCol(col, defaultCols.get(col));
+            }
+            else {
+                addOrderByCol(col, defaultCols.get(col));
+            }           
+        });
+    }
+    
     // construit la clause WHERE
     protected void buildWhere(StringBuilder whereBuilder) {
+        checkForDefaultParams(WHERE);
         whereCols.keySet().forEach((col) -> {
             if(whereBuilder.length() == 0 && this.searchBuilder.indexOf(" where ") < 0) {
                 // il n'y a pas de clause where dans la requête de base : on l'ajoute
@@ -282,6 +305,7 @@ public class FlexQuery<T> {
     // construit la clause ORDER BY
     protected void buildOrderBy(StringBuilder orderByBuilder) {
         if(count) { return; }
+        checkForDefaultParams(ORDERBY);
         orderByCols.keySet().forEach((col) -> {
             if(orderByBuilder.length() == 0) {
                 orderByBuilder.append("order by ");

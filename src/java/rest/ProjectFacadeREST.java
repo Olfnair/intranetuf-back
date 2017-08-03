@@ -112,29 +112,33 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     }
     
     @GET
-    @Path("query/{whereParams}")
-    public Response findAll(@Context MessageContext jaxrsContext, @PathParam("whereParams") String whereParams) {       
+    @Path("query/{whereParams}/{orderbyParams}/{index}/{limit}")
+    public Response findAll(@Context MessageContext jaxrsContext,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {       
         AuthToken token = Authentication.validate(jaxrsContext);
         User user = em.find(User.class, token.getUserId());
         
         FlexQuery<Project> projectsQuery = user.isAdmin() ?
                 new FlexQuery<>(Project.PROJECTLIST_FOR_ADMIN) : new FlexQuery<>(Project.PROJECTLIST_FOR_USER);
         try {
-            projectsQuery.setParameters(Base64Url.decode(whereParams), "default");
+            projectsQuery.setParameters(
+                    Base64Url.decode(whereParams),
+                    Base64Url.decode(orderbyParams),
+                    index, limit
+            );
         } catch (UnsupportedEncodingException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         
-        projectsQuery.prepareQuery(em);
+        projectsQuery.prepareCountQuery(em);
         
         if(! user.isAdmin()) {
             projectsQuery.setParameter("userId", user.getId());
             projectsQuery.setParameter("right", ProjectRight.Rights.VIEWPROJECT);
         }
         
-        return this.buildResponseList(() -> {
-            return projectsQuery.execute().getList();
-        });
+        return Response.ok(projectsQuery.execute()).build();
     }
     
     @GET

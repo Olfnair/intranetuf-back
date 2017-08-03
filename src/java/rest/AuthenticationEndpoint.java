@@ -48,7 +48,7 @@ public class AuthenticationEndpoint {
         userQuery.setParameter("login", login);
         User user;
         try {
-            user = (User)userQuery.getSingleResult();
+            user = userQuery.getSingleResult();
         }
         catch(Exception e) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);

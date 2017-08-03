@@ -50,6 +50,7 @@ public class File implements Serializable {
         LIST_BY_PROJECT.addOrderBySpec("author");
         LIST_BY_PROJECT.addOrderByColReplacer("author", "f.author.name, f.author.firstname");
         LIST_BY_PROJECT.addOrderBySpec("version.status");
+        LIST_BY_PROJECT.addDefaultOrderByCol("version.filename", "ASC");
     }
 
     private static final long serialVersionUID = 1L;

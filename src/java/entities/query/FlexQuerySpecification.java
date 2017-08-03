@@ -18,10 +18,15 @@ public class FlexQuerySpecification<T> {
     private final HashMap<String, String> whereColsOperators  = new HashMap<>();
     private final HashMap<String, String> whereColsLinkers = new HashMap<>(); // indique s'il faut employer OR ou AND pour ajouter la colonne à la requête.
     private final HashMap<String, String> whereColsParameterNames = new HashMap<>();
+    @SuppressWarnings("rawtypes")
     private final HashMap<String, Class> whereColsParameterClass = new HashMap<>();
     
     // spec order by
     private final HashMap<String, Boolean> orderByColsSpec = new HashMap<>();
+    
+    // where et order by par défaut
+    private final HashMap<String, String> defaultWhereCols = new HashMap<>();
+    private final HashMap<String, String> defaultOrderByCols = new HashMap<>();
     
     // permet de remplacer n'importe quelle colonne du where par autre chose (une fonction plus complexe par exemple...)
     private final HashMap<String, String> whereColsReplacers = new HashMap<>();
@@ -43,6 +48,7 @@ public class FlexQuerySpecification<T> {
     }
     
     // spec pour ce qui est accepté en WHERE
+    @SuppressWarnings("rawtypes")
     public void addWhereSpec(String column, String paramName, String operator, String link, Class classType) {
         whereColsOperators.put(column, operator);
         whereColsLinkers.put(column, link);
@@ -63,6 +69,22 @@ public class FlexQuerySpecification<T> {
     // est-ce que la colonne est dans la spec ?
     public boolean orderByColInSpec(String col) {
         return orderByColsSpec.containsKey(col);
+    }
+    
+    public HashMap<String, String> getDefaultWhereCols() {
+        return defaultWhereCols;
+    }
+    
+    public HashMap<String, String> getDefaultOrderByCols() {
+        return defaultOrderByCols;
+    }
+    
+    public void addDefaultWhereCol(String col, String param) {
+        defaultWhereCols.put(col, param);
+    }
+    
+    public void addDefaultOrderByCol(String col, String param) {
+        defaultOrderByCols.put(col, param);
     }
     
     public void addWhereColReplacer(String col, String replacer) {
@@ -88,6 +110,7 @@ public class FlexQuerySpecification<T> {
         return whereColsParameterNames;
     }
 
+    @SuppressWarnings("rawtypes")
     public HashMap<String, Class> getWhereColsParameterClass() {
         return whereColsParameterClass;
     }

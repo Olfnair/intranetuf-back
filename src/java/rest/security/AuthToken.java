@@ -26,9 +26,10 @@ import javax.ws.rs.core.Response;
  * @author Florian
  */
 @XmlRootElement
-public class AuthToken implements Serializable {
+public class AuthToken implements Serializable {   
     public static final int AUTH_KEY = 0;
     public static final int ACTIVATION_KEY = 1;
+    
     private static final String AUTH_SECRET;
     private static final String ACTIVATION_SECRET;
     
@@ -52,6 +53,8 @@ public class AuthToken implements Serializable {
             ACTIVATION_SECRET = activation;
         }
     }
+    
+    private static final long serialVersionUID = 1L;
     
     private long nonce;
     private long userId;
