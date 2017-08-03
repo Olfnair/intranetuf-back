@@ -73,8 +73,8 @@ public class FlexQuery<T> {
     
     private final Class<T> resultClass;
     
-    private final HashMap<String, Object> whereCols = new HashMap<>();
-    private final HashMap<String, String> orderByCols = new HashMap<>();
+    private final HashMap<String, Object> whereClauses = new HashMap<>();
+    private final HashMap<String, String> orderByClauses = new HashMap<>();
     
     private TypedQuery<T> query = null;
     private TypedQuery<Long> countQuery = null;
@@ -90,8 +90,8 @@ public class FlexQuery<T> {
     
     // reset pour une prochaine requête éventuelle
     protected void clear() {
-        whereCols.clear();
-        orderByCols.clear();
+        whereClauses.clear();
+        orderByClauses.clear();
         index = 0;
         limit = 0;
         query = null;
@@ -120,23 +120,23 @@ public class FlexQuery<T> {
         clear();
         
         whereMap.keySet().forEach((String col) -> {
-            addWhereCol(col, whereMap.get(col));
+            addWhereClause(col, whereMap.get(col));
         });
         
         orderbyMap.keySet().forEach((String col) -> {
-            addOrderByCol(col, orderbyMap.get(col));
+            addOrderByClause(col, orderbyMap.get(col));
         });
                 
         setPaginationParams(index, limit);
     }
     
     // ajoute une une colonne dans le WHERE
-    public boolean addWhereCol(String col, String param) {
-        if(! specification.whereColInSpec(col)) { return false; }
+    public boolean addWhereClause(String column, String param) {
+        if(! specification.whereColumnInSpec(column)) { return false; }
         
-        String operator = specification.getWhereColsOperators().get(col);
+        String operator = specification.getWhereClausesOperators().get(column);
         @SuppressWarnings("rawtypes")
-        Class classType = specification.getWhereColsParameterClass().get(col);
+        Class classType = specification.getWhereClausesParameterClass().get(column);
         // suppression des espaces pas nécessaires dans param
         param = param.trim().replaceAll("[\n\t ]+", " ");
         Object value = param;
@@ -160,21 +160,21 @@ public class FlexQuery<T> {
                 return false;
             }
         }
-        whereCols.put(col, value);
+        whereClauses.put(column, value);
         return true;
     }
     
     // ajoute une colonne order by à la requete
-    public boolean addOrderByCol(String col, String param) {
-        if(! specification.orderByColInSpec(col)) { return false; }
+    public boolean addOrderByClause(String column, String param) {
+        if(! specification.orderByColumnInSpec(column)) { return false; }
         
-        orderByCols.put(col, param);
+        orderByClauses.put(column, param);
         return true;
     }
     
     // renvoie le nom d'un paramètre pour une colonne donnée
-    public String getParamName(String col) {
-        return specification.getWhereColsParameterNames().get(col);
+    public String getParamName(String column) {
+        return specification.getWhereClausesParameterNames().get(column);
     }
     
     public void setPaginationParams(Integer index, Integer limit) {
@@ -195,8 +195,8 @@ public class FlexQuery<T> {
     }
     
     public String getSortOrder(String column) {
-        String order = orderByCols.get(column);
-        if(order.equals("DESC") || order.equals("desc")) {
+        String order = orderByClauses.get(column);
+        if(order.toLowerCase().equals("desc")) {
             return "desc";
         }
         return "asc";
@@ -242,23 +242,23 @@ public class FlexQuery<T> {
         return new FlexQueryResult<>(results, (totalCount < 0L) ? results.size() : totalCount);
     }
     
-    protected Query getQuery(boolean cq) {
-        return cq ? countQuery : query;
+    protected Query getQuery(boolean isCountQuery) {
+        return isCountQuery ? countQuery : query;
     }
     
     protected void checkForDefaultParams(boolean where) {
-        if(where ? ! whereCols.isEmpty() : ! orderByCols.isEmpty()) {
+        if(where ? ! whereClauses.isEmpty() : ! orderByClauses.isEmpty()) {
             // rien à faire
             return;
         }
-        HashMap<String, String> defaultCols = where ? specification.getDefaultWhereCols()
-                : specification.getDefaultOrderByCols();
-        defaultCols.keySet().forEach((col) -> {
+        HashMap<String, String> defaultClauses = where ? specification.getDefaultWhereClauses()
+                : specification.getDefaultOrderByClauses();
+        defaultClauses.keySet().forEach((column) -> {
             if(where) {
-                addWhereCol(col, defaultCols.get(col));
+                addWhereClause(column, defaultClauses.get(column));
             }
             else {
-                addOrderByCol(col, defaultCols.get(col));
+                addOrderByClause(column, defaultClauses.get(column));
             }           
         });
     }
@@ -266,31 +266,31 @@ public class FlexQuery<T> {
     // construit la clause WHERE
     protected void buildWhere(StringBuilder whereBuilder) {
         checkForDefaultParams(WHERE);
-        whereCols.keySet().forEach((col) -> {
+        whereClauses.keySet().forEach((column) -> {
             if(whereBuilder.length() == 0 && this.searchBuilder.indexOf(" where ") < 0) {
                 // il n'y a pas de clause where dans la requête de base : on l'ajoute
                 whereBuilder.append("where ");
             }
             else {
-                whereBuilder.append(' ').append(specification.getWhereColsLinkers().get(col)).append(' ');
+                whereBuilder.append(' ').append(specification.getWhereClausesLinkers().get(column)).append(' ');
             }
-            if(specification.getWhereColsReplacers().containsKey(col)) {
-                String replacer = specification.getWhereColsReplacers().get(col);
+            if(specification.getWhereClausesReplacers().containsKey(column)) {
+                String replacer = specification.getWhereClausesReplacers().get(column);
                 whereBuilder.append(replacer);
             }
             else {
-                whereBuilder.append(specification.getEntityName()).append('.').append(col);
+                whereBuilder.append(specification.getEntityName()).append('.').append(column);
             }
-            whereBuilder.append(' ').append(specification.getWhereColsOperators().get(col)).append(" :")
-                    .append(specification.getWhereColsParameterNames().get(col)); // id du param;
+            whereBuilder.append(' ').append(specification.getWhereClausesOperators().get(column)).append(" :")
+                    .append(specification.getWhereClausesParameterNames().get(column)); // id du param;
         });
     }
     
     protected boolean buildReplacerOrderBy(String column, StringBuilder orderByBuilder) {
-        if(! specification.getOrderByColsReplacers().containsKey(column)) { return false; }
+        if(! specification.getOrderByClausesReplacers().containsKey(column)) { return false; }
         
         String sortOrder = getSortOrder(column);
-        StringTokenizer tokens = new StringTokenizer(specification.getOrderByColsReplacers().get(column), ",;/");
+        StringTokenizer tokens = new StringTokenizer(specification.getOrderByClausesReplacers().get(column), ",;/");
         boolean comma = false;
         while(tokens.hasMoreElements()) {
             if(comma) {
@@ -306,24 +306,24 @@ public class FlexQuery<T> {
     protected void buildOrderBy(StringBuilder orderByBuilder) {
         if(count) { return; }
         checkForDefaultParams(ORDERBY);
-        orderByCols.keySet().forEach((col) -> {
+        orderByClauses.keySet().forEach((column) -> {
             if(orderByBuilder.length() == 0) {
                 orderByBuilder.append("order by ");
             }
             else {
                 orderByBuilder.append(',');
             }
-            if(! buildReplacerOrderBy(col, orderByBuilder)) {
-                orderByBuilder.append(specification.getEntityName()).append('.').append(col).append(' ').append(getSortOrder(col));
+            if(! buildReplacerOrderBy(column, orderByBuilder)) {
+                orderByBuilder.append(specification.getEntityName()).append('.').append(column).append(' ').append(getSortOrder(column));
             }
         });
     }
      
     // bind les params de la clause WHERE en fonction de ce qui a été donné en paramètre
     protected void bindParams() {
-        whereCols.keySet().forEach((col) -> {
-            String paramName = getParamName(col);
-            Object value = whereCols.get(col);
+        whereClauses.keySet().forEach((column) -> {
+            String paramName = getParamName(column);
+            Object value = whereClauses.get(column);
             setParameter(paramName, value);
         });
     }

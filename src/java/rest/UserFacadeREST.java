@@ -154,12 +154,11 @@ public class UserFacadeREST extends AbstractFacade<User> {
         // pas de check de droit spécifique
         
         return super.buildResponseList(() -> {
-            FlexQuery<User> usersQuery = new FlexQuery<>(User.LIST_BY_RIGHT_ON_PROJECT);
-            usersQuery.prepareQuery(em);
+            TypedQuery<User> usersQuery = em.createNamedQuery("User.getByRightOnProject", User.class);
             usersQuery.setParameter("projectId", projectId);
             usersQuery.setParameter("userId", token.getUserId());
             usersQuery.setParameter("right", right);
-            return usersQuery.execute().getList();
+            return usersQuery.getResultList();
         });
     }
 

@@ -14,8 +14,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,9 +25,6 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name="Project.ListForRights", query="SELECT p FROM Project p")
-})
 public class Project implements Serializable {
     public static final FlexQuerySpecification<Project> PROJECTLIST_FOR_USER;
     public static final FlexQuerySpecification<Project> PROJECTLIST_FOR_ADMIN;
@@ -47,7 +42,7 @@ public class Project implements Serializable {
         PROJECTLIST_FOR_ADMIN.addWhereSpec("active", "projectActive", "=", "AND", boolean.class);
         PROJECTLIST_FOR_ADMIN.addOrderBySpec("name");
         PROJECTLIST_FOR_ADMIN.addOrderBySpec("active");
-        PROJECTLIST_FOR_ADMIN.addDefaultOrderByCol("name", "ASC");
+        PROJECTLIST_FOR_ADMIN.addDefaultOrderByClause("name", "ASC");
         
         LIST_FOR_RIGHTS = new FlexQuerySpecification<>("SELECT p FROM Project p :where: :orderby:", "p", Project.class);
         LIST_FOR_RIGHTS.addWhereSpec("name", "projectName", "LIKE", "AND", String.class);

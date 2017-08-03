@@ -35,7 +35,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @NamedQueries({
     @NamedQuery(name="User.getWithCredentials", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.id = :userId"),
     @NamedQuery(name="User.getByLogin", query="SELECT u FROM User u WHERE u.login = :login"),
-    @NamedQuery(name="User.getByloginWithCredentialsForAuth", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.login = :login AND u.active = true AND u.pending = false")
+    @NamedQuery(name="User.getByloginWithCredentialsForAuth", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.login = :login AND u.active = true AND u.pending = false"),
+    @NamedQuery(name="User.getByRightOnProject", query="SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId AND MOD(pr.rights/:right, 2) >= 1")
 })
 public class User implements Serializable {
     
@@ -46,7 +47,7 @@ public class User implements Serializable {
     }
     
     public final static FlexQuerySpecification<User> LIST_ALL_COMPLETE;
-    public final static FlexQuerySpecification<User> LIST_BY_RIGHT_ON_PROJECT;
+    //public final static FlexQuerySpecification<User> LIST_BY_RIGHT_ON_PROJECT;
     
     static {
         LIST_ALL_COMPLETE = new FlexQuerySpecification<>("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u", User.class);   
@@ -60,9 +61,10 @@ public class User implements Serializable {
         LIST_ALL_COMPLETE.addOrderBySpec("login");
         LIST_ALL_COMPLETE.addOrderBySpec("active");
         LIST_ALL_COMPLETE.addOrderBySpec("pending");
+        LIST_ALL_COMPLETE.addDefaultOrderByClause("login", "ASC");
         
-        LIST_BY_RIGHT_ON_PROJECT = new FlexQuerySpecification<>("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId "
-                + "AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "pr", User.class);
+        /*LIST_BY_RIGHT_ON_PROJECT = new FlexQuerySpecification<>("SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId "
+                + "AND MOD(pr.rights/:right, 2) >= 1 :where: :orderby:", "pr", User.class);*/
     }
 
     private static final long serialVersionUID = 1L;
@@ -83,10 +85,6 @@ public class User implements Serializable {
     @Basic(fetch=FetchType.LAZY)
     @NotNull
     
-    /*@Pattern(regexp = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\."
-        +"[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
-        +"(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?",
-             message = "{invalid.email}")*/
     // http://emailregex.com/
     @Pattern(regexp = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/="
             + "?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-"
@@ -105,7 +103,7 @@ public class User implements Serializable {
     @Pattern(regexp = "[a-zA-Z0-9]+", message = "{invalid.login}")
     private String login;
         
-    @OneToOne(fetch=FetchType.LAZY, cascade={CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE})
+    @OneToOne(fetch=FetchType.LAZY, cascade={CascadeType.ALL})
     Credentials credentials;
         
     private boolean active = true;

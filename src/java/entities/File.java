@@ -29,7 +29,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name="File.byProject", query="SELECT f FROM File f WHERE f.active = true AND f.project.id = :projectId"),
     @NamedQuery(name="File.byVersion", query="SELECT f FROM File f JOIN FETCH f.project WHERE f.version.id = :versionId"),
     @NamedQuery(name="File.getProject", query="SELECT f.project FROM File f WHERE f.id = :fileId")
 })
@@ -43,14 +42,14 @@ public class File implements Serializable {
         LIST_BY_PROJECT.addWhereSpec("version.filename", "versionFilename", "LIKE", "AND", String.class);
         LIST_BY_PROJECT.addWhereSpec("version.num", "versionNum", "=", "AND", Long.class);
         LIST_BY_PROJECT.addWhereSpec("author", "authorName", "LIKE", "AND", String.class);
-        LIST_BY_PROJECT.addWhereColReplacer("author", "concat(f.author.firstname, ' ', f.author.name)");
+        LIST_BY_PROJECT.addWhereClauseReplacer("author", "concat(f.author.firstname, ' ', f.author.name)");
         LIST_BY_PROJECT.addOrderBySpec("version.filename");
         LIST_BY_PROJECT.addOrderBySpec("version.num");
         LIST_BY_PROJECT.addOrderBySpec("version.date_upload");
         LIST_BY_PROJECT.addOrderBySpec("author");
-        LIST_BY_PROJECT.addOrderByColReplacer("author", "f.author.name, f.author.firstname");
+        LIST_BY_PROJECT.addOrderByClauseReplacer("author", "f.author.name, f.author.firstname");
         LIST_BY_PROJECT.addOrderBySpec("version.status");
-        LIST_BY_PROJECT.addDefaultOrderByCol("version.filename", "ASC");
+        LIST_BY_PROJECT.addDefaultOrderByClause("version.filename", "ASC");
     }
 
     private static final long serialVersionUID = 1L;
