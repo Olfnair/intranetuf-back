@@ -76,6 +76,8 @@ public class FlexQuery<T> {
     private final HashMap<String, Object> whereClauses = new HashMap<>();
     private final HashMap<String, String> orderByClauses = new HashMap<>();
     
+    private final HashMap<String, Object> baseParameters = new HashMap<>();
+    
     private TypedQuery<T> query = null;
     private TypedQuery<Long> countQuery = null;
     
@@ -92,6 +94,7 @@ public class FlexQuery<T> {
     protected void clear() {
         whereClauses.clear();
         orderByClauses.clear();
+        baseParameters.clear();
         index = 0;
         limit = 0;
         query = null;
@@ -202,13 +205,8 @@ public class FlexQuery<T> {
         return "asc";
     }
     
-    public void setParameter(String name, Object value) {
-        Query q = getQuery(count);
-        if(q == null) {
-            // TODO : lancer exception ?
-            return;
-        }      
-        q.setParameter(name, value);
+    public void setBaseParameter(String name, Object value) {
+        baseParameters.put(name, value);
     }
     
     public FlexQueryResult<T> execute() {
@@ -240,6 +238,15 @@ public class FlexQuery<T> {
         
         // retour
         return new FlexQueryResult<>(results, (totalCount < 0L) ? results.size() : totalCount);
+    }
+    
+    protected void setParameter(String name, Object value) {
+        Query q = getQuery(count);
+        if(q == null) {
+            // TODO lancer exception ?
+            return;
+        }
+        q.setParameter(name, value);
     }
     
     protected Query getQuery(boolean isCountQuery) {
@@ -321,10 +328,15 @@ public class FlexQuery<T> {
      
     // bind les params de la clause WHERE en fonction de ce qui a été donné en paramètre
     protected void bindParams() {
-        whereClauses.keySet().forEach((column) -> {
+        whereClauses.forEach((column, value) -> {
             String paramName = getParamName(column);
-            Object value = whereClauses.get(column);
             setParameter(paramName, value);
+        });
+    }
+    
+    protected void bindBaseParams() {
+        baseParameters.forEach((name, value) -> {
+            setParameter(name, value);
         });
     }
     
@@ -380,6 +392,7 @@ public class FlexQuery<T> {
         
         instanciateQuery();
         bindParams();
+        bindBaseParams();
         setLimits();
     }
     
