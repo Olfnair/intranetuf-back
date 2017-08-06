@@ -131,12 +131,12 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         
-        projectsQuery.prepareCountQuery(em);
-        
         if(! user.isAdmin()) {
-            projectsQuery.setParameter("userId", user.getId());
-            projectsQuery.setParameter("right", ProjectRight.Rights.VIEWPROJECT);
+            projectsQuery.setBaseParameter("userId", user.getId());
+            projectsQuery.setBaseParameter("right", ProjectRight.Rights.VIEWPROJECT);
         }
+        
+        projectsQuery.prepareCountQuery(em);
         
         return Response.ok(projectsQuery.execute()).build();
     }
