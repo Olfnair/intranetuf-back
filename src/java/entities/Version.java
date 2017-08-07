@@ -5,15 +5,11 @@
  */
 package entities;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -31,7 +27,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name="Version.getWithChecks", query="SELECT v FROM Version v JOIN FETCH v.workflowChecks WHERE v.id = :versionId")
 })
-public class Version implements Serializable {
+public class Version extends entities.Entity {
+    private static final long serialVersionUID = 1L;
     
     public final static class Status {
        public final static int CREATED = 0;
@@ -39,11 +36,6 @@ public class Version implements Serializable {
        public final static int VALIDATED = 2;
        public final static int REFUSED = 3;
     }
-
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     
     @NotNull
     private String filename;
@@ -61,14 +53,6 @@ public class Version implements Serializable {
     
     @OneToMany(mappedBy="version", fetch=FetchType.LAZY, cascade=CascadeType.PERSIST)
     private List<WorkflowCheck> workflowChecks = new ArrayList<>();
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getFilename() {
         return filename;
@@ -182,30 +166,10 @@ public class Version implements Serializable {
             this.setStatus(Status.VALIDATED);
         }      
     }
-    
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof Version)) {
-            return false;
-        }
-        Version other = (Version) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        return true;
-    }
 
     @Override
     public String toString() {
-        return "entities.Version[ id=" + id + " ]";
+        return "entities.Version[ id=" + getId() + " ]";
     }
     
 }

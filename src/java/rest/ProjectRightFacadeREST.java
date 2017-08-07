@@ -5,11 +5,13 @@
 */
 package rest;
 
+import entities.Entity;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
 import entities.query.FlexQuery;
 import entities.query.FlexQueryResult;
+import entities.query.FlexQuerySpecification;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,20 +106,24 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         });
     }
     
-    @GET
-    @Path("user/{userId}/{whereParams}/{orderbyParams}/{index}/{limit}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getRightsForUser(@Context MessageContext jaxrsContext, @PathParam("userId") Long userId,
-            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
-            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
+    public <T extends Entity, E extends Entity> Response getRights(
+            FlexQuerySpecification<T> specification, String rightsQueryName,
+            E searchForEntity, MessageContext jaxrsContext,
+            String whereParams, String orderbyParams,
+            Integer index,  Integer limit
+    ) {
         // droits : uniquement les admins (ou super)
         AuthToken token = Authentication.validate(jaxrsContext);
         RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
+        if(searchForEntity == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        
         // selection des projets demandés :
-        FlexQuery<Project> queryProjects = new FlexQuery<>(Project.LIST_FOR_RIGHTS);
+        FlexQuery<T> queryEntities = new FlexQuery<>(specification);
         try {
-            queryProjects.setParameters(
+            queryEntities.setParameters(
                     Base64Url.decode(whereParams),
                     Base64Url.decode(orderbyParams),
                     index, limit
@@ -125,26 +131,25 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         } catch (UnsupportedEncodingException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
-        queryProjects.prepareCountQuery(em);
-        FlexQueryResult<Project> flexQueryResultProjects = queryProjects.execute();
+        queryEntities.prepareCountQuery(em);
+        FlexQueryResult<T> flexQueryResultProjects = queryEntities.execute();
         if(flexQueryResultProjects == null) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
-        List<Project> projects= flexQueryResultProjects.getList();
+        List<T> entities = flexQueryResultProjects.getList();
         
-        if(projects == null) {
+        if(entities == null) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
-        List<Long> projectsIds = new ArrayList<>(projects.size());
-        projects.forEach((project) -> {
-            projectsIds.add(project.getId());
+        List<Long> entitiesIds = new ArrayList<>(entities.size());
+        entities.forEach((entity) -> {
+            entitiesIds.add(entity.getId());
         });
         
         // selection des droits existants éventuels sur ces projets
-        User user = em.find(User.class, userId);
-        TypedQuery<ProjectRight> queryRights = em.createNamedQuery("ProjectRight.ListForUserAndProjects", ProjectRight.class);
-        queryRights.setParameter("userId", userId);
-        queryRights.setParameter("projectIds", projectsIds);
+        TypedQuery<ProjectRight> queryRights = em.createNamedQuery(rightsQueryName, ProjectRight.class);
+        queryRights.setParameter("entityId", searchForEntity.getId());
+        queryRights.setParameter("entitiesIds", entitiesIds);
         List<ProjectRight> existingRights = queryRights.getResultList();
         if(existingRights == null) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
@@ -156,23 +161,69 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
             rightsMap.put(right.getProject().getId(), right);
         });
         
-        // on construit l'output
-        List<ProjectRight> outputRights = new ArrayList<>(projects.size());
-        projects.forEach((project) -> {
-            if(rightsMap.containsKey(project.getId())) {
-                // on récupère le droit existant dans le mapping
-                outputRights.add(rightsMap.get(project.getId()));
-            }
-            else {
-                // on crée un objet droit pour le front
-                outputRights.add(new ProjectRight(user, project));
-            }
-        });
+        List<ProjectRight> outputRights = new ArrayList<>(entities.size());
+        if(searchForEntity instanceof User) {
+            // on construit l'output
+            entities.forEach((entity) -> {
+                if(rightsMap.containsKey(entity.getId())) {
+                    // on récupère le droit existant dans le mapping
+                    outputRights.add(rightsMap.get(entity.getId()));
+                }
+                else {
+                    // on crée un objet droit pour le front
+                    outputRights.add(new ProjectRight((User)searchForEntity, (Project)entity));
+                }
+            });
+        }
+        else if(searchForEntity instanceof Project) {
+            // on construit l'output
+            entities.forEach((entity) -> {
+                if(rightsMap.containsKey(entity.getId())) {
+                    // on récupère le droit existant dans le mapping
+                    outputRights.add(rightsMap.get(entity.getId()));
+                }
+                else {
+                    // on crée un objet droit pour le front
+                    outputRights.add(new ProjectRight((User)entity, (Project)searchForEntity));
+                }
+            });
+        }
+        else {
+            throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+        }
         
         FlexQueryResult<ProjectRight> queryResult = new FlexQueryResult<>(outputRights, flexQueryResultProjects.getTotalCount());
         
         // sortie
         return Response.ok(queryResult).build();
+    }
+    
+    @GET
+    @Path("user/{userId}/{whereParams}/{orderbyParams}/{index}/{limit}")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getRightsForUser(@Context MessageContext jaxrsContext, @PathParam("userId") Long userId,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
+        return this.getRights(
+                Project.LIST_FOR_RIGHTS,
+                "ProjectRight.ListForUserAndProjects",
+                em.find(User.class, userId),
+                jaxrsContext, whereParams, orderbyParams, index, limit
+        );
+    }
+    
+    @GET
+    @Path("project/{projectId}/{whereParams}/{orderbyParams}/{index}/{limit}")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getRightsForProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
+        return this.getRights(
+                User.LIST_FOR_RIGHTS,
+                "ProjectRight.ListForProjectAndUsers",
+                em.find(Project.class, projectId),
+                jaxrsContext, whereParams, orderbyParams, index, limit
+        );
     }
     
     @GET

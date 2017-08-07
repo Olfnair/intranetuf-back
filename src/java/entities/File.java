@@ -6,15 +6,11 @@
 package entities;
 
 import entities.query.FlexQuerySpecification;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -32,7 +28,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name="File.byVersion", query="SELECT f FROM File f JOIN FETCH f.project WHERE f.version.id = :versionId"),
     @NamedQuery(name="File.getProject", query="SELECT f.project FROM File f WHERE f.id = :fileId")
 })
-public class File implements Serializable {
+public class File extends entities.Entity {
+    private static final long serialVersionUID = 1L;
     
     public final static FlexQuerySpecification<File> LIST_BY_PROJECT; // utilisé pour afficher la liste des fichiers contenus dans un projet
     
@@ -51,11 +48,6 @@ public class File implements Serializable {
         LIST_BY_PROJECT.addOrderBySpec("version.status");
         LIST_BY_PROJECT.addDefaultOrderByClause("version.filename", "ASC");
     }
-
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     
     private boolean active = true;
     
@@ -73,14 +65,6 @@ public class File implements Serializable {
     
     @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
     private List<Log> logs = new ArrayList<>();
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public boolean isActive() {
         return active;
@@ -131,28 +115,8 @@ public class File implements Serializable {
     }
 
     @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof File)) {
-            return false;
-        }
-        File other = (File) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
     public String toString() {
-        return "entities.File[ id=" + id + " ]";
+        return "entities.File[ id=" + getId() + " ]";
     }
     
 }

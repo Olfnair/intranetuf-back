@@ -5,12 +5,8 @@
  */
 package entities;
 
-import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -28,7 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name="WorkflowCheck.getByStatusUserVersions", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.version WHERE wfc.user.id = :userId AND wfc.status = :status AND wfc.version.id IN(:versionIds)"),
     @NamedQuery(name="WorkflowCheck.getWithUser", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user WHERE wfc.id = :wfcId")
 })
-public class WorkflowCheck implements Serializable {
+public class WorkflowCheck extends entities.Entity {
+    private static final long serialVersionUID = 1L;
     
     // la flemme de faire des enums...
     public final static class Types {
@@ -42,11 +39,6 @@ public class WorkflowCheck implements Serializable {
         public final static int CHECK_OK = 2;
         public final static int CHECK_KO = 3;
     } 
-    
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     
     private Integer status = 0;
     
@@ -66,14 +58,6 @@ public class WorkflowCheck implements Serializable {
     
     @ManyToOne(fetch=FetchType.LAZY)
     private User user;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public Integer getStatus() {
         return status;
@@ -138,30 +122,10 @@ public class WorkflowCheck implements Serializable {
     public void setUser(User user) {
         this.user = user;
     }
-    
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof WorkflowCheck)) {
-            return false;
-        }
-        WorkflowCheck other = (WorkflowCheck) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        return true;
-    }
 
     @Override
     public String toString() {
-        return "entities.FileAction[ id=" + id + " ]";
+        return "entities.FileAction[ id=" + getId() + " ]";
     }
     
 }

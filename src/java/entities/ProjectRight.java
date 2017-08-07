@@ -5,12 +5,8 @@
  */
 package entities;
 
-import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -24,9 +20,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name="ProjectRight.GetByUserAndProject", query="SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id = :projectId"),
-    @NamedQuery(name="ProjectRight.ListForUserAndProjects", query="SELECT pr FROM ProjectRight pr WHERE pr.user.id = :userId AND pr.project.id IN(:projectIds)")
+    @NamedQuery(name="ProjectRight.ListForUserAndProjects", query="SELECT pr FROM ProjectRight pr WHERE pr.user.id = :entityId AND pr.project.id IN(:entitiesIds)"),
+    @NamedQuery(name="ProjectRight.ListForProjectAndUsers", query="SELECT pr FROM ProjectRight pr WHERE pr.project.id = :entityId AND pr.user.id IN(:entitiesIds)")
 })
-public class ProjectRight implements Serializable {
+public class ProjectRight extends entities.Entity {
+    private static final long serialVersionUID = 1L;
     
     public final static class Rights {
         // droits sur le projet :
@@ -43,12 +41,6 @@ public class ProjectRight implements Serializable {
         // il reste des bits inutilisés pour ajouter des droits si nécessaire
     }
     
-
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
     private int rights = 0;
     
     @ManyToOne(fetch=FetchType.EAGER)
@@ -63,14 +55,6 @@ public class ProjectRight implements Serializable {
     public ProjectRight(User user, Project project) {
         this.user = user;
         this.project = project;
-    }
-    
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public int getRights() {
@@ -106,28 +90,8 @@ public class ProjectRight implements Serializable {
     }
 
     @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof ProjectRight)) {
-            return false;
-        }
-        ProjectRight other = (ProjectRight) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
     public String toString() {
-        return "entities.ProjectRight[ id=" + id + " ]";
+        return "entities.ProjectRight[ id=" + getId() + " ]";
     }
     
 }
