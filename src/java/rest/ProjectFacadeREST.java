@@ -11,6 +11,8 @@ import entities.ProjectRight;
 import entities.User;
 import entities.query.FlexQuery;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -27,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.ext.MessageContext;
+import rest.objects.RestLong;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.RightsChecker;
@@ -58,6 +61,29 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         Response res = super.insert(entity);
         new java.io.File(ApplicationConfig.PROJECTS_LOCATION + '/' + entity.getId().toString()).mkdirs();
         return res;
+    }
+    
+    @PUT
+    @Path("activateMany/{activate}")
+    public Response activateMany(
+            @Context MessageContext jaxrsContext,
+            @PathParam("activate") Integer activate,
+            List<RestLong> restLongProjectIds
+    ) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        User user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        List<Long> projectIds = new ArrayList<>(restLongProjectIds.size());
+        restLongProjectIds.forEach((restLongId) -> {
+            projectIds.add(restLongId.getValue());
+        });
+        
+        javax.persistence.Query updateQuery = em.createNamedQuery("Project.ActivateMany");
+        updateQuery.setParameter("active", activate > 0);
+        updateQuery.setParameter("projectIds", projectIds);
+        updateQuery.executeUpdate();
+        
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
     
     @PUT

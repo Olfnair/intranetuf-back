@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -21,6 +23,9 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @XmlRootElement
+@NamedQueries({
+    @NamedQuery(name="Project.ActivateMany", query="UPDATE Project p SET p.active = :active WHERE p.id IN(:projectIds)")
+})
 public class Project extends entities.Entity {
     private static final long serialVersionUID = 1L;
     
