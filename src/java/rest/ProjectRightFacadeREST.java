@@ -57,7 +57,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         super(ProjectRight.class);
     }
     
-    @POST
+    @PUT
     public Response createOrEdit(List<ProjectRight> entities) {
         entities.forEach((right) -> {
             if(right.getId() == null) {
@@ -73,11 +73,11 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         return Response.status(Response.Status.CREATED).build();
     }
     
-    @PUT
+    /*@PUT
     @Path("{id}")
     public Response edit(@PathParam("id") Long id, ProjectRight entity) {
         return super.edit(entity);
-    }
+    }*/
     
     @DELETE
     @Path("{id}")

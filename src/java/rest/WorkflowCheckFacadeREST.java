@@ -118,6 +118,7 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         restLongVersionIds.forEach((restLongId) -> {
             versionIds.add(restLongId.getValue());
         });
+        
         return super.buildResponseList(() -> {
             TypedQuery<WorkflowCheck> wfcQuery = em.createNamedQuery("WorkflowCheck.getByStatusUserVersions", WorkflowCheck.class);
             wfcQuery.setParameter("userId", userId);
