@@ -7,6 +7,8 @@ package rest;
 
 import config.ApplicationConfig;
 import entities.Credentials;
+import entities.Project;
+import entities.ProjectRight;
 import entities.User;
 import entities.query.FlexQuery;
 import java.io.UnsupportedEncodingException;
@@ -87,14 +89,41 @@ public class UserFacadeREST extends AbstractFacade<User> {
 
     @PUT
     @Path("{id}")
-    public Response edit(@PathParam("id") Long id, User entity) {
+    public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, User entity) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        User askingUser = em.find(User.class, token.getUserId());
+        
+        
+        User user = em.find(User.class, id);
+        if(user == null || askingUser == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        
+         // vérifie que l'utilisateur qui fait la demande est bien celui qui est modifié ou admin
+        if(askingUser.getId().longValue() != user.getId().longValue() && ! askingUser.isAdmin()) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }          
+            
+        if(! askingUser.isAdmin()) {
+            entity.setActive(user.isActive());
+        }
+        entity.setId(user.getId());
         return super.edit(entity);
     }
 
     @DELETE
     @Path("{id}")
-    public Response remove(@PathParam("id") Long id) {
-        return super.remove(id);
+    public Response remove(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        User user = em.find(User.class, id);
+        if(user == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        
+        user.setActive(false);
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @GET
@@ -146,7 +175,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return Response.ok(usersQuery.execute()).build();
     }
     
-    // utilisé pour récupérer les controleurs et valideurs par projet
+    // utilisé pour récupérer les contrôleurs et valideurs par projet
     @GET
     @Path("rightOnProject/{projectId}/{right}")
     public Response getByRightOnProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId, @PathParam("right") Long right) {
