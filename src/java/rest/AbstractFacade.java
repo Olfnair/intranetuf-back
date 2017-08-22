@@ -10,7 +10,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 

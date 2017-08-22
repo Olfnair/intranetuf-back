@@ -7,8 +7,6 @@ package rest;
 
 import config.ApplicationConfig;
 import entities.Credentials;
-import entities.Project;
-import entities.ProjectRight;
 import entities.User;
 import entities.query.FlexQuery;
 import java.io.UnsupportedEncodingException;
