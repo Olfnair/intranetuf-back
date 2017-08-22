@@ -16,8 +16,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -25,7 +23,6 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -58,7 +55,10 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     }
     
     @PUT
-    public Response createOrEdit(List<ProjectRight> entities) {
+    public Response createOrEdit(@Context MessageContext jaxrsContext, List<ProjectRight> entities) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
         entities.forEach((right) -> {
             if(right.getId() == null) {
                 em.persist(right);
@@ -110,7 +110,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
             FlexQuerySpecification<T> specification, String rightsQueryName,
             E searchForEntity, MessageContext jaxrsContext,
             String whereParams, String orderbyParams,
-            Integer index,  Integer limit
+            Integer index, Integer limit
     ) {
         // droits : uniquement les admins (ou super)
         AuthToken token = Authentication.validate(jaxrsContext);
@@ -155,10 +155,15 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         
-        // on map l'id du projet vers les droits existants
+        // on map id de l'entité vers droits pour les droits existants récupérés
         HashMap<Long, ProjectRight> rightsMap = new HashMap<>();
         existingRights.forEach((right) -> {
-            rightsMap.put(right.getProject().getId(), right);
+            if(searchForEntity instanceof User) {
+                rightsMap.put(right.getProject().getId(), right);
+            }
+            else {
+                rightsMap.put(right.getUser().getId(), right);
+            }
         });
         
         List<ProjectRight> outputRights = new ArrayList<>(entities.size());

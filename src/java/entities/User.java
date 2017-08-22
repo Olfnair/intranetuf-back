@@ -32,7 +32,8 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name="User.getWithCredentials", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.id = :userId"),
     @NamedQuery(name="User.getByLogin", query="SELECT u FROM User u WHERE u.login = :login"),
     @NamedQuery(name="User.getByloginWithCredentialsForAuth", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.login = :login AND u.active = true AND u.pending = false"),
-    @NamedQuery(name="User.getByRightOnProject", query="SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId AND MOD(pr.rights/:right, 2) >= 1")
+    @NamedQuery(name="User.getByRightOnProject", query="SELECT pr.user FROM ProjectRight pr WHERE pr.project.id = :projectId AND pr.user.id <> :userId AND MOD(pr.rights/:right, 2) >= 1"),
+    @NamedQuery(name="User.ActivateMany", query="UPDATE User u SET u.active = :active WHERE u.id IN(:userIds)")
 })
 public class User extends entities.Entity {
     private static final long serialVersionUID = 1L;
@@ -130,7 +131,11 @@ public class User extends entities.Entity {
     }
     
     public boolean isAdmin() {
-        return this.hasRole(Roles.ADMIN) || this.hasRole(Roles.SUPERADMIN);
+        return hasRole(Roles.ADMIN) || hasRole(Roles.SUPERADMIN);
+    }
+    
+    public boolean isSuperAdmin() {
+        return hasRole(Roles.SUPERADMIN);
     }
     
     public String getName() {

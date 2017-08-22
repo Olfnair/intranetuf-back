@@ -12,6 +12,8 @@ import entities.ProjectRight;
 import entities.User;
 import entities.query.FlexQuery;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -52,6 +54,20 @@ public class UserFacadeREST extends AbstractFacade<User> {
     
     @PersistenceContext(unitName = "IUFPU")
     private EntityManager em;
+    
+    static void sendActivationLink(Long userId, String email, String subject, String text) {
+        // On signe le token avec la clé pour les activations.
+        // Important pour éviter de générer un token qui pourrait aussi servir pour tout le reste
+        AuthToken userToken = Authentication.issueToken(userId, 0L, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
+        String url;
+        try {
+            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + Base64Url.encode(userToken.toJsonString(), "ISO-8859-1");
+        } catch (UnsupportedEncodingException ex) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{error: \"UnsupportedEncodingException\"}").build());
+        }
+        new SendMailThread(new Mail(email, "Activer votre compte", text + url)).start();
+    }
 
     public UserFacadeREST() {
         super(User.class);
@@ -65,8 +81,6 @@ public class UserFacadeREST extends AbstractFacade<User> {
         
         entity.setCredentials(new Credentials(entity.getLogin()));
         Response res = super.insert(entity);
-        // On signe le token avec la clé pour les activations.
-        // Important pour éviter de générer un token qui pourrait aussi servir pour tout le reste
         Long id;
         try {
             id = entity.getId();
@@ -74,17 +88,28 @@ public class UserFacadeREST extends AbstractFacade<User> {
             throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE)
                     .entity(new RestError("login")).build());
         }
-        AuthToken userToken = Authentication.issueToken(id, 0L, 3 * 24 * 60 * 60, AuthToken.ACTIVATION_KEY); // token valable pendant 3 jours
-        String url = "";
-        String text = "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : ";
-        try {
-            url = ApplicationConfig.FRONTEND_URL + "/#/activate/" + Base64Url.encode(userToken.toJsonString(), "ISO-8859-1");
-        } catch (UnsupportedEncodingException ex) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("{error: \"UnsupportedEncodingException\"}").build());
-        }
-        new SendMailThread(new Mail(entity.getEmail(), "Activer votre compte", text + url)).start();
+        
+        // Envoi d'un lien d'activation par mail
+        UserFacadeREST.sendActivationLink(
+                id,
+                entity.getEmail(),
+                "Activer votre compte",
+                "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : "
+        );
+        
         return res;
+    }
+    
+    @PUT
+    public Response editMany(@Context MessageContext jaxrsContext, List<User> entities) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        entities.forEach((user) -> {
+            em.merge(user);
+        });
+        
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @PUT
@@ -92,21 +117,52 @@ public class UserFacadeREST extends AbstractFacade<User> {
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, User entity) {
         AuthToken token = Authentication.validate(jaxrsContext);
         User askingUser = em.find(User.class, token.getUserId());
-        
-        
+              
         User user = em.find(User.class, id);
         if(user == null || askingUser == null) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         
-         // vérifie que l'utilisateur qui fait la demande est bien celui qui est modifié ou admin
+        // vérifie que l'utilisateur qui fait la demande est bien celui qui est modifié ou admin
         if(askingUser.getId().longValue() != user.getId().longValue() && ! askingUser.isAdmin()) {
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+        
+        String login = entity.getLogin();
+        if(login != null) {
+            // login match le regex ?
+            if(! login.matches("[a-zA-Z0-9]+")) {
+                // login ne match pas le regex
+                throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE)
+                        .entity(new RestError("login")).build());
+            }
+                       
+            // login unique ?
+            TypedQuery<User> usersByloginQuery = em.createNamedQuery("User.getByLogin", User.class);
+            usersByloginQuery.setParameter("login", login);
+            List<User> usersByLoginResult = usersByloginQuery.getResultList();
+            if(usersByLoginResult.size() > 0 && usersByLoginResult.get(0).getId().longValue() != user.getId().longValue()) {
+                // login déjà utlisé
+                throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE)
+                        .entity(new RestError("login")).build());
+            }
         }          
             
         if(! askingUser.isAdmin()) {
             entity.setActive(user.isActive());
+            entity.setPending(user.isPending());
         }
+        else if(entity.isPending() && (! user.isSuperAdmin() || askingUser.isSuperAdmin())) {
+            // Réactivation d'un compte : (reset mot de passe)
+            // Envoi d'un lien d'activation par mail
+            UserFacadeREST.sendActivationLink(
+                    id,
+                    entity.getEmail(),
+                    "Réinitialisation de votre compte",
+                    "Votre compte a été réinitilisé. Cliquez sur ce lien pour le réactiver et choisir un nouveau mot de passe : "
+            );
+        }
+        
         entity.setId(user.getId());
         return super.edit(entity);
     }
@@ -123,6 +179,29 @@ public class UserFacadeREST extends AbstractFacade<User> {
         }
         
         user.setActive(false);
+        return Response.status(Response.Status.NO_CONTENT).build();
+    }
+    
+    @PUT
+    @Path("activateMany/{activate}")
+    public Response activateMany(
+            @Context MessageContext jaxrsContext,
+            @PathParam("activate") Integer activate,
+            List<RestLong> restLongProjectIds
+    ) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        User user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        List<Long> userIds = new ArrayList<>(restLongProjectIds.size());
+        restLongProjectIds.forEach((restLongId) -> {
+            userIds.add(restLongId.getValue());
+        });
+        
+        javax.persistence.Query updateQuery = em.createNamedQuery("User.ActivateMany");
+        updateQuery.setParameter("active", activate > 0);
+        updateQuery.setParameter("userIds", userIds);
+        updateQuery.executeUpdate();
+        
         return Response.status(Response.Status.NO_CONTENT).build();
     }
 
