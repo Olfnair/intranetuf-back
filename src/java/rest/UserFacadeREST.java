@@ -101,9 +101,14 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @PUT
     public Response editMany(@Context MessageContext jaxrsContext, List<User> entities) {
         AuthToken token = Authentication.validate(jaxrsContext);
-        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        User admin = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
         entities.forEach((user) -> {
+            User persistedUser = em.find(User.class, user.getId());
+            if(! admin.isSuperAdmin() && (persistedUser.hasRole(User.Roles.SUPERADMIN) || user.hasRole(User.Roles.SUPERADMIN))) {
+                // un admin simple essaye de modifier un superadmin ou de donner le droit superadmin
+                throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+            }
             em.merge(user);
         });
         
@@ -122,7 +127,9 @@ public class UserFacadeREST extends AbstractFacade<User> {
         }
         
         // vérifie que l'utilisateur qui fait la demande est bien celui qui est modifié ou admin
-        if(askingUser.getId().longValue() != user.getId().longValue() && ! askingUser.isAdmin()) {
+        // si l'utilisateur à modifier est superadmin, celui qui modifie doit être superadmin aussi
+        if(askingUser.getId().longValue() != user.getId().longValue() && ! askingUser.isAdmin()
+                || user.isSuperAdmin() && ! askingUser.isSuperAdmin()) {
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         }
         
@@ -192,7 +199,12 @@ public class UserFacadeREST extends AbstractFacade<User> {
         
         List<Long> userIds = new ArrayList<>(restLongProjectIds.size());
         restLongProjectIds.forEach((restLongId) -> {
-            userIds.add(restLongId.getValue());
+            long id = restLongId.getValue();
+            User persistedUser = em.find(User.class, id);
+            if(! persistedUser.isSuperAdmin() || user.isSuperAdmin()) {
+                // on ne peut pas modifier un superadmin sans être superadmin
+                userIds.add(restLongId.getValue());
+            }
         });
         
         javax.persistence.Query updateQuery = em.createNamedQuery("User.ActivateMany");
