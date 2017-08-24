@@ -53,6 +53,7 @@ public class User extends entities.Entity {
         LIST_ALL_COMPLETE.addWhereSpec("firstname", "firstname", "LIKE", "AND", String.class);
         LIST_ALL_COMPLETE.addWhereSpec("email", "email", "LIKE", "AND", String.class);
         LIST_ALL_COMPLETE.addWhereSpec("login", "login", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addWhereSpec("id", "ids", "NOT IN", "AND", List.class);
         LIST_ALL_COMPLETE.addOrderBySpec("name");
         LIST_ALL_COMPLETE.addOrderBySpec("firstname");
         LIST_ALL_COMPLETE.addOrderBySpec("email");

@@ -238,16 +238,10 @@ public class UserFacadeREST extends AbstractFacade<User> {
         }
         return Response.ok(new RestLong(user.getRole())).build();
     }
-
-    @GET
-    @Path("{whereParams}/{orderbyParams}/{index}/{limit}")
-    public Response findAll(@Context MessageContext jaxrsContext,
-            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
-            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
-        
-        AuthToken token = Authentication.validate(jaxrsContext);
-        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
-        
+    
+    private FlexQuery<User> prepareFindAll(MessageContext jaxrsContext,
+            String whereParams, String orderbyParams,
+            Integer index, Integer limit) {
         FlexQuery<User> usersQuery = new FlexQuery<>(User.LIST_ALL_COMPLETE);
         try {
             usersQuery.setParameters(
@@ -259,8 +253,45 @@ public class UserFacadeREST extends AbstractFacade<User> {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         
-        usersQuery.prepareCountQuery(em);
+        return usersQuery;
+    }
+
+    @GET
+    @Path("{whereParams}/{orderbyParams}/{index}/{limit}")
+    public Response findAll(@Context MessageContext jaxrsContext,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
         
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        FlexQuery<User> usersQuery = prepareFindAll(jaxrsContext, whereParams, orderbyParams, index, limit);
+        
+        usersQuery.prepareCountQuery(em);
+        return Response.ok(usersQuery.execute()).build();
+    }
+    
+    @POST
+    @Path("{whereParams}/{orderbyParams}/{index}/{limit}")
+    public Response findAllExcludeIds(@Context MessageContext jaxrsContext,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit,
+            List<RestLong> restLongIds) {
+        
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        FlexQuery<User> usersQuery = prepareFindAll(jaxrsContext, whereParams, orderbyParams, index, limit);
+        
+        if(restLongIds != null && restLongIds.size() > 0) {
+            List<Long> ids = new ArrayList<>(restLongIds.size());
+            restLongIds.forEach((id) -> {
+                ids.add(id.getValue());
+            });
+            usersQuery.addWhereClause("id", ids);
+        }
+        
+        usersQuery.prepareCountQuery(em);
         return Response.ok(usersQuery.execute()).build();
     }
     

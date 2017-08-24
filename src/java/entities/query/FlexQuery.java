@@ -133,6 +133,13 @@ public class FlexQuery<T> {
         setPaginationParams(index, limit);
     }
     
+    public boolean addWhereClause(String column, Object param) {
+        if(! specification.whereColumnInSpec(column)) { return false; }
+        
+        whereClauses.put(column, param);
+        return true;
+    }
+    
     // ajoute une une colonne dans le WHERE
     public boolean addWhereClause(String column, String param) {
         if(! specification.whereColumnInSpec(column)) { return false; }
