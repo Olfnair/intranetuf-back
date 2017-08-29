@@ -54,30 +54,72 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         super(ProjectRight.class);
     }
     
+    private void save(ProjectRight right) {
+        if(right.getId() == null) {
+            em.persist(right);
+        }
+        else if(right.getRights() == 0) {
+            em.remove(em.merge(right));
+        }
+        else {
+            em.merge(right);
+        }
+    }
+    
+    @PUT
+    @Path("project/{id}")
+    public Response createOrEditForProject(@Context MessageContext jaxrsContext, @PathParam("id") Long projectId, List<ProjectRight> rights) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        Project project = em.find(Project.class, projectId);
+        if(project == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        
+        List<Long> usersIds = new ArrayList<>(rights.size());
+        HashMap<Long, ProjectRight> mapUserIdToRight = new HashMap<>();
+        rights.forEach((right) -> {
+            if(right.getProject().getId().longValue() == projectId.longValue()) {
+                usersIds.add(right.getUser().getId());
+                mapUserIdToRight.put(right.getUser().getId(), right);
+            }
+        });
+        
+        List<ProjectRight> existingRights = new ArrayList<>();
+        if(usersIds.size() > 0) {
+            TypedQuery<ProjectRight> rightsQuery = em.createNamedQuery("ProjectRight.ListForProjectAndUsers", ProjectRight.class);
+            rightsQuery.setParameter("entityId", project.getId());
+            rightsQuery.setParameter("entitiesIds", usersIds);
+            existingRights = rightsQuery.getResultList();
+        }
+        
+        existingRights.forEach((existingRight) -> {
+            if(mapUserIdToRight.containsKey(existingRight.getUser().getId())) {
+                ProjectRight right = mapUserIdToRight.get(existingRight.getUser().getId());
+                right.setRights(right.getRights() | existingRight.getRights());
+                right.setId(existingRight.getId());
+                mapUserIdToRight.put(existingRight.getUser().getId(), right);
+            }
+        });
+        
+        mapUserIdToRight.keySet().forEach((userId) -> {
+            save(mapUserIdToRight.get(userId));
+        });
+        
+        return Response.status(Response.Status.CREATED).build();
+    }
+    
     @PUT
     public Response createOrEdit(@Context MessageContext jaxrsContext, List<ProjectRight> entities) {
         AuthToken token = Authentication.validate(jaxrsContext);
         RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
         entities.forEach((right) -> {
-            if(right.getId() == null) {
-                em.persist(right);
-            }
-            else if(right.getRights() == 0) {
-                em.remove(em.merge(right));
-            }
-            else {
-                em.merge(right);
-            }
+            save(right);
         });
         return Response.status(Response.Status.CREATED).build();
     }
-    
-    /*@PUT
-    @Path("{id}")
-    public Response edit(@PathParam("id") Long id, ProjectRight entity) {
-        return super.edit(entity);
-    }*/
     
     @DELETE
     @Path("{id}")

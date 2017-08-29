@@ -5,6 +5,7 @@
  */
 package rest;
 
+import dao.DAOVersion;
 import entities.Project;
 import files.Upload;
 import java.io.InputStream;
@@ -58,7 +59,7 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             @Context MessageContext jaxrsContext,
             @Multipart("entity") Version entity,
             @Multipart("file") InputStream uploadedInputStream,
-            @Multipart("file") Attachment attachment) {       
+            @Multipart("file") Attachment attachment) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
         File file;
@@ -89,7 +90,7 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             entity.setFile(file);
             entity.setNum(file.getVersion().getNum() + 1);
             entity.setDate_upload(Instant.now().getEpochSecond());
-            entity.initWorkflowChecks();
+            new DAOVersion(entity, em).initWorkflowChecks();
             em.persist(entity);
             file.setVersion(entity);
             em.merge(file);

@@ -44,24 +44,9 @@ public class User extends entities.Entity {
         public final static int SUPERADMIN = 2;
     }
     
-    public final static FlexQuerySpecification<User> LIST_ALL_COMPLETE;
     public final static FlexQuerySpecification<User> LIST_FOR_RIGHTS;
     
-    static {
-        LIST_ALL_COMPLETE = new FlexQuerySpecification<>("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login :where: :orderby:", "u", User.class);   
-        LIST_ALL_COMPLETE.addWhereSpec("name", "name", "LIKE", "AND", String.class);
-        LIST_ALL_COMPLETE.addWhereSpec("firstname", "firstname", "LIKE", "AND", String.class);
-        LIST_ALL_COMPLETE.addWhereSpec("email", "email", "LIKE", "AND", String.class);
-        LIST_ALL_COMPLETE.addWhereSpec("login", "login", "LIKE", "AND", String.class);
-        LIST_ALL_COMPLETE.addWhereSpec("id", "ids", "NOT IN", "AND", List.class);
-        LIST_ALL_COMPLETE.addOrderBySpec("name");
-        LIST_ALL_COMPLETE.addOrderBySpec("firstname");
-        LIST_ALL_COMPLETE.addOrderBySpec("email");
-        LIST_ALL_COMPLETE.addOrderBySpec("login");
-        LIST_ALL_COMPLETE.addOrderBySpec("active");
-        LIST_ALL_COMPLETE.addOrderBySpec("pending");
-        LIST_ALL_COMPLETE.addDefaultOrderByClause("login", "ASC");
-        
+    static {        
         LIST_FOR_RIGHTS = new FlexQuerySpecification<>("SELECT u FROM User u JOIN FETCH u.login :where: :orderby:", "u", User.class);
         LIST_FOR_RIGHTS.addWhereSpec("login", "name", "LIKE", "AND", String.class);
         LIST_FOR_RIGHTS.addOrderBySpec("login");
@@ -81,7 +66,6 @@ public class User extends entities.Entity {
     
     @Basic(fetch=FetchType.LAZY)
     @NotNull
-    
     // http://emailregex.com/
     @Pattern(regexp = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/="
             + "?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-"

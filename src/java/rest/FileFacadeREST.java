@@ -5,17 +5,20 @@
 */
 package rest;
 
+import dao.DAOVersion;
 import entities.File;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
 import entities.Version;
+import entities.WorkflowCheck;
 import entities.query.FlexQuery;
 import entities.query.FlexQueryResult;
 import files.Upload;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -84,7 +87,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
             Version version = entity.getVersion();
             version.setFile(entity);
             version.setDate_upload(Instant.now().getEpochSecond());
-            version.initWorkflowChecks();
+            new DAOVersion(version, em).initWorkflowChecks();
             entity.setAuthor(author);
             em.persist(entity);
             new Upload(uploadedInputStream, project.getId().toString(), version.getId().toString()).run();
@@ -164,12 +167,14 @@ public class FileFacadeREST extends AbstractFacade<File> {
             @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
+        
         // droits
+        User user;
         try { // voir le projet
-            RightsChecker.getInstance(em).validate(token, User.Roles.USER, id, ProjectRight.Rights.VIEWPROJECT);
+            user = RightsChecker.getInstance(em).validate(token, User.Roles.USER, id, ProjectRight.Rights.VIEWPROJECT);
         }
         catch(WebApplicationException e) { // ou role admin
-            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+            user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         }
         
         FlexQuery<File> filesQuery = new FlexQuery<>(File.LIST_BY_PROJECT);
@@ -181,6 +186,28 @@ public class FileFacadeREST extends AbstractFacade<File> {
             );
         } catch (UnsupportedEncodingException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        
+        if(! user.isAdmin()) {
+            TypedQuery<Long> availableIdsQuery = em.createNamedQuery("File.getAvailableByProject", Long.class);
+            availableIdsQuery.setParameter("projectId", id);
+            availableIdsQuery.setParameter("userId", user.getId());
+            availableIdsQuery.setParameter("versionStatus", Version.Status.VALIDATED);
+            List<Long> availableIdsList = availableIdsQuery.getResultList();
+        
+            TypedQuery<Long> toCheckIdsQuery = em.createNamedQuery("File.getForCheckersByProject", Long.class);
+            toCheckIdsQuery.setParameter("userId", user.getId());
+            toCheckIdsQuery.setParameter("projectId", id);
+            toCheckIdsQuery.setParameter("checkStatus", WorkflowCheck.Status.TO_CHECK);
+            List<Long> toCheckIdsList = toCheckIdsQuery.getResultList();
+        
+            List<Long> idsList = new ArrayList<>(availableIdsList.size() + toCheckIdsList.size());
+            idsList.addAll(availableIdsList);
+            idsList.addAll(toCheckIdsList);
+            
+            if(! idsList.isEmpty()) {
+                filesQuery.addWhereClause("id", idsList);
+            }
         }
         
         filesQuery.prepareCountQuery(em);

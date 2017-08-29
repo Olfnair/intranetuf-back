@@ -9,6 +9,7 @@ import config.ApplicationConfig;
 import entities.Credentials;
 import entities.User;
 import entities.query.FlexQuery;
+import entities.query.FlexQuerySpecification;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -241,8 +242,31 @@ public class UserFacadeREST extends AbstractFacade<User> {
     
     private FlexQuery<User> prepareFindAll(MessageContext jaxrsContext,
             String whereParams, String orderbyParams,
-            Integer index, Integer limit) {
-        FlexQuery<User> usersQuery = new FlexQuery<>(User.LIST_ALL_COMPLETE);
+            Integer index, Integer limit, boolean showSuper) {
+        
+        String showSuperStr = "";
+        
+        if(! showSuper) {
+            showSuperStr = " WHERE MOD(u.role/:role, 2) < 1"; // quand l'utilisateur n'a pas le rôle
+        }
+        
+        FlexQuerySpecification<User> LIST_ALL_COMPLETE = new FlexQuerySpecification<>("SELECT u FROM User u JOIN FETCH u.email JOIN FETCH u.login"
+              + showSuperStr  + " :where: :orderby:", "u", User.class);   
+        LIST_ALL_COMPLETE.addWhereSpec("name", "name", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addWhereSpec("firstname", "firstname", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addWhereSpec("email", "email", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addWhereSpec("login", "login", "LIKE", "AND", String.class);
+        LIST_ALL_COMPLETE.addWhereSpec("id", "ids", "NOT IN", "AND", List.class);
+        LIST_ALL_COMPLETE.addOrderBySpec("name");
+        LIST_ALL_COMPLETE.addOrderBySpec("firstname");
+        LIST_ALL_COMPLETE.addOrderBySpec("email");
+        LIST_ALL_COMPLETE.addOrderBySpec("login");
+        LIST_ALL_COMPLETE.addOrderBySpec("active");
+        LIST_ALL_COMPLETE.addOrderBySpec("pending");
+        LIST_ALL_COMPLETE.addDefaultOrderByClause("login", "ASC");
+        
+        FlexQuery<User> usersQuery = new FlexQuery<>(LIST_ALL_COMPLETE);
+        
         try {
             usersQuery.setParameters(
                     Base64Url.decode(whereParams),
@@ -251,6 +275,10 @@ public class UserFacadeREST extends AbstractFacade<User> {
             );
         } catch (UnsupportedEncodingException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        
+        if(! showSuper) {
+           usersQuery.setBaseParameter("role", User.Roles.SUPERADMIN);
         }
         
         return usersQuery;
@@ -263,9 +291,9 @@ public class UserFacadeREST extends AbstractFacade<User> {
             @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
         
         AuthToken token = Authentication.validate(jaxrsContext);
-        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        User user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
-        FlexQuery<User> usersQuery = prepareFindAll(jaxrsContext, whereParams, orderbyParams, index, limit);
+        FlexQuery<User> usersQuery = prepareFindAll(jaxrsContext, whereParams, orderbyParams, index, limit, user.isSuperAdmin());
         
         usersQuery.prepareCountQuery(em);
         return Response.ok(usersQuery.execute()).build();
@@ -279,9 +307,9 @@ public class UserFacadeREST extends AbstractFacade<User> {
             List<RestLong> restLongIds) {
         
         AuthToken token = Authentication.validate(jaxrsContext);
-        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        User user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
-        FlexQuery<User> usersQuery = prepareFindAll(jaxrsContext, whereParams, orderbyParams, index, limit);
+        FlexQuery<User> usersQuery = prepareFindAll(jaxrsContext, whereParams, orderbyParams, index, limit, user.isSuperAdmin());
         
         if(restLongIds != null && restLongIds.size() > 0) {
             List<Long> ids = new ArrayList<>(restLongIds.size());

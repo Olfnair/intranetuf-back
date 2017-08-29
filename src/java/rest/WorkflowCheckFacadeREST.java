@@ -5,6 +5,7 @@
  */
 package rest;
 
+import dao.DAOVersion;
 import entities.File;
 import entities.Project;
 import entities.ProjectRight;
@@ -186,7 +187,7 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         // question d'intégrité (sinon on pourrait modifier user ou version..)
         check.setComment(entity.getComment());
         check.setStatus(status);
-        version.updateStatus(check);
+        new DAOVersion(version, em).updateStatus(check);
         
         return Response.status(Response.Status.OK).build();
     }

@@ -5,6 +5,7 @@
  */
 package entities;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -102,12 +103,13 @@ public class Version extends entities.Entity {
         this.workflowChecks = workflowChecks;   
     }
     
-    public void initWorkflowChecks() {
+    /*public void initWorkflowChecks() {
         
         for(WorkflowCheck check : this.workflowChecks) {
             check.setVersion(this);
             if(check.getType() == WorkflowCheck.Types.CONTROL && check.getOrder_num() == 0) {
                 check.setStatus(WorkflowCheck.Status.TO_CHECK);
+                check.setDate_init(Instant.now().getEpochSecond());
             }
             else {
                 check.setStatus(WorkflowCheck.Status.WAITING);
@@ -124,7 +126,8 @@ public class Version extends entities.Entity {
         int order_num = updateCheck.getOrder_num();
         boolean updated;
         
-        // TODO : envoyer mails, noter dates       
+        // TODO : envoyer mails, noter dates
+        updateCheck.setDate_checked(Instant.now().getEpochSecond());
         
         if(updateCheck.getStatus() == WorkflowCheck.Status.CHECK_KO) {
             this.setStatus(Status.REFUSED);
@@ -145,6 +148,7 @@ public class Version extends entities.Entity {
         for(WorkflowCheck check : this.workflowChecks) {
             if(check.getType() == type && check.getOrder_num() == order_num + 1) {
                 check.setStatus(WorkflowCheck.Status.TO_CHECK);
+                check.setDate_init(Instant.now().getEpochSecond());
                 updated = true;
             }
         }
@@ -156,6 +160,7 @@ public class Version extends entities.Entity {
             for(WorkflowCheck check : this.workflowChecks) {
                 if(check.getType() == type + 1 && check.getOrder_num() == 0) {
                     check.setStatus(WorkflowCheck.Status.TO_CHECK);
+                    check.setDate_init(Instant.now().getEpochSecond());
                     updated = true;
                 }
             }
@@ -165,7 +170,7 @@ public class Version extends entities.Entity {
         else if(! updated && type == WorkflowCheck.Types.VALIDATION) {
             this.setStatus(Status.VALIDATED);
         }      
-    }
+    }*/
 
     @Override
     public String toString() {

@@ -26,7 +26,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name="File.byVersion", query="SELECT f FROM File f JOIN FETCH f.project WHERE f.version.id = :versionId"),
-    @NamedQuery(name="File.getProject", query="SELECT f.project FROM File f WHERE f.id = :fileId")
+    @NamedQuery(name="File.getProject", query="SELECT f.project FROM File f WHERE f.id = :fileId"),
+    @NamedQuery(name="File.getAvailableByProject", query="SELECT f.id FROM File f WHERE f.project.id = :projectId AND (f.version.status = :versionStatus OR f.author.id = :userId)"),
+    @NamedQuery(name="File.getForCheckersByProject", query="SELECT f.id FROM File f INNER JOIN f.version.workflowChecks as checks WHERE f.project.id = :projectId AND f.version.id = checks.version.id AND checks.user.id = :userId AND checks.status = :checkStatus")
 })
 public class File extends entities.Entity {
     private static final long serialVersionUID = 1L;
@@ -40,6 +42,7 @@ public class File extends entities.Entity {
         LIST_BY_PROJECT.addWhereSpec("version.num", "versionNum", "=", "AND", Long.class);
         LIST_BY_PROJECT.addWhereSpec("author", "authorName", "LIKE", "AND", String.class);
         LIST_BY_PROJECT.addWhereClauseReplacer("author", "concat(f.author.firstname, ' ', f.author.name)");
+        LIST_BY_PROJECT.addWhereSpec("id", "filesIds", "IN", "AND", List.class);
         LIST_BY_PROJECT.addOrderBySpec("version.filename");
         LIST_BY_PROJECT.addOrderBySpec("version.num");
         LIST_BY_PROJECT.addOrderBySpec("version.date_upload");
