@@ -63,6 +63,9 @@ public class Project extends entities.Entity {
     
     @OneToMany(mappedBy="project", fetch=FetchType.LAZY)
     private List<ProjectRight> projectRights = new ArrayList<>();
+    
+    @OneToMany(mappedBy="project", fetch=FetchType.LAZY)
+    private List<WorkflowCheck> workflowChecks = new ArrayList<>();
 
     public String getName() {
         return name;
@@ -98,6 +101,15 @@ public class Project extends entities.Entity {
         this.projectRights = projectRights;
     }
 
+    @XmlTransient
+    public List<WorkflowCheck> getWorkflowChecks() {
+        return workflowChecks;
+    }
+
+    public void setWorkflowChecks(List<WorkflowCheck> workflowChecks) {
+        this.workflowChecks = workflowChecks;
+    }
+    
     @Override
     public String toString() {
         return "entities.Project[ id=" + getId() + " ]";

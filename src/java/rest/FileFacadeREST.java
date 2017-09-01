@@ -87,13 +87,16 @@ public class FileFacadeREST extends AbstractFacade<File> {
             Version version = entity.getVersion();
             version.setFile(entity);
             version.setDate_upload(Instant.now().getEpochSecond());
-            new DAOVersion(version, em).initWorkflowChecks();
             entity.setAuthor(author);
             em.persist(entity);
+            em.flush();
+            new DAOVersion(version, em).initWorkflowChecks();
+            em.merge(entity);
             new Upload(uploadedInputStream, project.getId().toString(), version.getId().toString()).run();
             return Response.status(201).build();
         }
         catch(Exception e) {
+            e.printStackTrace();
             throw new WebApplicationException(Response.status(500).build());
         }
     }
@@ -161,10 +164,43 @@ public class FileFacadeREST extends AbstractFacade<File> {
     }
     
     @GET
-    @Path("/project/{id}/query/{whereParams}/{orderbyParams}/{index}/{limit}")
-    public Response findByProject(@Context MessageContext jaxrsContext, @PathParam("id") Long id,
+    @Path("/user/{id}/query/{whereParams}/{orderbyParams}/{index}/{limit}")
+    public Response findByUser(
+            @Context MessageContext jaxrsContext, @PathParam("id") Long id,
             @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
-            @PathParam("index") Integer index, @PathParam("limit") Integer limit) {
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit
+    ) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        if(id != token.getUserId()) {
+            // garde : on ne peut lister que ses propres fichiers
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+        
+        FlexQuery<File> filesQuery = new FlexQuery<>(File.LIST_BY_USER);
+        try {
+            filesQuery.setParameters(
+                    Base64Url.decode(whereParams) + "col: 'author.id', param: '" + id + "'",
+                    Base64Url.decode(orderbyParams),
+                    index, limit
+            );
+        } catch (UnsupportedEncodingException ex) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        
+        filesQuery.prepareCountQuery(em);
+        
+        FlexQueryResult<File> files = filesQuery.execute();
+        return Response.ok(files).build();
+    }
+    
+    @GET
+    @Path("/project/{id}/query/{whereParams}/{orderbyParams}/{index}/{limit}")
+    public Response findByProject(
+            @Context MessageContext jaxrsContext, @PathParam("id") Long id,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit
+    ) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
         

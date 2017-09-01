@@ -28,12 +28,12 @@ public class ConfigFile {
         if(! this.loaded) {
             if(! isResource) {
                 try (InputStream input = new FileInputStream(filename)) {
-                    prop.load(input);
+                    prop.loadFromXML(input);
                 }
             }
             else {
                 try (InputStream input = this.getClass().getClassLoader().getResourceAsStream(filename)) {
-                    prop.load(input);
+                    prop.loadFromXML(input);
                 }
             }
             loaded = true;

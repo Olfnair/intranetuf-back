@@ -90,8 +90,10 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             entity.setFile(file);
             entity.setNum(file.getVersion().getNum() + 1);
             entity.setDate_upload(Instant.now().getEpochSecond());
-            new DAOVersion(entity, em).initWorkflowChecks();
             em.persist(entity);
+            em.flush();
+            new DAOVersion(entity, em).initWorkflowChecks();
+            em.merge(entity);
             file.setVersion(entity);
             em.merge(file);
             new Upload(uploadedInputStream, project.getId().toString(), entity.getId().toString()).run();

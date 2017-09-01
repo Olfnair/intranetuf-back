@@ -34,6 +34,7 @@ public class File extends entities.Entity {
     private static final long serialVersionUID = 1L;
     
     public final static FlexQuerySpecification<File> LIST_BY_PROJECT; // utilisé pour afficher la liste des fichiers contenus dans un projet
+    public final static FlexQuerySpecification<File> LIST_BY_USER; // utilisé pour lister les fichiers par utilisateur
     
     static {
         LIST_BY_PROJECT = new FlexQuerySpecification<>("SELECT f FROM File f WHERE f.active = true :where: :orderby:", "f", File.class);
@@ -50,11 +51,21 @@ public class File extends entities.Entity {
         LIST_BY_PROJECT.addOrderByClauseReplacer("author", "f.author.name, f.author.firstname");
         LIST_BY_PROJECT.addOrderBySpec("version.status");
         LIST_BY_PROJECT.addDefaultOrderByClause("version.filename", "ASC");
+        
+        LIST_BY_USER = new FlexQuerySpecification<>("SELECT f FROM File f JOIN FETCH f.project WHERE f.active = true :where: :orderby:", "f", File.class);
+        LIST_BY_USER.addWhereSpec("author.id", "authorId", "=", "AND", Long.class);
+        LIST_BY_USER.addWhereSpec("project.name", "projectName", "LIKE", "AND", String.class);
+        LIST_BY_USER.addWhereSpec("version.filename", "versionFilename", "LIKE", "AND", String.class);
+        LIST_BY_USER.addWhereSpec("version.num", "versionNum", "=", "AND", Long.class);
+        LIST_BY_USER.addOrderBySpec("version.filename");
+        LIST_BY_USER.addOrderBySpec("version.num");
+        LIST_BY_USER.addOrderBySpec("version.date_upload");
+        LIST_BY_USER.addDefaultOrderByClause("version.filename", "ASC");
     }
     
     private boolean active = true;
     
-    @OneToOne(fetch=FetchType.EAGER, cascade={CascadeType.PERSIST, CascadeType.REMOVE})
+    @OneToOne(fetch=FetchType.EAGER, cascade={CascadeType.ALL})
     private Version version;
     
     @ManyToOne(fetch=FetchType.EAGER)

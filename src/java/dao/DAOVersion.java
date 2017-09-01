@@ -5,10 +5,18 @@
  */
 package dao;
 
+import config.ApplicationConfig;
+import entities.Project;
+import entities.User;
 import entities.Version;
 import entities.WorkflowCheck;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import mail.Mail;
+import mail.SendMailThread;
 
 /**
  *
@@ -18,8 +26,10 @@ public class DAOVersion {
     private Version version = null;
     private EntityManager em = null;
     
-    public DAOVersion(Version version) {
-        this.version = version;
+    private void sendMails(List<WorkflowCheck> checks) {
+        checks.forEach((check) -> {
+            new DAOWorkflowCheck(check, em).sendMail(version);
+        });
     }
     
     public DAOVersion(Version version, EntityManager em) {
@@ -35,17 +45,22 @@ public class DAOVersion {
         this.version = version;
     }
     
-    public void initWorkflowChecks() {  
+    public void initWorkflowChecks() {
+        List<WorkflowCheck> checksWithUserToAvert = new ArrayList<>();
+        
         for(WorkflowCheck check : version.getWorkflowChecks()) {
             check.setVersion(version);
             if(check.getType() == WorkflowCheck.Types.CONTROL && check.getOrder_num() == 0) {
                 check.setStatus(WorkflowCheck.Status.TO_CHECK);
                 check.setDate_init(Instant.now().getEpochSecond());
+                checksWithUserToAvert.add(check);
             }
             else {
                 check.setStatus(WorkflowCheck.Status.WAITING);
             }
         }
+        
+        sendMails(checksWithUserToAvert);
     }
     
     
@@ -73,6 +88,8 @@ public class DAOVersion {
                 return;
             }
         }
+        
+        List<WorkflowCheck> checksWithUserToAvert = new ArrayList<>();
            
         // si non, regarder s'il existe des checks d'ordre order_num + 1 du même type et les mettre à TO_CHECK
         updated = false;
@@ -80,6 +97,7 @@ public class DAOVersion {
             if(check.getType() == type && check.getOrder_num() == order_num + 1) {
                 check.setStatus(WorkflowCheck.Status.TO_CHECK);
                 check.setDate_init(Instant.now().getEpochSecond());
+                checksWithUserToAvert.add(check);
                 updated = true;
             }
         }
@@ -92,6 +110,7 @@ public class DAOVersion {
                 if(check.getType() == type + 1 && check.getOrder_num() == 0) {
                     check.setStatus(WorkflowCheck.Status.TO_CHECK);
                     check.setDate_init(Instant.now().getEpochSecond());
+                    checksWithUserToAvert.add(check);
                     updated = true;
                 }
             }
@@ -100,6 +119,8 @@ public class DAOVersion {
         // sinon si le type == VALIDATION, le fichier est validé
         else if(! updated && type == WorkflowCheck.Types.VALIDATION) {
             version.setStatus(Version.Status.VALIDATED);
-        }      
+        }
+        
+        sendMails(checksWithUserToAvert);
     }
 }

@@ -25,7 +25,7 @@ public class Mail {
     private final String recipient;
     
     static {
-        ConfigFile configFile = new ConfigFile(ApplicationConfig.PROPERTIES_LOCATION + '/' + "mail.properties");
+        ConfigFile configFile = new ConfigFile(ApplicationConfig.PROPERTIES_LOCATION + '/' + "mail.xml");
         try {
             Mail.configUser(configFile.read("username"), configFile.read("password"));
             Mail.configServer(configFile);

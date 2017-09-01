@@ -22,7 +22,7 @@ public class ApplicationConfig extends Application {
     public final static String FRONTEND_URL;
     
     static {
-        ConfigFile configFile = new ConfigFile("global.properties", true);
+        ConfigFile configFile = new ConfigFile("global.xml", true);
         String projects = null;
         String properties = null;
         String keys = null;
@@ -33,7 +33,7 @@ public class ApplicationConfig extends Application {
             keys = configFile.read("keys");
             frontEndURL = configFile.read("frontEndURL");
             if(projects == null || properties == null || keys == null || frontEndURL == null) {
-                throw new Exception("Error in global.properties");
+                throw new Exception("Error in global.xml");
             }
         } catch (Exception ex) {
             Logger.getLogger(ApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);

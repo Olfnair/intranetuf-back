@@ -30,30 +30,6 @@ public class AuthToken implements Serializable {
     public static final int AUTH_KEY = 0;
     public static final int ACTIVATION_KEY = 1;
     
-    private static final String AUTH_SECRET;
-    private static final String ACTIVATION_SECRET;
-    
-    static {
-        ConfigFile config = new ConfigFile(ApplicationConfig.KEYS_LOCATION + '/' + "keys.properties");
-        String auth="ifDdJaJ+RcWFPUVSymIjLe5PHc4plksmKFwSfa7KNxQ="; // clé par défaut de secours
-        String activation="MRyZ57CFn/h2p4j7co9fUbt18q4nrGj+53nikbvdfHs="; // clé par défaut de secours
-        try {
-            auth = config.read("auth");
-            activation = config.read("activation");
-            if(auth == null || activation == null) {
-                throw new Exception("Error in keys.properties");
-            }
-            else if(auth.equals(activation)) {
-                throw new Exception("key for auth is same as activation. Not Recommended : use 2 different keys.");
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(ApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            AUTH_SECRET = auth;
-            ACTIVATION_SECRET = activation;
-        }
-    }
-    
     private static final long serialVersionUID = 1L;
     
     private long nonce;
@@ -123,14 +99,21 @@ public class AuthToken implements Serializable {
     public void setExpDate(long expDate) {
         this.expDate = expDate;
     }
-    
     private String generateSignature(int key) {
+        return generateSignature(key, false);
+    }
+    
+    private String generateSignature(int key, boolean old) {
         String sign;
+        String secret = getSecret(key, old);
+        if(secret == null) {
+            return "";
+        }
         try {
             String data = Long.toString(this.nonce) + Long.toString(this.userId) + Long.toString(this.roleId) + Long.toString(this.expDate);
             
             Mac HMAC_sha512 = Mac.getInstance("HmacSHA512");
-            SecretKeySpec secret_key = new SecretKeySpec(getSecret(key).getBytes("ISO-8859-1"), "HmacSHA512");
+            SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes("ISO-8859-1"), "HmacSHA512");
             HMAC_sha512.init(secret_key);
             
             sign = Base64.getEncoder().encodeToString(HMAC_sha512.doFinal(data.getBytes("ISO-8859-1")));
@@ -148,7 +131,11 @@ public class AuthToken implements Serializable {
     }
     
     public boolean checkSign(int key) {
-        return this.signature.equals(this.generateSignature(key));
+        boolean ret = this.signature.equals(this.generateSignature(key, false)); // clé actuelle
+        if(! ret) {
+            ret = this.signature.equals(this.generateSignature(key, true)); // ancienne clé
+        }
+        return ret;
     }
     
     public boolean isExpired() {
@@ -217,9 +204,13 @@ public class AuthToken implements Serializable {
     }
     
     private static String getSecret(int key) {
+        return getSecret(key, false);
+    }
+    
+    private static String getSecret(int key, boolean old) {
         if(key == ACTIVATION_KEY) {
-            return ACTIVATION_SECRET;
+            return old ? KeyManager.getACTIVATION_SECRET_OLD() : KeyManager.getACTIVATION_SECRET();
         }
-        return AUTH_SECRET; // par defaut
+        return old ? KeyManager.getAUTH_SECRET_OLD() : KeyManager.getAUTH_SECRET(); // par defaut
     }
 }

@@ -152,7 +152,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE)
                         .entity(new RestError("login")).build());
             }
-        }          
+        }
             
         if(! askingUser.isAdmin()) {
             entity.setActive(user.isActive());
@@ -218,8 +218,28 @@ public class UserFacadeREST extends AbstractFacade<User> {
 
     @GET
     @Path("{id}")
-    public Response find(@PathParam("id") Long id) {
-        return super.find(id);
+    public Response find(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        User askingUser = em.find(User.class, token.getUserId());
+        if(askingUser.getId().longValue() != id.longValue() && ! askingUser.isAdmin()) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+        
+        return this.buildResponse(() -> {
+            TypedQuery<User> userQuery = em.createNamedQuery("User.getWithLoginAndEmail", User.class);
+            userQuery.setParameter("userId", id);
+            User user = userQuery.getResultList().get(0);
+            
+            // nécessaire au chargement de l'email et du mot de passe...
+            // si on ne le fait pas, si l'entité est dans le cache, on n'aura pas l'email ni le login dans la réponse.
+            // apparemment, c'est du à un "bug" d'openjpa : JOIN FETCH ne marche que pour mettre en cache
+            String email = user.getEmail();
+            String login = user.getLogin();
+            // .........................................................
+            
+            return user;
+        });
     }
     
     @GET

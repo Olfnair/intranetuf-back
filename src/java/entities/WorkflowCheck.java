@@ -22,7 +22,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name="WorkflowCheck.getByVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user WHERE wfc.version.id = :versionId ORDER BY wfc.type ASC, wfc.order_num ASC"),
     @NamedQuery(name="WorkflowCheck.getByStatusUserVersions", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.version WHERE wfc.user.id = :userId AND wfc.status = :status AND wfc.version.id IN(:versionIds)"),
-    @NamedQuery(name="WorkflowCheck.getWithUser", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user WHERE wfc.id = :wfcId")
+    @NamedQuery(name="WorkflowCheck.getWithUser", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user WHERE wfc.id = :wfcId"),
+    @NamedQuery(name="WorkflowCheck.getWithUserAndVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user JOIN FETCH wfc.version WHERE wfc.id = :wfcId")
 })
 public class WorkflowCheck extends entities.Entity {
     private static final long serialVersionUID = 1L;
@@ -58,6 +59,9 @@ public class WorkflowCheck extends entities.Entity {
     
     @ManyToOne(fetch=FetchType.LAZY)
     private User user;
+    
+    @ManyToOne(fetch=FetchType.LAZY)
+    private Project project;
 
     public Integer getStatus() {
         return status;
@@ -123,6 +127,14 @@ public class WorkflowCheck extends entities.Entity {
         this.user = user;
     }
 
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+    
     @Override
     public String toString() {
         return "entities.FileAction[ id=" + getId() + " ]";

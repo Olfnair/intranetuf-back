@@ -6,6 +6,7 @@
 package rest;
 
 import dao.DAOVersion;
+import dao.DAOWorkflowCheck;
 import entities.File;
 import entities.Project;
 import entities.ProjectRight;
@@ -66,6 +67,18 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         return project;
+    }
+    
+    @POST
+    @Path("sendReminder/{id}")
+    public Response sendReminder(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        User user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        TypedQuery<WorkflowCheck> checkQuery = em.createNamedQuery("WorkflowCheck.getWithUserAndVersion", WorkflowCheck.class);
+        checkQuery.setParameter("wfcId", id);
+        new DAOWorkflowCheck(checkQuery.getResultList().get(0), em).sendMail(true); // envoi d'un mail de rappel
+        return Response.status(Response.Status.CREATED).build();
     }
     
     @POST

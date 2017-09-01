@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @XmlRootElement
 @NamedQueries({
+    @NamedQuery(name="User.getWithLoginAndEmail", query="SELECT u FROM User u JOIN FETCH u.login JOIN FETCH u.email WHERE u.id = :userId"),
     @NamedQuery(name="User.getWithCredentials", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.id = :userId"),
     @NamedQuery(name="User.getByLogin", query="SELECT u FROM User u WHERE u.login = :login"),
     @NamedQuery(name="User.getByloginWithCredentialsForAuth", query="SELECT u FROM User u JOIN FETCH u.credentials WHERE u.login = :login AND u.active = true AND u.pending = false"),

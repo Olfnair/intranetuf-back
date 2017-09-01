@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>
+Configuration globale de l'application
+- projects: Chemin vers le dossier où stocker les projets
+- config: Chemin vers le dossier avec le reste de la configuartion de l'application
+- keys: Chemin vers le dossier où sont stockées les clés de l'application
+- frontEndURL: url du front
+</comment>
+<entry key="projects">C:/IUF_data/projects</entry>
+<entry key="config">C:/IUF_data/config</entry>
+<entry key="keys">C:/IUF_data/keys</entry>
+<entry key="frontEndURL">http://localhost:4200</entry>
+</properties>

@@ -31,7 +31,7 @@ public class PasswordHasher {
     private final static int SALT_LEN;
     
     static {
-        ConfigFile config = new ConfigFile(ApplicationConfig.KEYS_LOCATION + '/' + "hashpass.properties");
+        ConfigFile config = new ConfigFile(ApplicationConfig.KEYS_LOCATION + '/' + "hashpass.xml");
         // valeurs de secours
         int iteration = 102417;
         int output_len = 64;
@@ -44,7 +44,7 @@ public class PasswordHasher {
             output_len = Integer.parseInt(config.read("output_len", Integer.toString(output_len)), 10);
             salt_len = Integer.parseInt(config.read("salt_len", Integer.toString(salt_len)), 10);
             if(peper == null) {
-                throw new Exception("Error in hashpass.properties");
+                throw new Exception("Error in hashpass.xml");
             }
         } catch (Exception ex) {
             Logger.getLogger(ApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
@@ -79,7 +79,7 @@ public class PasswordHasher {
         for(int i = 0; i < salt.length && i < PEPER.length; ++i) {
             salt[i] ^= PEPER[i];
         }
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATION, OUTPUT_LEN * 8);
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, OUTPUT_LEN * 8);
         try {
             SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
             return Base64.getEncoder().encodeToString(f.generateSecret(spec).getEncoded());
