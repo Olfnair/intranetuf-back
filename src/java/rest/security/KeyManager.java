@@ -54,8 +54,8 @@ public class KeyManager {
                 throw new Exception("key for auth is same as activation. Not Recommended : use 2 different keys.");
             }
         } catch (Exception ex) {
-            //auth = "ifDdJaJ+RcWFPUVSymIjLe5PHc4plksmKFwSfa7KNxQ="; // clé par défaut de secours
-            //activation = "MRyZ57CFn/h2p4j7co9fUbt18q4nrGj+53nikbvdfHs="; // clé par défaut de secours
+            auth = "ifDdJaJ+RcWFPUVSymIjLe5PHc4plksmKFwSfa7KNxQ="; // clé par défaut de secours
+            activation = "MRyZ57CFn/h2p4j7co9fUbt18q4nrGj+53nikbvdfHs="; // clé par défaut de secours
             Logger.getLogger(ApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             AUTH_SECRET = auth;
@@ -167,7 +167,7 @@ public class KeyManager {
         @Schedule(second="0", minute="30", hour="0", dayOfMonth="5, 15, 25")
     })
     public void removeOldActivationKey() {
-        ACTIVATION_SECRET = null;
+        ACTIVATION_SECRET_OLD = null;
         saveKeys();
     }
 }

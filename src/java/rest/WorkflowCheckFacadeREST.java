@@ -13,6 +13,9 @@ import entities.ProjectRight;
 import entities.User;
 import entities.Version;
 import entities.WorkflowCheck;
+import entities.query.FlexQuery;
+import entities.query.FlexQueryResult;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -36,6 +39,7 @@ import rest.objects.RestLong;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import rest.security.RightsChecker;
+import utils.Base64Url;
 
 /**
  *
@@ -209,6 +213,36 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     @Path("{id}")
     public Response remove(@PathParam("id") Long id) {
         return super.remove(id);
+    }
+    
+    @GET
+    @Path("/user/{id}/query/{whereParams}/{orderbyParams}/{index}/{limit}")
+    public Response findByUser(
+            @Context MessageContext jaxrsContext, @PathParam("id") Long id,
+            @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index, @PathParam("limit") Integer limit
+    ) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        if(id != token.getUserId()) {
+            // garde : on ne peut lister que ses propres contrôles
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+        
+        FlexQuery<WorkflowCheck> wfcQuery = new FlexQuery<>(WorkflowCheck.LIST_BY_USER);
+        try {
+            wfcQuery.setParameters(
+                    Base64Url.decode(whereParams) + "col: 'user.id', param: '" + id + "'",
+                    Base64Url.decode(orderbyParams),
+                    index, limit
+            );
+        } catch (UnsupportedEncodingException ex) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        
+        wfcQuery.prepareCountQuery(em);
+        
+        return Response.ok(wfcQuery.execute()).build();
     }
 
     @GET

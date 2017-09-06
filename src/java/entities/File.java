@@ -57,6 +57,7 @@ public class File extends entities.Entity {
         LIST_BY_USER.addWhereSpec("project.name", "projectName", "LIKE", "AND", String.class);
         LIST_BY_USER.addWhereSpec("version.filename", "versionFilename", "LIKE", "AND", String.class);
         LIST_BY_USER.addWhereSpec("version.num", "versionNum", "=", "AND", Long.class);
+        LIST_BY_USER.addOrderBySpec("project.name");
         LIST_BY_USER.addOrderBySpec("version.filename");
         LIST_BY_USER.addOrderBySpec("version.num");
         LIST_BY_USER.addOrderBySpec("version.date_upload");
