@@ -45,15 +45,24 @@ public class WorkflowCheck extends entities.Entity {
     public static final FlexQuerySpecification<WorkflowCheck> LIST_BY_USER;
     
     static {
-        LIST_BY_USER = new FlexQuerySpecification<>("SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user "
-                + "JOIN FETCH wfc.version JOIN FETCH wfc.project :where: :orderby:", "wfc", WorkflowCheck.class);
+        LIST_BY_USER = new FlexQuerySpecification<>("SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.version "
+                + "JOIN FETCH wfc.project :where: :orderby:", "wfc", WorkflowCheck.class);
         LIST_BY_USER.addWhereSpec("user.id", "userId", "=", "AND", Long.class);
         LIST_BY_USER.addWhereSpec("version.filename", "versionFilename", "LIKE", "AND", String.class);
+        LIST_BY_USER.addWhereSpec("version.num", "versionNum", "=", "AND", Long.class);
+        LIST_BY_USER.addWhereSpec("version.status", "versionNum", "=", "AND", Long.class);
         LIST_BY_USER.addWhereSpec("project.name", "projectName", "LIKE", "AND", String.class);
         LIST_BY_USER.addWhereSpec("status", "status", "=", "AND", Long.class);
+        LIST_BY_USER.addWhereSpec("status_greater_than", "statusGt", ">", "AND", Long.class);
+        LIST_BY_USER.addWhereClauseReplacer("status_greater_than", "wfc.status");
         LIST_BY_USER.addWhereSpec("type", "type", "=", "AND", Long.class);
         LIST_BY_USER.addOrderBySpec("version.filename");
+        LIST_BY_USER.addOrderBySpec("version.num");
+        LIST_BY_USER.addOrderBySpec("version.status");
+        LIST_BY_USER.addOrderBySpec("version.date_upload");
         LIST_BY_USER.addOrderBySpec("project.name");
+        LIST_BY_USER.addOrderBySpec("date_init");
+        LIST_BY_USER.addOrderBySpec("date_checked");
         LIST_BY_USER.addDefaultOrderByClause("version.filename", "ASC");
     }
     

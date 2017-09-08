@@ -231,7 +231,7 @@ public class FlexQuery<T> {
             count = false;
             buildQuery(em);
         }
-        
+
         // filtered results
         List<T> results = query.getResultList();
         if(results == null) {

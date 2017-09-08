@@ -242,7 +242,8 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         
         wfcQuery.prepareCountQuery(em);
         
-        return Response.ok(wfcQuery.execute()).build();
+        FlexQueryResult<WorkflowCheck> wfcResults = wfcQuery.execute();
+        return Response.ok(wfcResults).build();
     }
 
     @GET
