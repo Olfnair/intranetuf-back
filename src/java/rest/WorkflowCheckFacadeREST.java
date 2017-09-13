@@ -73,6 +73,12 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         return project;
     }
     
+    /**
+     * Endpoint utilisé pour envoyer un mail de rappel à un contrôleur/valideur qui n'a pas encore vérifié un fichier
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param id id du WorkflowCheck pour lequel il faut envoyer un mail à la personne qui en est chargé
+     * @return Statut HTTP 201 en cas de succès
+     */
     @POST
     @Path("sendReminder/{id}")
     public Response sendReminder(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
@@ -85,6 +91,12 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         return Response.status(Response.Status.CREATED).build();
     }
     
+    /**
+     * Endpoint utilisé pour créer des WorkflowCheck
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param entities Liste des checks à créer
+     * @return Statut HTTP 201 en cas de succès
+     */
     @POST
     public Response create(@Context MessageContext jaxrsContext, List<WorkflowCheck> entities) {
         AuthToken token = Authentication.validate(jaxrsContext);
@@ -117,6 +129,15 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         return Response.status(Response.Status.CREATED).build();
     }
     
+    /**
+     * Endpoint utilisé pour récupérer les contrôles/validations liés à certaines versions (fichiers) par statut et utilisateur
+     * (Utilisé pour savoir s'il y a un contrôle ou validation à effectuer sur un fichier par l'utilisateur courant dans le front)
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param userId id de l'utilisateur
+     * @param status statut du check
+     * @param restLongVersionIds Liste des id's des versions concernées
+     * @return Liste des WorkflowChecks correspondants aux paramètres
+     */
     @POST // on passe les id's de versions dans le corps de la requête pour être sur de ne pas être limité par la taille d'un GET
     @Path("{userId}/{status}")
     public Response getByStatusUserVersions(
@@ -146,6 +167,13 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         });
     }
 
+    /**
+     * Endpoint utilisé pour modifier un WorkflowCheck
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param id id du WorkflowCheck à modifier
+     * @param entity WorkflowCheck modifié
+     * @return Statut HTTP 200 en cas de succès
+     */
     @PUT
     @Path("{id}")
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, WorkflowCheck entity) {
@@ -208,13 +236,17 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         
         return Response.status(Response.Status.OK).build();
     }
-
-    @DELETE
-    @Path("{id}")
-    public Response remove(@PathParam("id") Long id) {
-        return super.remove(id);
-    }
     
+    /**
+     * Enpoint utilisé pour faire une recherche sur les WorkflowChecks d'un utilisateur
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param id id de l'utilisateur
+     * @param whereParams paramètres WHERE de la recherche
+     * @param orderbyParams paramètres ORDER BY de la recherche
+     * @param index index à partir duqle on veut récupérer les résultats
+     * @param limit nombre max de résultats à récupérer
+     * @return Liste des WorkflowChecks correspondants à la recherche
+     */
     @GET
     @Path("/user/{id}/query/{whereParams}/{orderbyParams}/{index}/{limit}")
     public Response findByUser(
@@ -245,19 +277,13 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         FlexQueryResult<WorkflowCheck> wfcResults = wfcQuery.execute();
         return Response.ok(wfcResults).build();
     }
-
-    @GET
-    @Path("{id}")
-    public Response find(@PathParam("id") Long id) {
-        return super.find(id);
-    }
-
-    @GET
-    @Override
-    public Response findAll() {
-        return super.findAll();
-    }
     
+    /**
+     * Endpoint utilisé pour récupérer les WorkflowChecks correspondants à une version (d'un fichier)
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param versionId id de la version
+     * @return WorkflowChecks demandés
+     */
     @GET
     @Path("forVersion/{versionId}")
     public Response findforVersion(@Context MessageContext jaxrsContext, @PathParam("versionId") Long versionId) {
@@ -277,6 +303,12 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         });
     }
       
+    /**
+     * Enpoint qui permet de récupérer les WorkflowChecks pour la dernière version d'un fichier
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param fileId - id du fichier
+     * @return Liste des WorkflowChecks correspondants à la dernière version du fichier donné en paramètre
+     */
     @GET
     @Path("forLastVersion/{fileId}")
     public Response findforFile(@Context MessageContext jaxrsContext, @PathParam("fileId") Long fileId) {
@@ -287,19 +319,6 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         }
         // auth et droits vérifiés ici :
         return this.findforVersion(jaxrsContext, file.getVersion().getId());
-    }
-    
-    @GET
-    @Path("{from}/{to}")
-    public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-
-    @GET
-    @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response countREST() {
-        return super.count();
     }
 
     @Override

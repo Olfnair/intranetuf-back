@@ -32,12 +32,24 @@ public class AuthenticationEndpoint {
     public AuthenticationEndpoint() {
     }
     
+    /**
+     * Endpoint qui authentifie un utilisateur sur base de ses credentials (login, mot de passe) et lui renvoie un token
+     * signé pour ses requêtes suivantes afin de pouvoir s'authentifier rapidement.
+     * @param credentials entité qui conteint le login et le mot de passe de l'utilisateur à authentifier
+     * @return Token d'authentification pour l'utilisateur
+     */
     @POST
     public Response authenticateUser(Credentials credentials) {       
         AuthToken token = authenticate(credentials);
         return Response.ok(token.toJsonString()).build();
     }
     
+    /**
+     * Endpoint qui permet à un superadmin de récupérer un token qui lui permet d'utiliser le compte d'un autre utilisateur.
+     * @param jaxrsContext Contexte de la requête, utilisé pour l'authentification
+     * @param login Le login du compte qu'on veut utiliser
+     * @return Token qui permet de se faire passer pour l'utisateur correspondant au login.
+     */
     @GET
     @Path("adminLoginAs/{login}")
     public Response authenticateAsUser(@Context MessageContext jaxrsContext, @PathParam("login") String login) {       

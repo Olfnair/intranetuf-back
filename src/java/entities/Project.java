@@ -66,6 +66,9 @@ public class Project extends entities.Entity {
     
     @OneToMany(mappedBy="project", fetch=FetchType.LAZY)
     private List<WorkflowCheck> workflowChecks = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "project", fetch=FetchType.LAZY)
+    private List<Log> logs = new ArrayList<>();
 
     public String getName() {
         return name;
@@ -108,6 +111,15 @@ public class Project extends entities.Entity {
 
     public void setWorkflowChecks(List<WorkflowCheck> workflowChecks) {
         this.workflowChecks = workflowChecks;
+    }
+
+    @XmlTransient
+    public List<Log> getLogs() {
+        return logs;
+    }
+
+    public void setLogs(List<Log> logs) {
+        this.logs = logs;
     }
     
     @Override

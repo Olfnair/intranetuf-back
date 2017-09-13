@@ -66,6 +66,13 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         }
     }
     
+    /**
+     * Endpoint utilsé pour ajouter ou éditer des droits sur un projet
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param projectId id du projet concerné par les droits
+     * @param rights Liste d'entités ProjectRights à créer/modifier pour ce projet
+     * @return Statut HTTP 201 en cas de succès
+     */
     @PUT
     @Path("project/{id}")
     public Response createOrEditForProject(@Context MessageContext jaxrsContext, @PathParam("id") Long projectId, List<ProjectRight> rights) {
@@ -110,6 +117,12 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         return Response.status(Response.Status.CREATED).build();
     }
     
+    /**
+     * Utilisé pour ajouter ou modifier des ProjectRights
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param entities - Liste des ProjectRights à ajouter/modifier
+     * @return Statut HTTP 201 en cas de succès
+     */
     @PUT
     public Response createOrEdit(@Context MessageContext jaxrsContext, List<ProjectRight> entities) {
         AuthToken token = Authentication.validate(jaxrsContext);
@@ -121,19 +134,12 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         return Response.status(Response.Status.CREATED).build();
     }
     
-    @DELETE
-    @Path("{id}")
-    public Response remove(@PathParam("id") Long id) {
-        return super.remove(super.find(id));
-    }
-    
-    @GET
-    @Path("{id}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response find(@PathParam("id") Long id) {
-        return super.find(id);
-    }
-    
+    /**
+     * Endpoint utilisé pour récupérer les ProjectRights pour un projet pour l'utilisateur correspondant au token fourni
+     * @param jaxrsContext contexte utilsé pour l'authentification
+     * @param projectId id du projet dont on veut récupérer les ProjectRights
+     * @return Liste des ProjectRights demandés
+     */
     @GET
     @Path("project/{projectId}")
     public Response findForUserByProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId) {
@@ -245,6 +251,16 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         return Response.ok(queryResult).build();
     }
     
+    /**
+     * Endpoint utilisé pour faire une recherche sur les droits par utilisateur
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param userId - id de l'utilisateur dont on veut récupérer les droits
+     * @param whereParams - paramètres WHERE de la recherche
+     * @param orderbyParams - paramètres ORDER BY
+     * @param index - index à partir duquel récupérer les résultats
+     * @param limit - nombre max de résultats à récupérer
+     * @return Liste des ProjectRights correspondants à la recherche
+     */
     @GET
     @Path("user/{userId}/{whereParams}/{orderbyParams}/{index}/{limit}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -259,6 +275,16 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         );
     }
     
+    /**
+     * Endpoint utilisé pour faire une recherche sur les droits par projet
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param projectId - id du projet dont on veut récuprérer les droits
+     * @param whereParams - paramètres WHERE de la recherche
+     * @param orderbyParams - paramètres ORDER BY
+     * @param index - index à partir duquel récupérer les résultats
+     * @param limit - nombre max de résultats à récupérer
+     * @return Liste des ProjectRights correspondants à la recherche
+     */
     @GET
     @Path("project/{projectId}/{whereParams}/{orderbyParams}/{index}/{limit}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -271,27 +297,6 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
                 em.find(Project.class, projectId),
                 jaxrsContext, whereParams, orderbyParams, index, limit
         );
-    }
-    
-    @GET
-    @Override
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response findAll() {
-        return super.findAll();
-    }
-    
-    @GET
-    @Path("{from}/{to}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-    
-    @GET
-    @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response countREST() {
-        return super.count();
     }
     
     @Override

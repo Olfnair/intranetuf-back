@@ -52,6 +52,12 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         super(Project.class);
     }
     
+    /**
+     * Endpoint utilisé pour créer un projet
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param entity - Entité contenant les infos du projet quy'on veut créer
+     * @return L'entité Project créée
+     */
     @POST
     public Response create(@Context MessageContext jaxrsContext, Project entity) {
         AuthToken token = Authentication.validate(jaxrsContext);
@@ -63,6 +69,13 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         return res;
     }
     
+    /**
+     * Endpoint utilisé pour supprimer/restaurer plusieurs projets d'un coup
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param activate - true pour restaurer les projets, false pour supprimer
+     * @param restLongProjectIds - liste des Id's des projets à affecter
+     * @return Statut HTTP 204 en cas de succès
+     */
     @PUT
     @Path("activateMany/{activate}")
     public Response activateMany(
@@ -86,6 +99,13 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         return Response.status(Response.Status.NO_CONTENT).build();
     }
     
+    /**
+     * Endpoint qui permet de modifier un projet
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param id - id du projet à modifier
+     * @param entity - entité contenant les modifications à apporter au projet
+     * @return Le projet modifié
+     */
     @PUT
     @Path("{id}")
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, Project entity) {
@@ -110,6 +130,12 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         return super.edit(entity);
     }
     
+    /**
+     * Endpoint qui perlmet de supprimer (logiquement) un projet
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param id - id du projet
+     * @return Statut HTTP 204 en cas de succès
+     */
     @DELETE
     @Path("{id}")
     public Response remove(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
@@ -131,12 +157,15 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         return Response.status(Response.Status.NO_CONTENT).build();
     }
     
-    @GET
-    @Path("{id}")
-    public Response find(@PathParam("id") Long id) {
-        return super.find(id);
-    }
-    
+    /**
+     * Endpoint qui permet de faire une recherche sur les projets
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param whereParams - paramètres WHERE
+     * @param orderbyParams - paramètres ORDER BY
+     * @param index - index à partir duqel on veut récupérer les résultats
+     * @param limit - nombre max de résultats à récupérer
+     * @return Liste des projets correspondants à la recherche
+     */
     @GET
     @Path("query/{whereParams}/{orderbyParams}/{index}/{limit}")
     public Response findAll(@Context MessageContext jaxrsContext,
@@ -165,18 +194,6 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         projectsQuery.prepareCountQuery(em);
         
         return Response.ok(projectsQuery.execute()).build();
-    }
-    
-    @GET
-    @Path("{from}/{to}")
-    public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-    
-    @GET
-    @Path("count")
-    public Response countREST() {
-        return super.count();
     }
     
     @Override

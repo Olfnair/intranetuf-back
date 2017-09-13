@@ -18,6 +18,7 @@ import javax.mail.internet.MimeMessage;
 public class Mail {
     private static String username;
     private static String password;
+    private static String email;
     private static final Properties PROPS = new Properties();
     
     private final String subject;
@@ -27,16 +28,17 @@ public class Mail {
     static {
         ConfigFile configFile = new ConfigFile(ApplicationConfig.PROPERTIES_LOCATION + '/' + "mail.xml");
         try {
-            Mail.configUser(configFile.read("username"), configFile.read("password"));
+            Mail.configUser(configFile.read("username"), configFile.read("password"), configFile.read("user"));
             Mail.configServer(configFile);
         } catch (IOException ex) {
             Logger.getLogger(Mail.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    public static void configUser(String username, String password) {
+    public static void configUser(String username, String password, String email) {
         Mail.username = username;
         Mail.password = password;
+        Mail.email = email;
     }
     
     public static void configServer(ConfigFile config) throws IOException {
@@ -71,7 +73,7 @@ public class Mail {
                 });
         
         Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(Mail.username));
+        message.setFrom(new InternetAddress(Mail.email));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(this.recipient));
         message.setSubject(this.subject);
         message.setText(this.text);

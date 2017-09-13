@@ -62,6 +62,14 @@ public class FileFacadeREST extends AbstractFacade<File> {
         super(File.class);
     }
     
+    /**
+     * Endpoint utilisé pour uploader un nouveau fichier
+     * @param jaxrsContext Contexte utilisé pour l'authentifcation
+     * @param entity - entité contenant les informations du fichier
+     * @param uploadedInputStream - stream avec le contenu du fichier
+     * @param attachment - nom du fichier, taille etc..
+     * @return Statut HTTP 201 si le fichier est uploadé correctement
+     */
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response create(
@@ -101,12 +109,12 @@ public class FileFacadeREST extends AbstractFacade<File> {
         }
     }
     
-    @PUT
-    @Path("{id}")
-    public Response edit(@PathParam("id") Long id, File entity) {
-        return super.edit(entity);
-    }
-    
+    /**
+     * Endpoint de suppression (logique) d'un fichier
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param id - id du fichier à supprimer
+     * @return Statut HTTP 200 si la suppression s'est effectuée correctement
+     */
     @DELETE
     @Path("{id}")
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
@@ -133,12 +141,13 @@ public class FileFacadeREST extends AbstractFacade<File> {
         return Response.status(Response.Status.OK).build();
     }
     
-    @GET
-    @Path("{id}")
-    public Response find(@PathParam("id") Long id) {
-        return super.find(id);
-    }
-    
+    /**
+     * Endpoint qui permet de savoir si un utilisateur est l'auteur d'un fichier
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param fileId - id du fichier
+     * @param userId - id de l'utilisateur
+     * @return Entité RestLong contenant 1 si userId correspond à l'id de l'auteur, sinon 0
+     */
     @GET
     @Path("{fileId}/isauthor/{userId}")
     public Response find(
@@ -163,6 +172,36 @@ public class FileFacadeREST extends AbstractFacade<File> {
         return Response.ok(new RestLong(userIsAuthor ? 1 : 0)).build();
     }
     
+    /**
+     * Endpoint qui permet de récupérer l'entité fichier correspondant à une version
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param id - id de la version dont on veut récpérer l'entité fichier correspondante
+     * @return Entité fichier demandée
+     */
+    @GET
+    @Path("version/{id}")
+    public Response findByVersion(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        
+        // TODO : pour bien faire il faudrait vérifier que l'utilisateur a le droit de voir cette version...
+        
+        return this.buildResponse(() -> {
+            TypedQuery<File> fileQuery = em.createNamedQuery("File.byVersion", File.class);
+            fileQuery.setParameter("versionId", id);
+            return fileQuery.getResultList().get(0);
+        });
+    }
+    
+    /**
+     * Endpoint qui permet de faire une recherche/tris sur les fichiers d'un utilisateur
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param id - id de l'utilisateur qui fait la requête
+     * @param whereParams - paramètres WHERE
+     * @param orderbyParams - paramètres ORDER BY
+     * @param index - index à partir duquel on veut récupérer les résultats
+     * @param limit - nombre de résultats max à récupérer
+     * @return La liste des entités correspondants à la recherche
+     */
     @GET
     @Path("/user/{id}/query/{whereParams}/{orderbyParams}/{index}/{limit}")
     public Response findByUser(
@@ -194,6 +233,16 @@ public class FileFacadeREST extends AbstractFacade<File> {
         return Response.ok(files).build();
     }
     
+    /**
+     * Endpoint qui permet de faire une recherche/tris sur les fichiers d'un projet
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param id - id du projet
+     * @param whereParams - paramètres WHERE
+     * @param orderbyParams - paramètres ORDER BY
+     * @param index - index à partir duquel on veut récupérer les résultats
+     * @param limit - nombre de résultats max à récupérer
+     * @return La liste des entités correspondants à la recherche
+     */
     @GET
     @Path("/project/{id}/query/{whereParams}/{orderbyParams}/{index}/{limit}")
     public Response findByProject(
@@ -201,8 +250,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
             @PathParam("whereParams") String whereParams, @PathParam("orderbyParams") String orderbyParams,
             @PathParam("index") Integer index, @PathParam("limit") Integer limit
     ) {
-        AuthToken token = Authentication.validate(jaxrsContext);
-        
+        AuthToken token = Authentication.validate(jaxrsContext);       
         
         // droits
         User user;
@@ -250,24 +298,6 @@ public class FileFacadeREST extends AbstractFacade<File> {
         
         FlexQueryResult<File> files = filesQuery.execute();
         return Response.ok(files).build();
-    }
-    
-    @GET
-    @Override
-    public Response findAll() {
-        return super.findAll();
-    }
-    
-    @GET
-    @Path("{from}/{to}")
-    public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-    
-    @GET
-    @Path("count")
-    public Response countREST() {
-        return super.count();
     }
     
     @Override

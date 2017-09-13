@@ -99,8 +99,8 @@ public class KeyManager {
         if(AUTH_SECRET_OLD != null) {
             config.setProperty("auth_old", AUTH_SECRET_OLD);
         }
-        config.setProperty("activation", ACTIVATION_SECRET);
         
+        config.setProperty("activation", ACTIVATION_SECRET);
         if(ACTIVATION_SECRET_OLD != null) {
             config.setProperty("activation_old", ACTIVATION_SECRET_OLD);
         }

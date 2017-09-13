@@ -37,47 +37,6 @@ public class LogFacadeREST extends AbstractFacade<Log> {
         super(Log.class);
     }
 
-    @POST
-    public Response create(Log entity) {
-        return super.insert(entity);
-    }
-
-    @PUT
-    @Path("{id}")
-    public Response edit(@PathParam("id") Long id, Log entity) {
-        return super.edit(entity);
-    }
-
-    @DELETE
-    @Path("{id}")
-    public Response remove(@PathParam("id") Long id) {
-        return super.remove(id);
-    }
-
-    @GET
-    @Path("{id}")
-    public Response find(@PathParam("id") Long id) {
-        return super.find(id);
-    }
-
-    @GET
-    @Override
-    public Response findAll() {
-        return super.findAll();
-    }
-
-    @GET
-    @Path("{from}/{to}")
-    public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-
-    @GET
-    @Path("count")
-    public Response countREST() {
-        return super.count();
-    }
-
     @Override
     protected EntityManager getEntityManager() {
         return em;

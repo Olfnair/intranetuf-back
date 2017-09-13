@@ -72,6 +72,12 @@ public class UserFacadeREST extends AbstractFacade<User> {
         super(User.class);
     }
 
+    /**
+     * Endpoint utilisé pour créer un nouvel utilisateur
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param entity Entité correspondant à l'utilisateur à créer
+     * @return Utilisateur créé
+     */
     @POST
     public Response create(@Context MessageContext jaxrsContext, User entity) {
         // droits : admin ou super
@@ -99,6 +105,12 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return res;
     }
     
+    /**
+     * Endpoint utilisé pour modifier plusieurs utilisateurs en une fois.
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param entities Liste des entités utilisateurs modifiés
+     * @return Statut HTTP 204 en cas de succès
+     */
     @PUT
     public Response editMany(@Context MessageContext jaxrsContext, List<User> entities) {
         AuthToken token = Authentication.validate(jaxrsContext);
@@ -116,6 +128,13 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return Response.status(Response.Status.NO_CONTENT).build();
     }
 
+    /**
+     * Endpoint utilisé pour modifier un utilisateur
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param id id de l'utilisateur à modifier
+     * @param entity entité correspondant à l'utilisateur modifié
+     * @return Utilisateur modifié
+     */
     @PUT
     @Path("{id}")
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, User entity) {
@@ -173,6 +192,12 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return super.edit(entity);
     }
 
+    /**
+     * Endpoint utilisé pour la suppression (logique) d'un utilisateur
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param id id de l'utilisateur à supprimer
+     * @return Statut HTTP 204 si succès
+     */
     @DELETE
     @Path("{id}")
     public Response remove(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
@@ -188,6 +213,13 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return Response.status(Response.Status.NO_CONTENT).build();
     }
     
+    /**
+     * Endpoint utilisé pour supprimer/restaurer plusieurs tuilisateurs en une seule requête
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param activate true pour restaurer, false pour supprimer
+     * @param restLongProjectIds liste des id's des utilisateurs concernés
+     * @return Statut HTTP 204 en cas de succès
+     */
     @PUT
     @Path("activateMany/{activate}")
     public Response activateMany(
@@ -216,6 +248,12 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return Response.status(Response.Status.NO_CONTENT).build();
     }
 
+    /**
+     * Endpoint utilisé pour récupérer les informations d'un utilisateur
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param id id de l'utilisateur à récupérer
+     * @return Utilisateur demandé
+     */
     @GET
     @Path("{id}")
     public Response find(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
@@ -242,6 +280,12 @@ public class UserFacadeREST extends AbstractFacade<User> {
         });
     }
     
+    /**
+     * Endpoint utilisé pour récupérer les rôles d'un utilisateur
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @param id id de l'utilisateur dont il faut récupérer les rôles
+     * @return RestLong contenant un entier dont les bits à 1 indiquent les rôles actifs.
+     */
     @GET
     @Path("{id}/role")
     public Response getRole(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
@@ -304,6 +348,15 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return usersQuery;
     }
 
+    /**
+     * Endpoint utilisé pour faire une recherche sur les utilisateurs
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param whereParams paramètres WHERE de la requête
+     * @param orderbyParams paramètres ORDER BY de la requête
+     * @param index index à partir duquel récupérer les résultats
+     * @param limit nombre max de résultats à récupérer
+     * @return Liste des utilisateurs correspondants à la recherche
+     */
     @GET
     @Path("{whereParams}/{orderbyParams}/{index}/{limit}")
     public Response findAll(@Context MessageContext jaxrsContext,
@@ -318,7 +371,17 @@ public class UserFacadeREST extends AbstractFacade<User> {
         usersQuery.prepareCountQuery(em);
         return Response.ok(usersQuery.execute()).build();
     }
-    
+     
+    /**
+     * Endpoint utilisé pour faire une recherche parmis les utilisaturs en excluant d'office certains utlisateurs
+     * @param jaxrsContext contexte d'authentification
+     * @param whereParams paramètres WHERE de la rechere
+     * @param orderbyParams paramètres ORDER BY de la recherche
+     * @param index index à partir duquel récupérer les résultats
+     * @param limit nombre max de résultats à récupérer
+     * @param restLongIds Liste des id's des utilisaturs à ignorer
+     * @return Liste des utilisateurs correspondants à la recherche
+     */
     @POST
     @Path("{whereParams}/{orderbyParams}/{index}/{limit}")
     public Response findAllExcludeIds(@Context MessageContext jaxrsContext,
@@ -343,7 +406,13 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return Response.ok(usersQuery.execute()).build();
     }
     
-    // utilisé pour récupérer les contrôleurs et valideurs par projet
+    /**
+     * Endpoint utilisé pour récupérer les contrôleurs et valideurs par projet
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param projectId id du projet
+     * @param right Droits à vérifier pour qu'un utilisateur soit sélectionné
+     * @return Liste des utilisaturs correspondants
+     */
     @GET
     @Path("rightOnProject/{projectId}/{right}")
     public Response getByRightOnProject(@Context MessageContext jaxrsContext, @PathParam("projectId") Long projectId, @PathParam("right") Long right) {
@@ -359,18 +428,11 @@ public class UserFacadeREST extends AbstractFacade<User> {
         });
     }
 
-    @GET
-    @Path("{from}/{to}")
-    public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-
-    @GET
-    @Path("count")
-    public Response countREST() {
-        return super.count();
-    }
-
+    /**
+     * Enpoint utilisé pour récupérer les informations d'un utilisateur à activer à partir de son token d'activation
+     * @param jaxrsContext - contexte utilisé pour l'authentification
+     * @return Utilisateur à activer
+     */
     @GET
     @Path("activate")
     public Response findUserToActivate(@Context MessageContext jaxrsContext) {
@@ -385,6 +447,13 @@ public class UserFacadeREST extends AbstractFacade<User> {
         return super.buildResponse(200, user);
     }
     
+    /**
+     * Endpoint utilisé pour activer un utlisateur (choix du mot de passe par l'utilisateur)
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param id id de l'utilisateur à activer
+     * @param entity Credentials contenant le mot de passe de l'utilisateur à activer
+     * @return Statut HTTP 200 en cas de succès
+     */
     @PUT
     @Path("activate/{id}")
     public Response activate(@Context MessageContext jaxrsContext, @PathParam("id") Long id, Credentials entity) {

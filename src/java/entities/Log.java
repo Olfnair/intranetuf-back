@@ -30,7 +30,13 @@ public class Log extends entities.Entity {
     private User user;
     
     @ManyToOne(fetch=FetchType.EAGER)
+    private Project project;
+    
+    @ManyToOne(fetch=FetchType.EAGER)
     private File file;
+    
+    @ManyToOne(fetch=FetchType.EAGER)
+    private Version version;
 
     public String getType() {
         return type;
@@ -56,6 +62,38 @@ public class Log extends entities.Entity {
         this.logdate = logdate;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+    
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
+
+    public Version getVersion() {
+        return version;
+    }
+
+    public void setVersion(Version version) {
+        this.version = version;
+    }
+    
     @Override
     public String toString() {
         return "entities.Log[ id=" + getId() + " ]";

@@ -43,6 +43,12 @@ public class DownloadEndpoint {
     public DownloadEndpoint() {
     }
     
+    /**
+     * Endpoint qui permet de télécharger un fichier
+     * @param jsonToken Token d'authentification
+     * @param versionId id de la version (d'un fichier) qu'on veut télécharger
+     * @return Le fichier demandé
+     */
     @POST
     @Path("{versionId}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)

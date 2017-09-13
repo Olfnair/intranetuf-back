@@ -53,6 +53,14 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
         super(Version.class);
     }
 
+    /**
+     * Endpoint utilisé pour uploader une nouvelle version d'un fichier
+     * @param jaxrsContext contexte utilisé pour l'authentification
+     * @param entity Informations de la version
+     * @param uploadedInputStream Flux de données du contenu du fichier
+     * @param attachment informations sur le nom du fichier, la taille, ...
+     * @return Statut HTTP 201 en cas de succès
+     */
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response create(
@@ -102,48 +110,6 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
         catch(Exception e) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    @PUT
-    @Path("{id}")
-    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response edit(@PathParam("id") Long id, Version entity) {
-        entity.setId(id);
-        return super.edit(entity);
-    }
-
-    @DELETE
-    @Path("{id}")
-    public Response remove(@PathParam("id") Long id) {
-        return super.remove(super.find(id));
-    }
-
-    @GET
-    @Path("{id}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response find(@PathParam("id") Long id) {
-        return super.find(id);
-    }
-
-    @GET
-    @Override
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response findAll() {
-        return super.findAll();
-    }
-
-    @GET
-    @Path("{from}/{to}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-
-    @GET
-    @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response countREST() {
-        return super.count();
     }
 
     @Override
