@@ -36,6 +36,7 @@ public class WorkflowCheck extends entities.Entity {
     }
     
     public final static class Status {
+        public final static int CANCELLED = -1;
         public final static int WAITING = 0;
         public final static int TO_CHECK = 1;
         public final static int CHECK_OK = 2;

@@ -77,7 +77,12 @@ public class DAOVersion {
         
         if(updateCheck.getStatus() == WorkflowCheck.Status.CHECK_KO) {
             version.setStatus(Version.Status.REFUSED);
-            // fichier refusé, tout s'arrête là..
+            // Fichier refusé. On annule tous les autres checks restants. Tout s'arrête là...
+            for(WorkflowCheck check : version.getWorkflowChecks()) {
+                if(check.getStatus() == WorkflowCheck.Status.TO_CHECK || check.getStatus() == WorkflowCheck.Status.WAITING) {
+                    check.setStatus(WorkflowCheck.Status.CANCELLED);
+                }
+            }
             return;
         }
         

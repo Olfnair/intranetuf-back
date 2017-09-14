@@ -3,6 +3,7 @@ package mail;
 import config.ApplicationConfig;
 import config.ConfigFile;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,6 +76,7 @@ public class Mail {
         Message message = new MimeMessage(session);
         message.setFrom(new InternetAddress(Mail.email));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(this.recipient));
+        message.setSentDate(new Date());
         message.setSubject(this.subject);
         message.setText(this.text);
         
