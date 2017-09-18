@@ -27,6 +27,7 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -67,6 +68,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
      * @param entity - entité contenant les informations du fichier
      * @param uploadedInputStream - stream avec le contenu du fichier
      * @param attachment - nom du fichier, taille etc..
+     * @param fileSize - taille du fichier
      * @return Statut HTTP 201 si le fichier est uploadé correctement
      */
     @POST
@@ -75,10 +77,15 @@ public class FileFacadeREST extends AbstractFacade<File> {
             @Context MessageContext jaxrsContext,
             @Multipart("entity") File entity,
             @Multipart("file") InputStream uploadedInputStream,
-            @Multipart("file") Attachment attachment) {
-        // TODO : check extension
-        // TODO : check file_size et décider d'un max
+            //@Multipart("file") Attachment attachment,
+            @HeaderParam("X-File-Size") Long fileSize) {
         AuthToken token = Authentication.validate(jaxrsContext);
+        
+        // TODO : check extension
+        if(fileSize == null || fileSize == 0 || fileSize > (1024 * 1024 * 10)) {
+            throw new WebApplicationException(413); // PAYLOAD TOO LARGE
+        }
+        
         Project project = em.find(Project.class, entity.getProject().getId());
         
         User author;

@@ -29,7 +29,7 @@
         </init-param>
         <init-param>
             <param-name>cors.allowed.headers</param-name>
-            <param-value>Authorization,Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
+            <param-value>Authorization,Content-Type,X-File-Size,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
         </init-param>
         <init-param>
             <param-name>cors.exposed.headers</param-name>

@@ -5,7 +5,6 @@
 */
 package rest;
 
-import entities.File;
 import entities.Version;
 import entities.Project;
 import entities.ProjectRight;
