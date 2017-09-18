@@ -5,7 +5,7 @@
  */
 package entities;
 
-import java.time.Instant;
+import entities.query.FlexQuerySpecification;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -26,7 +26,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name="Version.getWithChecks", query="SELECT v FROM Version v JOIN FETCH v.workflowChecks WHERE v.id = :versionId")
+    @NamedQuery(name="Version.getProject", query="SELECT v.file.project FROM Version v WHERE v.id = :versionId"),
+    @NamedQuery(name="Version.getWithChecks", query="SELECT v FROM Version v JOIN FETCH v.workflowChecks WHERE v.id = :versionId"),
+    @NamedQuery(name="Version.getOtherVersions", query="SELECT v FROM Version v WHERE v.file.id = :fileId AND v.id != :versionId")
 })
 public class Version extends entities.Entity {
     private static final long serialVersionUID = 1L;
@@ -36,6 +38,21 @@ public class Version extends entities.Entity {
        public final static int CONTROLLED = 1;
        public final static int VALIDATED = 2;
        public final static int REFUSED = 3;
+    }
+    
+    public final static FlexQuerySpecification<Version> LIST_OTHER_VERSIONS;
+    
+    static {
+        LIST_OTHER_VERSIONS = new FlexQuerySpecification<>("SELECT v FROM Version v :where: :orderby:", "v", Version.class);
+        LIST_OTHER_VERSIONS.addWhereSpec("file.id", "fileId", "=", "AND", Long.class);
+        LIST_OTHER_VERSIONS.addWhereSpec("id", "versionId", "<>", "AND", Long.class);
+        LIST_OTHER_VERSIONS.addWhereSpec("filename", "filename", "LIKE", "AND", String.class);
+        LIST_OTHER_VERSIONS.addWhereSpec("num", "versionNum", "=", "AND", Long.class);
+        LIST_OTHER_VERSIONS.addWhereSpec("status", "status", "=", "AND", Long.class);
+        LIST_OTHER_VERSIONS.addOrderBySpec("filename");
+        LIST_OTHER_VERSIONS.addOrderBySpec("num");
+        LIST_OTHER_VERSIONS.addOrderBySpec("status");
+        LIST_OTHER_VERSIONS.addDefaultOrderByClause("num", "DESC");
     }
     
     @NotNull

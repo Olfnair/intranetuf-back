@@ -63,17 +63,13 @@ public class DownloadEndpoint {
                     .entity(new RestError("Token Error")).build());
         }
         
-        TypedQuery<File> filesQuery = em.createNamedQuery("File.byVersion", File.class);
-        filesQuery.setParameter("versionId", versionId);
-        List<File> fileList = filesQuery.getResultList();
-        if(fileList == null || fileList.size() < 1) {
+        TypedQuery<Project> projectQuery = em.createNamedQuery("Version.getProject", Project.class);
+        projectQuery.setParameter("versionId", versionId);
+        List<Project> projectList = projectQuery.getResultList();
+        if(projectList == null || projectList.size() < 1) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        File file = fileList.get(0);
-        Project project = file.getProject();
-        if(project == null) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
+        Project project = projectList.get(0);
         
         // check droits
         // TODO : plus restrictif... Seulement quand le fichier est validé et qu'on peut le voir, sauf pour les auteurs, controleurs, valideurs et admins ou >
@@ -85,7 +81,7 @@ public class DownloadEndpoint {
             RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         }
         
-        Version version = em.find(Version.class, file.getVersion().getId());
+        Version version = em.find(Version.class, versionId);
         if(version == null) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }

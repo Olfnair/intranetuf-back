@@ -13,13 +13,18 @@ import entities.File;
 import entities.ProjectRight;
 import entities.User;
 import entities.Version;
+import entities.query.FlexQuery;
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
@@ -31,6 +36,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import rest.security.RightsChecker;
+import utils.Base64Url;
 
 /**
  *
@@ -47,6 +53,34 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
 
     public VersionFacadeREST() {
         super(Version.class);
+    }
+    
+    @GET
+    @Path("{versionId}/other/{fileId}/{whereParams}/{orderbyParams}/{index}/{limit}")
+    public Response getOtherVersions(
+            @Context MessageContext jaxrsContext,
+            @PathParam("versionId") Long versionId,
+            @PathParam("fileId") Long fileId,
+            @PathParam("whereParams") String whereParams,
+            @PathParam("orderbyParams") String orderbyParams,
+            @PathParam("index") Integer index,
+            @PathParam("limit") Integer limit
+    ) {
+        AuthToken token = Authentication.validate(jaxrsContext);
+        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        
+        FlexQuery<Version> versionsQuery = new FlexQuery<>(Version.LIST_OTHER_VERSIONS);
+        try {
+            versionsQuery.setParameters(Base64Url.decode(whereParams) + "col: 'file.id', param: '" + fileId + "'col: 'id', param: '" + versionId +"'",
+                    Base64Url.decode(orderbyParams),
+                    index, limit
+            );
+        } catch (UnsupportedEncodingException ex) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        
+        versionsQuery.prepareCountQuery(em);
+        return Response.ok(versionsQuery.execute()).build();
     }
 
     /**

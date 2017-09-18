@@ -5,18 +5,12 @@
  */
 package dao;
 
-import config.ApplicationConfig;
-import entities.Project;
-import entities.User;
 import entities.Version;
 import entities.WorkflowCheck;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import mail.Mail;
-import mail.SendMailThread;
 
 /**
  *
