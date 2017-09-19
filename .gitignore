@@ -5,6 +5,9 @@
 /tmp
 /build
 
+#lib
+/lib
+
 # IDEs and editors
 /.idea
 .project

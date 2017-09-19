@@ -5,8 +5,6 @@
 */
 package rest;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import config.ApplicationConfig;
 import dao.DAOVersion;
 import entities.File;
@@ -17,20 +15,12 @@ import entities.Version;
 import entities.WorkflowCheck;
 import entities.query.FlexQuery;
 import entities.query.FlexQueryResult;
-import files.Upload;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
+import files.MultiPartManager;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -41,7 +31,6 @@ import javax.servlet.http.Part;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -50,7 +39,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.objects.RestLong;
 import rest.security.AuthToken;
@@ -77,21 +65,13 @@ public class FileFacadeREST extends AbstractFacade<File> {
     
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response test(@Context HttpServletRequest request) {              
-        StringBuilder value = new StringBuilder();
+    public Response create(@Context HttpServletRequest request) {            
         try {
-            Part entityPart = request.getPart("entity");
-            Part filePart = request.getPart("file");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(entityPart.getInputStream(), "UTF-8"));
-            char[] buffer = new char[8192];
-            for (int length; (length = reader.read(buffer)) > 0;) {
-                value.append(buffer, 0, length);
-            }
-            reader.close();                     
-            String jsonFileEntity = value.toString();
-            Gson gson = new Gson();
-            File file = gson.fromJson(jsonFileEntity, File.class);
-            
+            // récupération des paramètres multipart :
+            MultiPartManager multipartManager = new MultiPartManager(request);
+            File file = multipartManager.getEntity("entity", File.class);
+            Part uploadedFilePart = multipartManager.get("file");
+                    
             // Auth :
             AuthToken token = Authentication.validate(request.getHeader("Authorization"));
             
@@ -105,7 +85,6 @@ public class FileFacadeREST extends AbstractFacade<File> {
                 author = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
             }
             
-            //User author = em.find(User.class, 15);
             Version version = file.getVersion();
             version.setFile(file);
             version.setDate_upload(Instant.now().getEpochSecond());
@@ -114,18 +93,14 @@ public class FileFacadeREST extends AbstractFacade<File> {
             em.flush();
             new DAOVersion(version, em).initWorkflowChecks();
             em.merge(file);
-            //new Upload(uploadedInputStream, project.getId().toString(), version.getId().toString()).run();
-            filePart.write(ApplicationConfig.PROJECTS_LOCATION + '/' + project.getId().toString() + '/' + version.getId().toString());
-            entityPart.delete();
-            filePart.delete();
+            uploadedFilePart.write(ApplicationConfig.PROJECTS_LOCATION + '/' + project.getId().toString() + '/' + version.getId().toString());
+            multipartManager.close();
             
-        } catch (UnsupportedEncodingException ex) {
-            ex.printStackTrace();
+        } catch (IOException | ServletException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-        } catch (IOException | IllegalStateException | ServletException ex) {
-            ex.printStackTrace();
+        } catch (IllegalStateException ex) {
             throw new WebApplicationException(413);
-        }       
+        }
         
         return Response.status(Response.Status.CREATED).build();
     }

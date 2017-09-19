@@ -5,29 +5,30 @@
  */
 package rest;
 
+import config.ApplicationConfig;
 import dao.DAOVersion;
 import entities.Project;
-import files.Upload;
-import java.io.InputStream;
 import entities.File;
 import entities.ProjectRight;
 import entities.User;
 import entities.Version;
 import entities.query.FlexQuery;
+import files.MultiPartManager;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.cxf.jaxrs.ext.multipart.Attachment;
-import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import javax.ws.rs.Produces;
@@ -82,6 +83,63 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
         versionsQuery.prepareCountQuery(em);
         return Response.ok(versionsQuery.execute()).build();
     }
+    
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response test(@Context HttpServletRequest request) {
+        try {
+            // récupération des paramètres multipart :
+            MultiPartManager multipartManager = new MultiPartManager(request);
+            Version version = multipartManager.getEntity("entity", Version.class);
+            Part uploadedFilePart = multipartManager.get("file");
+                    
+            // Auth :
+            AuthToken token = Authentication.validate(request.getHeader("Authorization"));
+            
+            File file;
+            Project project;
+            try {
+                file = em.find(File.class, version.getFile().getId());
+                project = em.find(Project.class, file.getProject().getId());
+            }
+            catch(Exception e) {
+                throw new WebApplicationException(Response.Status.NOT_FOUND);
+            }
+            
+            User author;
+            // Check droits :
+            try { // seulement si l'utilisateur peut ajouter des fichiers à ce project
+                author = RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.ADDFILES);
+            }
+            catch(WebApplicationException e) { // ou qu'il est admin
+                author = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+            }
+            
+            // vérifie que le token est bien celui de l'auteur ou de l'admin
+            if(file.getAuthor().getId().longValue() != author.getId().longValue() && ! author.isAdmin()) {
+                throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+            }
+            
+            version.setFile(file);
+            version.setNum(file.getVersion().getNum() + 1);
+            version.setDate_upload(Instant.now().getEpochSecond());
+            em.persist(version);
+            em.flush();
+            new DAOVersion(version, em).initWorkflowChecks();
+            em.merge(version);
+            file.setVersion(version);
+            em.merge(file);
+            uploadedFilePart.write(ApplicationConfig.PROJECTS_LOCATION + '/' + project.getId().toString() + '/' + version.getId().toString());
+            multipartManager.close();
+            
+        } catch (IOException | ServletException ex) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        } catch (IllegalStateException ex) {
+            throw new WebApplicationException(413);
+        }
+        
+        return Response.status(Response.Status.CREATED).build();
+    }
 
     /**
      * Endpoint utilisé pour uploader une nouvelle version d'un fichier
@@ -91,7 +149,7 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
      * @param attachment informations sur le nom du fichier, la taille, ...
      * @return Statut HTTP 201 en cas de succès
      */
-    @POST
+    /*@POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response create(
             @Context MessageContext jaxrsContext,
@@ -140,7 +198,7 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
         catch(Exception e) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
-    }
+    }*/
 
     @Override
     protected EntityManager getEntityManager() {
