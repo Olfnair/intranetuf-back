@@ -5,6 +5,9 @@
 */
 package rest;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import config.ApplicationConfig;
 import dao.DAOVersion;
 import entities.File;
 import entities.Project;
@@ -15,15 +18,26 @@ import entities.WorkflowCheck;
 import entities.query.FlexQuery;
 import entities.query.FlexQueryResult;
 import files.Upload;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -36,7 +50,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.objects.RestLong;
@@ -62,23 +75,77 @@ public class FileFacadeREST extends AbstractFacade<File> {
         super(File.class);
     }
     
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response test(@Context HttpServletRequest request) {              
+        StringBuilder value = new StringBuilder();
+        try {
+            Part entityPart = request.getPart("entity");
+            Part filePart = request.getPart("file");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(entityPart.getInputStream(), "UTF-8"));
+            char[] buffer = new char[8192];
+            for (int length; (length = reader.read(buffer)) > 0;) {
+                value.append(buffer, 0, length);
+            }
+            reader.close();                     
+            String jsonFileEntity = value.toString();
+            Gson gson = new Gson();
+            File file = gson.fromJson(jsonFileEntity, File.class);
+            
+            // Auth :
+            AuthToken token = Authentication.validate(request.getHeader("Authorization"));
+            
+            Project project = em.find(Project.class, file.getProject().getId());
+            User author;
+            // Check droits :
+            try { // seulement si l'utilisateur peut ajouter des fichiers à ce project
+                author = RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.ADDFILES);
+            }
+            catch(WebApplicationException e) { // ou qu'il est admin
+                author = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+            }
+            
+            //User author = em.find(User.class, 15);
+            Version version = file.getVersion();
+            version.setFile(file);
+            version.setDate_upload(Instant.now().getEpochSecond());
+            file.setAuthor(author);
+            em.persist(file);
+            em.flush();
+            new DAOVersion(version, em).initWorkflowChecks();
+            em.merge(file);
+            //new Upload(uploadedInputStream, project.getId().toString(), version.getId().toString()).run();
+            filePart.write(ApplicationConfig.PROJECTS_LOCATION + '/' + project.getId().toString() + '/' + version.getId().toString());
+            entityPart.delete();
+            filePart.delete();
+            
+        } catch (UnsupportedEncodingException ex) {
+            ex.printStackTrace();
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        } catch (IOException | IllegalStateException | ServletException ex) {
+            ex.printStackTrace();
+            throw new WebApplicationException(413);
+        }       
+        
+        return Response.status(Response.Status.CREATED).build();
+    }
+    
     /**
      * Endpoint utilisé pour uploader un nouveau fichier
      * @param jaxrsContext Contexte utilisé pour l'authentifcation
      * @param entity - entité contenant les informations du fichier
      * @param uploadedInputStream - stream avec le contenu du fichier
-     * @param attachment - nom du fichier, taille etc..
      * @param fileSize - taille du fichier
      * @return Statut HTTP 201 si le fichier est uploadé correctement
      */
-    @POST
+    /*@POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response create(
             @Context MessageContext jaxrsContext,
             @Multipart("entity") File entity,
             @Multipart("file") InputStream uploadedInputStream,
-            //@Multipart("file") Attachment attachment,
-            @HeaderParam("X-File-Size") Long fileSize) {
+            @HeaderParam("X-File-Size") Long fileSize) {       
+        
         AuthToken token = Authentication.validate(jaxrsContext);
         
         // TODO : check extension
@@ -113,7 +180,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
             e.printStackTrace();
             throw new WebApplicationException(Response.status(500).build());
         }
-    }
+    }*/
     
     /**
      * Endpoint de suppression (logique) d'un fichier

@@ -79,7 +79,7 @@ public class Authentication {
         }
         String authorizationHeader = authorizationHeaderList.get(0);
         // Check if the HTTP Authorization header is present and formatted correctly
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        if (authorizationHeader == null || ! authorizationHeader.startsWith("Bearer ")) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Authorization header must be provided").build());
         }
         
