@@ -7,13 +7,14 @@
         <servlet-name>default</servlet-name>
         <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
         <multipart-config>
+            <!-- Chemin vers le dossier temporeaire à utiliser -->
+            <location>C:/IUF_data/tmp</location>
             <!-- Taille max d'un fichier -->
             <max-file-size>10485760</max-file-size> <!-- 10 Mb -->
             <!-- Taille max d'une requête : doit pouvoir contenir un fichier et quelques autres infos -->
             <max-request-size>12582912</max-request-size> <!-- 12 Mb -->
             <!-- Taille à partir de laquelle on bascule dans un fichier temporaire -->
             <file-size-threshold>0</file-size-threshold>
-            <location>C:/IUF_data/tmp</location>
         </multipart-config>
     </servlet>
     <servlet-mapping>

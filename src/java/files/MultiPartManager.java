@@ -5,7 +5,7 @@
  */
 package files;
 
-import com.google.gson.Gson;
+import com.google.gson.Gson; // Si erreur : ajouter la librarie Gson au projet
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
