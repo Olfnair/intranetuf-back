@@ -15,6 +15,7 @@ import entities.Version;
 import entities.WorkflowCheck;
 import entities.query.FlexQuery;
 import entities.query.FlexQueryResult;
+import files.ExtensionChecker;
 import files.MultiPartManager;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -71,6 +72,11 @@ public class FileFacadeREST extends AbstractFacade<File> {
             MultiPartManager multipartManager = new MultiPartManager(request);
             File file = multipartManager.getEntity("entity", File.class);
             Part uploadedFilePart = multipartManager.get("file");
+            
+            // vérification de l'extension :
+            if(! new ExtensionChecker(ApplicationConfig.UPLOAD_CONFIG).check(file.getVersion().getFilename())) {
+                throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
+            }
                     
             // Auth :
             AuthToken token = Authentication.validate(request.getHeader("Authorization"));

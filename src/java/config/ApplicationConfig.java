@@ -21,6 +21,11 @@ public class ApplicationConfig extends Application {
     public final static String KEYS_LOCATION;
     public final static String FRONTEND_URL;
     
+    public final static AuthConfig AUTH_CONFIG;
+    public final static MailConfig MAIL_CONFIG;
+    public final static PBDKF2Config PBDKF2_CONFIG;
+    public final static UploadConfig UPLOAD_CONFIG;
+    
     static {
         ConfigFile configFile = new ConfigFile("global.xml", true);
         String projects = null;
@@ -43,6 +48,11 @@ public class ApplicationConfig extends Application {
             KEYS_LOCATION = keys;
             FRONTEND_URL = frontEndURL;
         }
+        
+        AUTH_CONFIG = new AuthConfig(KEYS_LOCATION + '/' + "keys.xml");
+        MAIL_CONFIG = new MailConfig(PROPERTIES_LOCATION + '/' + "mail.xml");
+        PBDKF2_CONFIG = new PBDKF2Config(KEYS_LOCATION + '/' + "hashpass.xml");
+        UPLOAD_CONFIG = new UploadConfig(PROPERTIES_LOCATION + '/' + "upload.xml");
     }
     
     @Override

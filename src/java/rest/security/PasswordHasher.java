@@ -6,14 +6,12 @@
 package rest.security;
 
 import config.ApplicationConfig;
-import config.ConfigFile;
+import config.PBDKF2Config;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.ws.rs.WebApplicationException;
@@ -24,62 +22,52 @@ import javax.ws.rs.core.Response;
  * @author Florian
  */
 public class PasswordHasher {
-    private final static byte PEPER[];
-    private final static int ITERATION;
-    
-    private final static int OUTPUT_LEN;
-    private final static int SALT_LEN;
-    
-    static {
-        ConfigFile config = new ConfigFile(ApplicationConfig.KEYS_LOCATION + '/' + "hashpass.xml");
-        // valeurs de secours
-        int iteration = 102417;
-        int output_len = 64;
-        int salt_len = 32;
-        String peper = "pLKvnBOx1V5qIxtblHUbdGQpTyifH0/Qbefppez0Kcg=";
-        
-        try {
-            iteration = Integer.parseInt(config.read("iteration", Integer.toString(iteration)), 10);
-            peper = config.read("peper");
-            output_len = Integer.parseInt(config.read("output_len", Integer.toString(output_len)), 10);
-            salt_len = Integer.parseInt(config.read("salt_len", Integer.toString(salt_len)), 10);
-            if(peper == null) {
-                throw new Exception("Error in hashpass.xml");
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(ApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            PEPER = Base64.getDecoder().decode(peper);
-            ITERATION = iteration;
-            OUTPUT_LEN = output_len;
-            SALT_LEN = salt_len;
-        }
-    }
-    
-    private int iterations = ITERATION;
+    private final PBDKF2Config config;
+    private int iterations;
     private String base64Salt;
     private String password;
     
+    // default Config :
     public PasswordHasher(String password) {
-        this(password, genBase64Salt(), ITERATION);
+        this(ApplicationConfig.PBDKF2_CONFIG, password, genBase64Salt(ApplicationConfig.PBDKF2_CONFIG.getSaltLen()),
+                ApplicationConfig.PBDKF2_CONFIG.getIterations());
     }
     
     public PasswordHasher(String password, String base64Salt) {
-        this(password, base64Salt, ITERATION);
+        this(ApplicationConfig.PBDKF2_CONFIG, password, base64Salt, ApplicationConfig.PBDKF2_CONFIG.getIterations());
     }
     
     public PasswordHasher(String password, String base64Salt, int iterations) {
+        this(ApplicationConfig.PBDKF2_CONFIG, password, base64Salt, iterations);
+    }
+    
+    
+    // specify Config :
+    public PasswordHasher(PBDKF2Config config, String password) {
+        this(config, password, genBase64Salt(config.getSaltLen()), config.getIterations());
+    }
+    
+    public PasswordHasher(PBDKF2Config config, String password, String base64Salt) {
+        this(config, password, base64Salt, config.getIterations());
+    }
+    
+    public PasswordHasher(PBDKF2Config config, String password, String base64Salt, int iterations) {
+        this.config = config;
         this.password = password;
         this.base64Salt = base64Salt;
         this.iterations = iterations;
+        if(iterations < config.getIterations()) {
+            this.iterations = config.getIterations();
+        }
     }
     
     public String hash() {
         byte salt[] = Base64.getDecoder().decode(base64Salt);
-        for(int i = 0; i < salt.length && i < PEPER.length; ++i) {
-            salt[i] ^= PEPER[i];
+        byte[] peper = config.getPeper();
+        for(int i = 0; i < salt.length && i < peper.length; ++i) {
+            salt[i] ^= peper[i];
         }
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, OUTPUT_LEN * 8);
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, config.getOutputLen() * 8);
         try {
             SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
             return Base64.getEncoder().encodeToString(f.generateSecret(spec).getEncoded());
@@ -104,9 +92,9 @@ public class PasswordHasher {
         this.base64Salt = base64Salt;
     }
     
-    public static String genBase64Salt() {
+    private static String genBase64Salt(int len) {
         SecureRandom random = new SecureRandom();
-        byte bytes[] = new byte[SALT_LEN];
+        byte bytes[] = new byte[len];
         random.nextBytes(bytes);
         return Base64.getEncoder().encodeToString(bytes);
     }

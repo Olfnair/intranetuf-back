@@ -6,20 +6,19 @@
 package rest.security;
 
 import config.ApplicationConfig;
-import config.ConfigFile;
+import config.AuthConfig;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -32,30 +31,48 @@ public class AuthToken implements Serializable {
     
     private static final long serialVersionUID = 1L;
     
+    @XmlTransient()
+    private final AuthConfig config;
+    
     private long nonce;
     private long userId;
-    private long roleId;
+    private long roles;
     private long expDate;
     private String signature;
     
     public AuthToken() {
+        this(ApplicationConfig.AUTH_CONFIG);
+    }
+    
+    public AuthToken(AuthConfig config) {
+        this.config = config;
     }
     
     public AuthToken(String jsonString) {
+        this(ApplicationConfig.AUTH_CONFIG, jsonString);
+    }
+    
+    public AuthToken(AuthConfig config, String jsonString) {
+        this.config = config;
         extractDataFromJsonString(jsonString);
     }
     
-    public AuthToken(long nonce, long userId, long roleId, long secValidity) {
+    public AuthToken(long nonce, long userId, long roles, long secValidity) {
+        this(ApplicationConfig.AUTH_CONFIG, nonce, userId, roles, secValidity);
+    }
+    
+    public AuthToken(AuthConfig config, long nonce, long userId, long roles, long secValidity) {
+        this.config = config;
         this.nonce = nonce;
         this.userId = userId;
-        this.roleId = roleId;
+        this.roles = roles;
         this.expDate = Instant.now().getEpochSecond() + secValidity;
     }
     
     private void setEmpty() {
         this.signature = "";
         this.nonce = 0;
-        this.roleId = 0;
+        this.roles = 0;
         this.userId = 0;
         this.expDate = 0;
     }
@@ -76,12 +93,12 @@ public class AuthToken implements Serializable {
         this.userId = userId;
     }
     
-    public long getRoleId() {
-        return roleId;
+    public long getRoles() {
+        return roles;
     }
     
-    public void setRoleId(long roleId) {
-        this.roleId = roleId;
+    public void setRoles(long roles) {
+        this.roles = roles;
     }
     
     public String getSignature() {
@@ -110,7 +127,7 @@ public class AuthToken implements Serializable {
             return "";
         }
         try {
-            String data = Long.toString(this.nonce) + Long.toString(this.userId) + Long.toString(this.roleId) + Long.toString(this.expDate);
+            String data = Long.toString(this.nonce) + Long.toString(this.userId) + Long.toString(this.roles) + Long.toString(this.expDate);
             
             Mac HMAC_sha512 = Mac.getInstance("HmacSHA512");
             SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes("ISO-8859-1"), "HmacSHA512");
@@ -169,7 +186,7 @@ public class AuthToken implements Serializable {
             for(i = roleIdIndex; json.charAt(i) != '\"' && i < json.length() && i > -1; ++i) {
                 builder.append(json.charAt(i));
             }
-            this.roleId = Long.parseLong(builder.toString());
+            this.roles = Long.parseLong(builder.toString());
             
             builder = new StringBuilder(Long.BYTES);
             final String expDateIdentifier = "\"e\":\"";
@@ -197,20 +214,20 @@ public class AuthToken implements Serializable {
         return "{"
             + "\"n\":\"" + Long.toString(this.nonce) + "\","
             + "\"u\":\"" + Long.toString(this.userId) + "\","
-            + "\"r\":\"" + Long.toString(this.roleId) + "\","
+            + "\"r\":\"" + Long.toString(this.roles) + "\","
             + "\"e\":\"" + Long.toString(this.expDate) + "\","
             + "\"s\":\"" + this.signature + "\"" +
         "}";
     }
     
-    private static String getSecret(int key) {
+    private String getSecret(int key) {
         return getSecret(key, false);
     }
     
-    private static String getSecret(int key, boolean old) {
+    private String getSecret(int key, boolean old) {
         if(key == ACTIVATION_KEY) {
-            return old ? KeyManager.getACTIVATION_SECRET_OLD() : KeyManager.getACTIVATION_SECRET();
+            return old ? config.getActivationSecretOld() : config.getActivationSecret();
         }
-        return old ? KeyManager.getAUTH_SECRET_OLD() : KeyManager.getAUTH_SECRET(); // par defaut
+        return old ? config.getAuthSecretOld() : config.getAuthSecret(); // par defaut
     }
 }

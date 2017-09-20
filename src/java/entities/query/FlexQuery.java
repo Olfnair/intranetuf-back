@@ -148,7 +148,7 @@ public class FlexQuery<T> {
         @SuppressWarnings("rawtypes")
         Class classType = specification.getWhereClausesParameterClass().get(column);
         // suppression des espaces pas nécessaires dans param
-        param = param.trim().replaceAll("[\n\t ]+", " ");
+        param = param.trim().replaceAll("\\s+", " ");
         Object value = param;
         if(OPERATOR_ADAPT_MAP.containsKey(operator.toLowerCase())) {
             // adaptation de la valeur pour certains opérateurs (LIKE, ...)

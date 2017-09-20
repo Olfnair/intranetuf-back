@@ -89,13 +89,13 @@ public class FlexQuerySpecification<T> {
     
     public void addWhereClauseReplacer(String column, String replacer) {
         if(! whereColumnInSpec(column)) { return; }
-        whereClausesReplacers.put(column, replacer.trim().replaceAll("[\n\t ]+", " "));
+        whereClausesReplacers.put(column, replacer.trim().replaceAll("\\s+", " "));
     }
     
     public void addOrderByClauseReplacer(String column, String replacer) {
         if(! orderByColumnInSpec(column)) { return; }
         // supprime absolument tous les espaces :
-        orderByClausesReplacers.put(column, replacer.trim().replaceAll("[\n\t ]", ""));
+        orderByClausesReplacers.put(column, replacer.replaceAll("\\s+", ""));
     }
 
     public HashMap<String, String> getWhereClausesOperators() {
