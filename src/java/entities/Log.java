@@ -26,7 +26,7 @@ public class Log extends entities.Entity {
     private static final long serialVersionUID = 1L;
     
     public final static class Type {
-        public final static String AUTH = "AUTH";
+        public final static String AUTH_USER = "AUTH_USER";
         public final static String AUTH_AS = "AUTH_AS";
         public final static String DOWNLOAD = "DOWNLOAD";
         public final static String CREATE_PROJECT = "CREATE_PROJECT";
@@ -60,7 +60,7 @@ public class Log extends entities.Entity {
     public final static FlexQuerySpecification<Log> LIST_ALL;
     
     static {
-        LIST_ALL = new FlexQuerySpecification<>("SELECT log FROM Log log :where: :orderby:", "log", Log.class);
+        LIST_ALL = new FlexQuerySpecification<>("SELECT log FROM Log log JOIN FETCH log.author.login JOIN FETCH log.user.login :where: :orderby:", "log", Log.class);
         LIST_ALL.addWhereSpec("message", "message", "LIKE", "AND", String.class);
         LIST_ALL.addWhereSpec("type", "type", "LIKE", "AND", String.class);
         LIST_ALL.addWhereSpec("author.login", "authorLogin", "LIKE", "AND", String.class);

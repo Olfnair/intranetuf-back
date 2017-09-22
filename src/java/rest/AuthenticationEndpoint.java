@@ -45,7 +45,7 @@ public class AuthenticationEndpoint {
     @POST
     public Response authenticateUser(Credentials credentials) {       
         AuthToken token = authenticate(credentials);
-        new DAOLog(em).log(new User(token.getUserId()), Log.Type.AUTH, "'" + credentials.getLogin() + "' s'est connecté");
+        new DAOLog(em).log(new User(token.getUserId()), Log.Type.AUTH_USER, "'" + credentials.getLogin() + "' s'est connecté");
         return Response.ok(token.toJsonString()).build();
     }
     
