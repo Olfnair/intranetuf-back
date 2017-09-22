@@ -74,6 +74,12 @@ public class Version extends entities.Entity {
     
     @OneToMany(mappedBy = "version", fetch=FetchType.LAZY)
     private List<Log> logs = new ArrayList<>();
+    
+    public Version() {}
+    
+    public Version(Long id) {
+        super(id);
+    }
 
     public String getFilename() {
         return filename;

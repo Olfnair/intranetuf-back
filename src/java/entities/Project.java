@@ -69,6 +69,12 @@ public class Project extends entities.Entity {
     
     @OneToMany(mappedBy = "project", fetch=FetchType.LAZY)
     private List<Log> logs = new ArrayList<>();
+    
+    public Project() {}
+    
+    public Project(Long id) {
+        super(id);
+    }
 
     public String getName() {
         return name;

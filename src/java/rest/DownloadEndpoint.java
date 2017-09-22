@@ -5,6 +5,8 @@
 */
 package rest;
 
+import dao.DAOLog;
+import entities.Log;
 import entities.Version;
 import entities.Project;
 import entities.ProjectRight;
@@ -13,6 +15,7 @@ import files.Download;
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
 import java.util.List;
+import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -34,6 +37,7 @@ import rest.security.RightsChecker;
  *
  * @author Florian
  */
+@Stateless
 @Path("download")
 public class DownloadEndpoint {
     @PersistenceContext(unitName = "IUFPU")
@@ -85,11 +89,17 @@ public class DownloadEndpoint {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         
+        boolean error = false;
         try {
             return new Download(version.getFilename(), project.getId().toString(), version.getId().toString()).run();
         }
         catch(Exception e) {
+            error = true;
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            if(! error) {
+                new DAOLog(em).log(new User(token.getUserId()), Log.Type.DOWNLOAD, "", project, version);
+            }
         }
     }
 }

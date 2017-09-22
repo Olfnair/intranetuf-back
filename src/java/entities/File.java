@@ -78,8 +78,11 @@ public class File extends entities.Entity {
     @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
     private List<Version> versions = new ArrayList<>();
     
-    @OneToMany(mappedBy="file", fetch=FetchType.LAZY)
-    private List<Log> logs = new ArrayList<>();
+    public File() {}
+    
+    public File(Long id) {
+        super(id);
+    }
 
     public boolean isActive() {
         return active;
@@ -119,14 +122,6 @@ public class File extends entities.Entity {
 
     public void setVersions(List<Version> versions) {
         this.versions = versions;
-    }
-    
-    public List<Log> getLogs() {
-        return logs;
-    }
-
-    public void setLogs(List<Log> logs) {
-        this.logs = logs;
     }
 
     @Override

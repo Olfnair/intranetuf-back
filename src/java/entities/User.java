@@ -92,8 +92,11 @@ public class User extends entities.Entity {
     
     private boolean pending = true;
     
+    @OneToMany(mappedBy = "author", fetch=FetchType.LAZY)
+    private List<Log> actionsLogs = new ArrayList<>();
+    
     @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)
-    private List<Log> logs = new ArrayList<>();
+    private List<Log> relatedLogs = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", fetch=FetchType.LAZY)
     private List<WorkflowCheck> fileActions = new ArrayList<>();
@@ -103,6 +106,12 @@ public class User extends entities.Entity {
     
     @OneToMany(mappedBy="user", fetch=FetchType.LAZY)
     private List<ProjectRight> projectRights = new ArrayList<>();
+    
+    public User() {}
+    
+    public User(Long id) {
+        super(id);
+    }
 
     public Long getRole() {
         return role;
@@ -181,12 +190,21 @@ public class User extends entities.Entity {
     }
 
     @XmlTransient
-    public List<Log> getLogs() {
-        return logs;
+    public List<Log> getActionsLogs() {
+        return actionsLogs;
     }
 
-    public void setLogs(List<Log> logs) {
-        this.logs = logs;
+    public void setActionsLogs(List<Log> actionsLogs) {
+        this.actionsLogs = actionsLogs;
+    }
+    
+    @XmlTransient
+    public List<Log> getRelatedLogs() {
+        return relatedLogs;
+    }
+
+    public void setRelatedLogs(List<Log> relatedLogs) {
+        this.relatedLogs = relatedLogs;
     }
 
     @XmlTransient

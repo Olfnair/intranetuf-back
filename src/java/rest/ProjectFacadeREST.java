@@ -6,6 +6,8 @@
 package rest;
 
 import config.ApplicationConfig;
+import dao.DAOLog;
+import entities.Log;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
@@ -66,6 +68,7 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         
         Response res = super.insert(entity);
         new java.io.File(ApplicationConfig.PROJECTS_LOCATION + '/' + entity.getId().toString()).mkdirs();
+        new DAOLog(em).log(new User(token.getUserId()), Log.Type.CREATE_PROJECT, "", entity);
         return res;
     }
     
@@ -95,6 +98,12 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         updateQuery.setParameter("active", activate > 0);
         updateQuery.setParameter("projectIds", projectIds);
         updateQuery.executeUpdate();
+        
+        // Logs
+        projectIds.forEach((projectId) -> {
+            new DAOLog(em).log(user, (activate > 0) ? Log.Type.ACTIVATE_PROJECT : Log.Type.DELETE_PROJECT,
+                    "", new Project(projectId));
+        });
         
         return Response.status(Response.Status.NO_CONTENT).build();
     }
@@ -126,12 +135,15 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         if(! user.isAdmin()) {
             entity.setActive(project.isActive());
         }
-        entity.setId(project.getId());   
-        return super.edit(entity);
+        entity.setId(project.getId());
+        
+        Response res = super.edit(entity);
+        new DAOLog(em).log(user, Log.Type.EDIT_PROJECT, "Ancien nom : " + project.getName(), entity);
+        return res;
     }
     
     /**
-     * Endpoint qui perlmet de supprimer (logiquement) un projet
+     * Endpoint qui permet de supprimer (logiquement) un projet
      * @param jaxrsContext - contexte utilisé pour l'authentification
      * @param id - id du projet
      * @return Statut HTTP 204 en cas de succès
@@ -141,11 +153,12 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
     public Response remove(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
         AuthToken token = Authentication.validate(jaxrsContext);
         // droits:
+        User user;
         try { // supprimer le projet
-            RightsChecker.getInstance(em).validate(token, User.Roles.USER, id, ProjectRight.Rights.DELETEPROJECT);
+            user = RightsChecker.getInstance(em).validate(token, User.Roles.USER, id, ProjectRight.Rights.DELETEPROJECT);
         }
         catch(WebApplicationException e) { // ou admins
-            RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+            user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         }
         Project project = em.find(Project.class, id);
         if(project == null) {
@@ -153,7 +166,8 @@ public class ProjectFacadeREST extends AbstractFacade<Project> {
         }
         
         // suppression logique
-        project.setActive(false);       
+        project.setActive(false);
+        new DAOLog(em).log(user, Log.Type.DELETE_PROJECT, "", project);
         return Response.status(Response.Status.NO_CONTENT).build();
     }
     

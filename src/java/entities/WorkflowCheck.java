@@ -23,14 +23,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name="WorkflowCheck.getByVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user WHERE wfc.version.id = :versionId ORDER BY wfc.type ASC, wfc.order_num ASC"),
     @NamedQuery(name="WorkflowCheck.getByStatusUserVersions", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.version WHERE wfc.user.id = :userId AND wfc.status = :status AND wfc.version.id IN(:versionIds)"),
-    @NamedQuery(name="WorkflowCheck.getWithUser", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user WHERE wfc.id = :wfcId"),
-    @NamedQuery(name="WorkflowCheck.getWithUserAndVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user JOIN FETCH wfc.version WHERE wfc.id = :wfcId")
+    @NamedQuery(name="WorkflowCheck.getWithUserAndProject", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user JOIN FETCH wfc.project WHERE wfc.id = :wfcId"),
+    @NamedQuery(name="WorkflowCheck.getWithUserAndProjectAndVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user JOIN FETCH wfc.project JOIN FETCH wfc.version WHERE wfc.id = :wfcId")
 })
 public class WorkflowCheck extends entities.Entity {
     private static final long serialVersionUID = 1L;
     
     // la flemme de faire des enums...
-    public final static class Types {
+    public final static class Type {
         public final static int CONTROL = 0;
         public final static int VALIDATION = 1;
     }
@@ -88,6 +88,12 @@ public class WorkflowCheck extends entities.Entity {
     
     @ManyToOne(fetch=FetchType.LAZY)
     private Project project;
+    
+    public WorkflowCheck() {}
+    
+    public WorkflowCheck(Long id) {
+        super(id);
+    }
 
     public Integer getStatus() {
         return status;

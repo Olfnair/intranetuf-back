@@ -28,6 +28,10 @@ public class Credentials extends entities.Entity {
     public Credentials() {
     }
     
+    public Credentials(Long id) {
+        super(id);
+    }
+    
     public Credentials(String login) {
         this.login = login;
     }

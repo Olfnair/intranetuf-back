@@ -6,7 +6,9 @@
 package rest;
 
 import config.ApplicationConfig;
+import dao.DAOLog;
 import entities.Credentials;
+import entities.Log;
 import entities.User;
 import entities.query.FlexQuery;
 import entities.query.FlexQuerySpecification;
@@ -82,7 +84,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
     public Response create(@Context MessageContext jaxrsContext, User entity) {
         // droits : admin ou super
         AuthToken adminToken = Authentication.validate(jaxrsContext);
-        RightsChecker.getInstance(em).validate(adminToken, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        User admin = RightsChecker.getInstance(em).validate(adminToken, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
         entity.setCredentials(new Credentials(entity.getLogin()));
         Response res = super.insert(entity);
@@ -102,6 +104,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
                 "Vous venez de créer un compte sur IntranetUF. Cliquez sur ce lien pour l'activer et choisir votre mot de passe : "
         );
         
+        new DAOLog(em).log(admin, Log.Type.CREATE_USER, "", entity);
         return res;
     }
     
@@ -123,6 +126,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
             em.merge(user);
+            new DAOLog(em).log(admin, Log.Type.EDIT_USER, "", user);
         });
         
         return Response.status(Response.Status.NO_CONTENT).build();
@@ -186,10 +190,13 @@ public class UserFacadeREST extends AbstractFacade<User> {
                     "Réinitialisation de votre compte",
                     "Votre compte a été réinitilisé. Cliquez sur ce lien pour le réactiver et choisir un nouveau mot de passe : "
             );
+            new DAOLog(em).log(askingUser, Log.Type.ACTIVATIONLINK_USER, "", entity);
         }
         
         entity.setId(user.getId());
-        return super.edit(entity);
+        Response res = super.edit(entity);
+        new DAOLog(em).log(askingUser, Log.Type.EDIT_USER, "", entity);
+        return res;
     }
 
     /**
@@ -202,7 +209,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @Path("{id}")
     public Response remove(@Context MessageContext jaxrsContext, @PathParam("id") Long id) {
         AuthToken token = Authentication.validate(jaxrsContext);
-        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        User admin = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
         User user = em.find(User.class, id);
         if(user == null) {
@@ -210,6 +217,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
         }
         
         user.setActive(false);
+        new DAOLog(em).log(admin, Log.Type.DELETE_USER, "", user);
         return Response.status(Response.Status.NO_CONTENT).build();
     }
     
@@ -244,6 +252,11 @@ public class UserFacadeREST extends AbstractFacade<User> {
         updateQuery.setParameter("active", activate > 0);
         updateQuery.setParameter("userIds", userIds);
         updateQuery.executeUpdate();
+        
+        // logs
+        userIds.forEach((userId) -> {
+            new DAOLog(em).log(user, (activate > 0) ? Log.Type.ACTIVATE_USER : Log.Type.DELETE_USER, "", new User(userId));
+        });
         
         return Response.status(Response.Status.NO_CONTENT).build();
     }
@@ -485,6 +498,7 @@ public class UserFacadeREST extends AbstractFacade<User> {
         user.getCredentials().setIteration(ph.getIterations());
         user.getCredentials().setSalt(ph.getBase64Salt());
         user.setPending(false);
+        new DAOLog(em).log(user, Log.Type.NEW_CREDENTIALS, "", user);
         return super.buildResponse(200);
     }
 

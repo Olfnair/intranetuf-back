@@ -5,7 +5,9 @@
 */
 package rest;
 
+import dao.DAOLog;
 import entities.Entity;
+import entities.Log;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
@@ -53,15 +55,19 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         super(ProjectRight.class);
     }
     
-    private void save(ProjectRight right) {
+    private void save(User user, ProjectRight right) {
+        DAOLog logger = new DAOLog(em);
         if(right.getId() == null) {
             em.persist(right);
+            logger.log(user, Log.Type.CREATE_RIGHTS, "Droits : " + right.getRights(), right.getProject(), right.getUser());
         }
         else if(right.getRights() == 0) {
             em.remove(em.merge(right));
+            logger.log(user, Log.Type.DELETE_RIGHTS, "Droits : " + right.getRights(), right.getProject(), right.getUser());
         }
         else {
             em.merge(right);
+            logger.log(user, Log.Type.EDIT_RIGHTS, "Droits : " + right.getRights(), right.getProject(), right.getUser());
         }
     }
     
@@ -76,7 +82,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     @Path("project/{id}")
     public Response createOrEditForProject(@Context MessageContext jaxrsContext, @PathParam("id") Long projectId, List<ProjectRight> rights) {
         AuthToken token = Authentication.validate(jaxrsContext);
-        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        User user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
         Project project = em.find(Project.class, projectId);
         if(project == null) {
@@ -110,7 +116,7 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
         });
         
         mapUserIdToRight.keySet().forEach((userId) -> {
-            save(mapUserIdToRight.get(userId));
+            save(user, mapUserIdToRight.get(userId));
         });
         
         return Response.status(Response.Status.CREATED).build();
@@ -125,10 +131,10 @@ public class ProjectRightFacadeREST extends AbstractFacade<ProjectRight> {
     @PUT
     public Response createOrEdit(@Context MessageContext jaxrsContext, List<ProjectRight> entities) {
         AuthToken token = Authentication.validate(jaxrsContext);
-        RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
+        User user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
         entities.forEach((right) -> {
-            save(right);
+            save(user, right);
         });
         return Response.status(Response.Status.CREATED).build();
     }

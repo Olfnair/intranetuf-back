@@ -6,8 +6,10 @@
 package rest;
 
 import config.ApplicationConfig;
+import dao.DAOLog;
 import dao.DAOVersion;
 import entities.File;
+import entities.Log;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
@@ -102,66 +104,15 @@ public class FileFacadeREST extends AbstractFacade<File> {
             uploadedFilePart.write(ApplicationConfig.PROJECTS_LOCATION + '/' + project.getId().toString() + '/' + version.getId().toString());
             multipartManager.close();
             
+            new DAOLog(em).log(author, Log.Type.CREATE_FILE, "", project, version);
+            return Response.status(Response.Status.CREATED).build();
+            
         } catch (IOException | ServletException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         } catch (IllegalStateException ex) {
             throw new WebApplicationException(413);
         }
-        
-        return Response.status(Response.Status.CREATED).build();
     }
-    
-    /**
-     * Endpoint utilisé pour uploader un nouveau fichier
-     * @param jaxrsContext Contexte utilisé pour l'authentifcation
-     * @param entity - entité contenant les informations du fichier
-     * @param uploadedInputStream - stream avec le contenu du fichier
-     * @param fileSize - taille du fichier
-     * @return Statut HTTP 201 si le fichier est uploadé correctement
-     */
-    /*@POST
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response create(
-            @Context MessageContext jaxrsContext,
-            @Multipart("entity") File entity,
-            @Multipart("file") InputStream uploadedInputStream,
-            @HeaderParam("X-File-Size") Long fileSize) {       
-        
-        AuthToken token = Authentication.validate(jaxrsContext);
-        
-        // TODO : check extension
-        if(fileSize == null || fileSize == 0 || fileSize > (1024 * 1024 * 10)) {
-            throw new WebApplicationException(413); // PAYLOAD TOO LARGE
-        }
-        
-        Project project = em.find(Project.class, entity.getProject().getId());
-        
-        User author;
-        // check droits
-        try { // seulement si l'utilisateur peut ajouter des fichiers à ce project
-            author = RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.ADDFILES);
-        }
-        catch(WebApplicationException e) { // ou qu'il est admin
-            author = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
-        }
-        
-        try {
-            Version version = entity.getVersion();
-            version.setFile(entity);
-            version.setDate_upload(Instant.now().getEpochSecond());
-            entity.setAuthor(author);
-            em.persist(entity);
-            em.flush();
-            new DAOVersion(version, em).initWorkflowChecks();
-            em.merge(entity);
-            new Upload(uploadedInputStream, project.getId().toString(), version.getId().toString()).run();
-            return Response.status(201).build();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-            throw new WebApplicationException(Response.status(500).build());
-        }
-    }*/
     
     /**
      * Endpoint de suppression (logique) d'un fichier
@@ -192,6 +143,7 @@ public class FileFacadeREST extends AbstractFacade<File> {
         
         File file = em.find(File.class, id);
         file.setActive(false);
+        new DAOLog(em).log(new User(token.getUserId()), Log.Type.DELETE_FILE, "", project, file.getVersion());
         return Response.status(Response.Status.OK).build();
     }
     

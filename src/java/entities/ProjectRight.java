@@ -48,8 +48,11 @@ public class ProjectRight extends entities.Entity {
     
     @ManyToOne(fetch=FetchType.EAGER)
     private User user;
-
-    public ProjectRight() {
+    
+    public ProjectRight() {}
+    
+    public ProjectRight(Long id) {
+        super(id);
     }
     
     public ProjectRight(User user, Project project) {

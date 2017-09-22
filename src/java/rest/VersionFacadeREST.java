@@ -6,9 +6,11 @@
 package rest;
 
 import config.ApplicationConfig;
+import dao.DAOLog;
 import dao.DAOVersion;
 import entities.Project;
 import entities.File;
+import entities.Log;
 import entities.ProjectRight;
 import entities.User;
 import entities.Version;
@@ -87,7 +89,7 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
     
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response test(@Context HttpServletRequest request) {
+    public Response create(@Context HttpServletRequest request) {
         try {
             // récupération des paramètres multipart :
             MultiPartManager multipartManager = new MultiPartManager(request);
@@ -138,73 +140,14 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             uploadedFilePart.write(ApplicationConfig.PROJECTS_LOCATION + '/' + project.getId().toString() + '/' + version.getId().toString());
             multipartManager.close();
             
+            new DAOLog(em).log(author, Log.Type.CREATE_VERSION, "", project, version);   
+            return Response.status(Response.Status.CREATED).build();     
         } catch (IOException | ServletException ex) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         } catch (IllegalStateException ex) {
             throw new WebApplicationException(413);
         }
-        
-        return Response.status(Response.Status.CREATED).build();
     }
-
-    /**
-     * Endpoint utilisé pour uploader une nouvelle version d'un fichier
-     * @param jaxrsContext contexte utilisé pour l'authentification
-     * @param entity Informations de la version
-     * @param uploadedInputStream Flux de données du contenu du fichier
-     * @param attachment informations sur le nom du fichier, la taille, ...
-     * @return Statut HTTP 201 en cas de succès
-     */
-    /*@POST
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response create(
-            @Context MessageContext jaxrsContext,
-            @Multipart("entity") Version entity,
-            @Multipart("file") InputStream uploadedInputStream,
-            @Multipart("file") Attachment attachment) {
-        AuthToken token = Authentication.validate(jaxrsContext);
-        
-        File file;
-        Project project;
-        User user;
-        try {
-            file = em.find(File.class, entity.getFile().getId());
-            project = em.find(Project.class, file.getProject().getId());
-        }
-        catch(Exception e) {
-           throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-        
-        // droits :
-        try { // ajouter un fichier au projet
-            user = RightsChecker.getInstance(em).validate(token, User.Roles.USER, project.getId(), ProjectRight.Rights.ADDFILES);
-        }
-        catch(WebApplicationException e) { // ou admin
-            user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
-        }
-        
-        // vérifie que le token est bien celui de l'auteur ou de l'admin
-        if(file.getAuthor().getId().longValue() != user.getId().longValue() && ! user.isAdmin()) {
-            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        }
-        
-        try { 
-            entity.setFile(file);
-            entity.setNum(file.getVersion().getNum() + 1);
-            entity.setDate_upload(Instant.now().getEpochSecond());
-            em.persist(entity);
-            em.flush();
-            new DAOVersion(entity, em).initWorkflowChecks();
-            em.merge(entity);
-            file.setVersion(entity);
-            em.merge(file);
-            new Upload(uploadedInputStream, project.getId().toString(), entity.getId().toString()).run();
-            return Response.status(201).build();
-        }
-        catch(Exception e) {
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }*/
 
     @Override
     protected EntityManager getEntityManager() {

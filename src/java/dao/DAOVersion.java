@@ -44,7 +44,7 @@ public class DAOVersion {
         
         for(WorkflowCheck check : version.getWorkflowChecks()) {
             check.setVersion(version);
-            if(check.getType() == WorkflowCheck.Types.CONTROL && check.getOrder_num() == 0) {
+            if(check.getType() == WorkflowCheck.Type.CONTROL && check.getOrder_num() == 0) {
                 check.setStatus(WorkflowCheck.Status.TO_CHECK);
                 check.setDate_init(Instant.now().getEpochSecond());
                 checksWithUserToAvert.add(check);
@@ -102,7 +102,7 @@ public class DAOVersion {
         }
         
         // si non et que le type == CONTROL, le fichier est contrôlé
-        if(! updated && type == WorkflowCheck.Types.CONTROL) {
+        if(! updated && type == WorkflowCheck.Type.CONTROL) {
             version.setStatus(Version.Status.CONTROLLED);
             // préparer les validations :
             for(WorkflowCheck check : version.getWorkflowChecks()) {
@@ -116,7 +116,7 @@ public class DAOVersion {
         }
 
         // sinon si le type == VALIDATION, le fichier est validé
-        else if(! updated && type == WorkflowCheck.Types.VALIDATION) {
+        else if(! updated && type == WorkflowCheck.Type.VALIDATION) {
             version.setStatus(Version.Status.VALIDATED);
         }
         

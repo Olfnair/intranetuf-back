@@ -5,9 +5,11 @@
  */
 package rest;
 
+import dao.DAOLog;
 import dao.DAOVersion;
 import dao.DAOWorkflowCheck;
 import entities.File;
+import entities.Log;
 import entities.Project;
 import entities.ProjectRight;
 import entities.User;
@@ -84,9 +86,11 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         AuthToken token = Authentication.validate(jaxrsContext);
         User user = RightsChecker.getInstance(em).validate(token, User.Roles.ADMIN | User.Roles.SUPERADMIN);
         
-        TypedQuery<WorkflowCheck> checkQuery = em.createNamedQuery("WorkflowCheck.getWithUserAndVersion", WorkflowCheck.class);
+        TypedQuery<WorkflowCheck> checkQuery = em.createNamedQuery("WorkflowCheck.getWithUserAndProjectAndVersion", WorkflowCheck.class);
         checkQuery.setParameter("wfcId", id);
-        new DAOWorkflowCheck(checkQuery.getResultList().get(0), em).sendMail(true); // envoi d'un mail de rappel
+        WorkflowCheck check = checkQuery.getResultList().get(0);
+        new DAOWorkflowCheck(check, em).sendMail(true); // envoi d'un mail de rappel
+        new DAOLog(em).log(user, Log.Type.WORKFLOWCHECK_REMINDER, "", check.getProject(), check.getVersion(), check.getUser());
         return Response.status(Response.Status.CREATED).build();
     }
     
@@ -178,7 +182,7 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
     public Response edit(@Context MessageContext jaxrsContext, @PathParam("id") Long id, WorkflowCheck entity) {
         AuthToken token = Authentication.validate(jaxrsContext);
         
-        TypedQuery<WorkflowCheck> wfcQuery = em.createNamedQuery("WorkflowCheck.getWithUser", WorkflowCheck.class);
+        TypedQuery<WorkflowCheck> wfcQuery = em.createNamedQuery("WorkflowCheck.getWithUserAndProject", WorkflowCheck.class);
         wfcQuery.setParameter("wfcId", id);
         List<WorkflowCheck> wfcResults = wfcQuery.getResultList();
         if(wfcResults == null || wfcResults.size() < 1) {
@@ -232,6 +236,18 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         check.setComment(entity.getComment());
         check.setStatus(status);
         new DAOVersion(version, em).updateStatus(check);
+        
+        // Log :
+        if(check.getStatus() == WorkflowCheck.Status.CHECK_OK) {
+            new DAOLog(em).log(new User(token.getUserId()),
+                    (check.getType() == WorkflowCheck.Type.CONTROL) ? Log.Type.CONTROL_OK : Log.Type.VALIDATION_OK, "",
+                    check.getProject(), version, check.getUser());
+        }
+        else if(check.getStatus() == WorkflowCheck.Status.CHECK_KO) {
+            new DAOLog(em).log(new User(token.getUserId()),
+                    (check.getType() == WorkflowCheck.Type.CONTROL) ? Log.Type.CONTROL_KO : Log.Type.VALIDATION_KO, "",
+                    check.getProject(), version, check.getUser());
+        }
         
         return Response.status(Response.Status.OK).build();
     }

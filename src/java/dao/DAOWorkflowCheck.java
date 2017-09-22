@@ -63,12 +63,12 @@ public class DAOWorkflowCheck {
             
         String subject;
         if(reminder) {
-            subject = check.getType() == WorkflowCheck.Types.CONTROL ? "Rappel Contrôle" : "Rappel Validation";
+            subject = check.getType() == WorkflowCheck.Type.CONTROL ? "Rappel Contrôle" : "Rappel Validation";
         }
         else {
-            subject = check.getType() == WorkflowCheck.Types.CONTROL ? "Nouveau Contrôle" : "Nouvelle Validation";
+            subject = check.getType() == WorkflowCheck.Type.CONTROL ? "Nouveau Contrôle" : "Nouvelle Validation";
         }
-        String verb = check.getType() == WorkflowCheck.Types.CONTROL ? "contrôler" : "valider";
+        String verb = check.getType() == WorkflowCheck.Type.CONTROL ? "contrôler" : "valider";
         String text = "Bonjour " + user.getFirstname() + " " + user.getName() + ",\n\n"
                 + "Vous avez été désigné pour " + verb + " le fichier " + version.getFilename()
                 + " du projet " + project.getName() +". Rendez vous sur "

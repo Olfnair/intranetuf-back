@@ -1,5 +1,6 @@
 package rest;
 
+import dao.DAOLog;
 import entities.User;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -15,6 +16,8 @@ import javax.ws.rs.core.Response;
 import rest.security.AuthToken;
 import rest.security.Authentication;
 import entities.Credentials;
+import entities.Log;
+import javax.ejb.Stateless;
 import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
@@ -22,6 +25,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import rest.security.PasswordHasher;
 import rest.security.RightsChecker;
 
+@Stateless
 @Path("auth")
 @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 @Produces(MediaType.TEXT_PLAIN)
@@ -35,12 +39,13 @@ public class AuthenticationEndpoint {
     /**
      * Endpoint qui authentifie un utilisateur sur base de ses credentials (login, mot de passe) et lui renvoie un token
      * signé pour ses requêtes suivantes afin de pouvoir s'authentifier rapidement.
-     * @param credentials entité qui conteint le login et le mot de passe de l'utilisateur à authentifier
+     * @param credentials entité qui contient le login et le mot de passe de l'utilisateur à authentifier
      * @return Token d'authentification pour l'utilisateur
      */
     @POST
     public Response authenticateUser(Credentials credentials) {       
         AuthToken token = authenticate(credentials);
+        new DAOLog(em).log(new User(token.getUserId()), Log.Type.AUTH, "'" + credentials.getLogin() + "' s'est connecté");
         return Response.ok(token.toJsonString()).build();
     }
     
@@ -54,7 +59,7 @@ public class AuthenticationEndpoint {
     @Path("adminLoginAs/{login}")
     public Response authenticateAsUser(@Context MessageContext jaxrsContext, @PathParam("login") String login) {       
         AuthToken token = Authentication.validate(jaxrsContext);
-        User admin = RightsChecker.getInstance(em).validate(token, User.Roles.SUPERADMIN);
+        User superadmin = RightsChecker.getInstance(em).validate(token, User.Roles.SUPERADMIN);
         
         TypedQuery<User> userQuery = em.createNamedQuery("User.getByLogin", User.class);
         userQuery.setParameter("login", login);
@@ -69,6 +74,7 @@ public class AuthenticationEndpoint {
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         }
         AuthToken userToken = Authentication.issueToken(user.getId(), user.getRole(), 60 * 60, AuthToken.AUTH_KEY);
+        new DAOLog(em).log(superadmin, Log.Type.AUTH_AS, "'" + superadmin.getLogin() + "' s'est connecté en tant que '" + login + "'", user);
         return Response.ok(userToken.toJsonString()).build();
     }
     
