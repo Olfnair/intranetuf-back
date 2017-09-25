@@ -37,7 +37,7 @@ public class File extends entities.Entity {
     public final static FlexQuerySpecification<File> LIST_BY_USER; // utilisé pour lister les fichiers par utilisateur
     
     static {
-        LIST_BY_PROJECT = new FlexQuerySpecification<>("SELECT f FROM File f WHERE f.active = true :where: :orderby:", "f", File.class);
+        LIST_BY_PROJECT = new FlexQuerySpecification<>("SELECT f FROM File f JOIN FETCH f.version.lastCheck JOIN FETCH f.version.lastCheck.user WHERE f.active = true :where: :orderby:", "f", File.class);
         LIST_BY_PROJECT.addWhereSpec("project.id", "projectId", "=", "AND", Long.class);
         LIST_BY_PROJECT.addWhereSpec("version.filename", "versionFilename", "LIKE", "AND", String.class);
         LIST_BY_PROJECT.addWhereSpec("version.num", "versionNum", "=", "AND", Long.class);

@@ -8,11 +8,14 @@ package rest;
 import entities.Log;
 import entities.User;
 import entities.Version;
+import entities.WorkflowCheck;
 import entities.query.FlexQuery;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -72,6 +75,23 @@ public class LogFacadeREST extends AbstractFacade<Log> {
         
         logsQuery.prepareCountQuery(em);
         return Response.ok(logsQuery.execute()).build();
+    }
+    
+    @GET
+    @Path("update")
+    public Response update() {
+        TypedQuery<Version> listVersions = em.createQuery("Select v FROM Version v", Version.class);
+        List<Version> versions = listVersions.getResultList();
+        for(Version version : versions) {
+            TypedQuery<WorkflowCheck> checksQuery = em.createQuery("Select w FROM WorkflowCheck w WHERE w.version.id = :versionId ORDER BY w.date_checked DESC", WorkflowCheck.class);
+            checksQuery.setParameter("versionId", version.getId());
+            List<WorkflowCheck> checks = checksQuery.getResultList();
+            if(! checks.isEmpty()) {
+                WorkflowCheck check = checks.get(0);
+                version.setLastCheck((check.getDate_checked() != null) ? checks.get(0) : null);
+            }
+        }
+        return Response.status(Response.Status.OK).build();
     }
     
 }

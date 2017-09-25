@@ -135,6 +135,9 @@ public class VersionFacadeREST extends AbstractFacade<Version> {
             em.flush();
             new DAOVersion(version, em).initWorkflowChecks();
             em.merge(version);
+            javax.persistence.Query cancelChecksQuery = em.createNamedQuery("WorkflowCheck.cancelByVersion");
+            cancelChecksQuery.setParameter("versionId", file.getVersion().getId());
+            cancelChecksQuery.executeUpdate();
             file.setVersion(version);
             em.merge(file);
             uploadedFilePart.write(ApplicationConfig.PROJECTS_LOCATION + '/' + project.getId().toString() + '/' + version.getId().toString());

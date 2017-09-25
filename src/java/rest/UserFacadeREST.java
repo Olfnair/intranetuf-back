@@ -121,7 +121,11 @@ public class UserFacadeREST extends AbstractFacade<User> {
         
         entities.forEach((user) -> {
             User persistedUser = em.find(User.class, user.getId());
-            if(! admin.isSuperAdmin() && (persistedUser.hasRole(User.Roles.SUPERADMIN) || user.hasRole(User.Roles.SUPERADMIN))) {
+            if(
+                    user.getLogin() != null
+                    || ! admin.isSuperAdmin()
+                    && (persistedUser.hasRole(User.Roles.SUPERADMIN) || user.hasRole(User.Roles.SUPERADMIN))
+            ) {
                 // un admin simple essaye de modifier un superadmin ou de donner le droit superadmin
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
@@ -145,7 +149,9 @@ public class UserFacadeREST extends AbstractFacade<User> {
         AuthToken token = Authentication.validate(jaxrsContext);
         User askingUser = em.find(User.class, token.getUserId());
               
-        User user = em.find(User.class, id);
+        TypedQuery<User> userQuery = em.createNamedQuery("User.getWithCredentials", User.class);
+        userQuery.setParameter("userId", id);
+        User user = userQuery.getResultList().get(0);
         if(user == null || askingUser == null) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
@@ -175,6 +181,9 @@ public class UserFacadeREST extends AbstractFacade<User> {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE)
                         .entity(new RestError("login")).build());
             }
+            Credentials credentials = user.getCredentials();
+            credentials.setLogin(login);
+            entity.setCredentials(credentials);
         }
             
         if(! askingUser.isAdmin()) {

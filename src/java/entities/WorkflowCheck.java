@@ -24,7 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name="WorkflowCheck.getByVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user WHERE wfc.version.id = :versionId ORDER BY wfc.type ASC, wfc.order_num ASC"),
     @NamedQuery(name="WorkflowCheck.getByStatusUserVersions", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.version WHERE wfc.user.id = :userId AND wfc.status = :status AND wfc.version.id IN(:versionIds)"),
     @NamedQuery(name="WorkflowCheck.getWithUserAndProject", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user JOIN FETCH wfc.project WHERE wfc.id = :wfcId"),
-    @NamedQuery(name="WorkflowCheck.getWithUserAndProjectAndVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user JOIN FETCH wfc.project JOIN FETCH wfc.version WHERE wfc.id = :wfcId")
+    @NamedQuery(name="WorkflowCheck.getWithUserAndProjectAndVersion", query="SELECT wfc FROM WorkflowCheck wfc JOIN FETCH wfc.user JOIN FETCH wfc.project JOIN FETCH wfc.version WHERE wfc.id = :wfcId"),
+    @NamedQuery(name="WorkflowCheck.cancelByVersion", query="UPDATE WorkflowCheck wfc SET wfc.status = -1 WHERE wfc.version.id = :versionId AND (wfc.status = 0 OR wfc.status = 1)")
 })
 public class WorkflowCheck extends entities.Entity {
     private static final long serialVersionUID = 1L;

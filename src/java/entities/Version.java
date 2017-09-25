@@ -11,10 +11,12 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -69,6 +71,9 @@ public class Version extends entities.Entity {
     @ManyToOne(fetch=FetchType.LAZY)
     private File file;
     
+    @OneToOne(fetch=FetchType.LAZY)
+    WorkflowCheck lastCheck;
+    
     @OneToMany(mappedBy="version", fetch=FetchType.LAZY, cascade=CascadeType.PERSIST)
     private List<WorkflowCheck> workflowChecks = new ArrayList<>();
     
@@ -121,6 +126,14 @@ public class Version extends entities.Entity {
         this.file = file;
     }
 
+    public WorkflowCheck getLastCheck() {
+        return lastCheck;
+    }
+
+    public void setLastCheck(WorkflowCheck lastCheck) {
+        this.lastCheck = lastCheck;
+    }
+    
     public List<WorkflowCheck> getWorkflowChecks() {
         return workflowChecks;
     }

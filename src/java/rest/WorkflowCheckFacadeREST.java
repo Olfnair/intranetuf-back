@@ -236,6 +236,7 @@ public class WorkflowCheckFacadeREST extends AbstractFacade<WorkflowCheck> {
         check.setComment(entity.getComment());
         check.setStatus(status);
         new DAOVersion(version, em).updateStatus(check);
+        version.setLastCheck(check);
         
         // Log :
         if(check.getStatus() == WorkflowCheck.Status.CHECK_OK) {
